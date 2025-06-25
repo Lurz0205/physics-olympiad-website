@@ -1,4 +1,5 @@
-"name": "physics-olympiad-backend",
+{
+  "name": "physics-olympiad-backend",
   "version": "1.0.0",
   "description": "Backend for Physics Olympiad Prep Website",
   "main": "server.js",
