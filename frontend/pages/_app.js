@@ -1,4 +1,4 @@
-import '../styles/globals.css';
+import '../styles/globals.css'; // Đảm bảo dòng này đã được import
 import Layout from '../components/Layout';
 
 function MyApp({ Component, pageProps }) {
