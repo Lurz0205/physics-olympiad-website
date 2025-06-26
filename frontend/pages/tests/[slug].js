@@ -114,7 +114,7 @@ const TestDetailPage = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-white"> {/* Nền trắng */}
+      <div className="flex items-center justify-center min-h-screen bg-white">
         <p className="text-xl text-gray-700">Đang tải đề thi...</p>
       </div>
     );
@@ -122,7 +122,7 @@ const TestDetailPage = () => {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-white p-4"> {/* Nền trắng */}
+      <div className="flex items-center justify-center min-h-screen bg-white p-4">
         <p className="text-xl text-red-600 text-center">{error}</p>
       </div>
     );
@@ -130,29 +130,28 @@ const TestDetailPage = () => {
 
   if (!testData) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-white"> {/* Nền trắng */}
+      <div className="flex items-center justify-center min-h-screen bg-white">
         <p className="text-xl text-gray-700">Không tìm thấy đề thi này.</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 sm:p-8"> {/* Nền hơi xám nhạt */}
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8"> {/* Responsive padding */}
       <Head>
         <title>{testData.title} - Đề thi Online</title>
       </Head>
-      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6 sm:p-8 border border-gray-100"> {/* Tăng bo tròn, shadow, thêm border */}
-        <h1 className="text-3xl font-bold text-gray-800 mb-4 text-center">{testData.title}</h1>
-        <p className="text-gray-600 text-center mb-2">{testData.description}</p>
-        <p className="text-gray-600 text-center mb-8">Thời lượng: {testData.duration} phút</p>
+      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6 sm:p-8 border border-gray-100"> {/* Responsive padding */}
+        <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-4 sm:mb-6 text-center">{testData.title}</h1> {/* Responsive font size */}
+        <p className="text-base sm:text-lg text-gray-600 text-center mb-6 sm:mb-8">Thời lượng: {testData.duration} phút</p> {/* Responsive font size */}
 
         {testData.questions.length === 0 ? (
           <p className="text-center text-gray-600 text-lg">Đề thi này chưa có câu hỏi nào.</p>
         ) : (
           <div className="space-y-8">
             {testData.questions.map((q, index) => (
-              <div key={q._id} className="bg-white rounded-xl shadow-md p-5 border border-gray-200"> {/* Bo tròn, shadow */}
-                <h3 className="text-xl font-semibold text-gray-900 mb-3">
+              <div key={q._id} className="bg-white rounded-xl shadow-md p-5 border border-gray-200">
+                <h3 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-3"> {/* Responsive font size */}
                   Câu hỏi {index + 1}: <MathContent content={q.questionText} />
                 </h3>
                 <div className="space-y-3">
@@ -175,18 +174,18 @@ const TestDetailPage = () => {
                         className="form-radio h-5 w-5 text-blue-600"
                         disabled={showResults}
                       />
-                      <span className="text-gray-800 text-base">
+                      <span className="text-sm sm:text-base text-gray-800"> {/* Responsive font size */}
                         <MathContent content={option} />
                       </span>
                     </label>
                   ))}
                 </div>
                 {showResults && correctAnswers[q._id] && (
-                  <div className="mt-4 p-4 rounded-lg border bg-gray-50 border-gray-200"> {/* Bo tròn, border */}
-                    <p className="font-semibold mb-2">Đáp án đúng: <MathContent content={correctAnswers[q._id].correctAnswer} /></p>
+                  <div className="mt-4 p-4 rounded-lg border bg-gray-50 border-gray-200">
+                    <p className="font-semibold mb-2 text-sm sm:text-base">Đáp án đúng: <MathContent content={correctAnswers[q._id].correctAnswer} /></p>
                     {correctAnswers[q._id].explanation && (
                       <div>
-                        <p className="font-semibold">Giải thích:</p>
+                        <p className="font-semibold text-sm sm:text-base">Giải thích:</p>
                         <MathContent content={correctAnswers[q._id].explanation} />
                       </div>
                     )}
@@ -198,7 +197,7 @@ const TestDetailPage = () => {
               <div className="flex justify-center mt-8">
                 <button
                   onClick={handleSubmitTest}
-                  className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-full shadow-md hover:bg-blue-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 transform hover:scale-105"
+                  className="btn-primary"
                 >
                   Nộp bài và xem kết quả
                 </button>
@@ -206,10 +205,10 @@ const TestDetailPage = () => {
             )}
             {showResults && (
               <div className="mt-8 text-center">
-                <p className="text-2xl font-bold text-blue-700">Bạn đã trả lời đúng {score} / {testData.questions.length} câu hỏi.</p>
+                <p className="text-xl sm:text-2xl font-bold text-blue-700">Bạn đã trả lời đúng {score} / {testData.questions.length} câu hỏi.</p>
                 <button
                   onClick={() => router.push('/tests')}
-                  className="mt-4 px-6 py-3 bg-gray-300 text-gray-800 font-semibold rounded-full shadow-md hover:bg-gray-400 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-75 transform hover:scale-105"
+                  className="mt-4 btn-secondary"
                 >
                   Quay lại danh sách đề thi
                 </button>
