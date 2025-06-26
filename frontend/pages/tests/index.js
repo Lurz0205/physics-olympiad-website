@@ -1,12 +1,14 @@
 // physics-olympiad-website/frontend/pages/tests/index.js
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react'; // Xóa useContext
 import Link from 'next/link';
-import { AuthContext } from '../../context/AuthContext'; // Đã sửa đường dẫn
+import { useAuth } from '../../context/AuthContext'; // THAY ĐỔI: Import useAuth hook
+import Head from 'next/head';
 
 const TestsPage = () => {
-  const { user, authToken } = useContext(AuthContext); // Lấy user và authToken từ context
+  // THAY ĐỔI: Sử dụng useAuth hook để lấy user và token (đổi tên token thành authToken cho nhất quán)
+  const { user, token: authToken } = useAuth();
   const [tests, setTests] = useState([]);
-  const [loading, setLoading] = useState(true); // ĐÃ SỬA LỖI CÚ PHÁP Ở ĐÂY
+  const [loading, setLoading] = useState(true); 
   const [error, setError] = useState(null);
 
   useEffect(() => {
