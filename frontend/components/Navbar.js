@@ -36,9 +36,9 @@ const Navbar = () => {
 
         <div className="hidden md:flex items-center space-x-4">
           <NavLink href="/theory">Lý thuyết</NavLink>
-          {/* THAY ĐỔI: Đảm bảo link Bài tập trỏ đến /exercise */}
-          <NavLink href="/exercise">Bài tập</NavLink> 
-          <NavLink href="/tests">Đề thi Online</NavLink>
+          <NavLink href="/exercise">Bài tập</NavLink>
+          {/* THAY ĐỔI: Đảm bảo link Đề thi Online trỏ đến /tests */}
+          <NavLink href="/tests">Đề thi Online</NavLink> 
           
           {user ? (
             <>
@@ -65,8 +65,8 @@ const Navbar = () => {
         <div className="md:hidden absolute top-full left-0 w-full bg-blue-800 shadow-lg pb-4 rounded-b-xl z-40">
           <div className="flex flex-col items-center space-y-4 py-4">
             <NavLinkMobile href="/theory" onClick={toggleMenu}>Lý thuyết</NavLinkMobile>
-            {/* THAY ĐỔI: Đảm bảo link Bài tập trỏ đến /exercise */}
             <NavLinkMobile href="/exercise" onClick={toggleMenu}>Bài tập</NavLinkMobile>
+            {/* THAY ĐỔI: Đảm bảo link Đề thi Online trỏ đến /tests */}
             <NavLinkMobile href="/tests" onClick={toggleMenu}>Đề thi Online</NavLinkMobile>
             
             {user ? (
