@@ -11,7 +11,7 @@ const generateSlug = (text) => {
     .trim()
     .replace(/\s+/g, '-')
     .replace(/[^\w-]+/g, '')
-    .replace(/--+/g/g, '-');
+    .replace(/--+/g, '-'); // THAY ĐỔI QUAN TRỌNG: Sửa từ /--+/g/g thành /--+/g
 };
 
 // @desc    Get all exercises
@@ -87,8 +87,6 @@ const createExercise = asyncHandler(async (req, res) => {
         throw new Error(`Đáp án đúng "${q.correctAnswer}" không phải là một lựa chọn hợp lệ cho câu hỏi "${q.questionText.substring(0, 50)}..."`);
       }
     }
-    // Đối với trắc nghiệm, giải pháp đầy đủ không bắt buộc vì lời giải nằm ở từng câu hỏi
-    // nhưng để tránh lỗi validate schema, ta vẫn giữ default rỗng
   } else if (type === 'Tự luận') {
     // Với tự luận, solution có thể rỗng hoặc không
     // Không cần validation đặc biệt cho questions ở đây
