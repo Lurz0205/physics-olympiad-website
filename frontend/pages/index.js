@@ -20,7 +20,11 @@ const HomePage = () => {
           giúp bạn đạt kết quả tốt nhất trong các kỳ thi học sinh giỏi Vật lí bảng không chuyên.
         </p>
 
-        <div className="flex flex-col sm:flex-row justify-center gap-4 mb-8 sm:mb-12"> {/* Flex-col trên mobile, flex-row trên sm */}
+        {/* THAY ĐỔI QUAN TRỌNG: Điều chỉnh lớp Tailwind cho khoảng cách */}
+        {/* flex-col: xếp dọc trên mobile; space-y-4: khoảng cách dọc 16px giữa các mục */}
+        {/* sm:flex-row: xếp ngang từ màn hình sm trở lên; sm:space-x-4: khoảng cách ngang 16px giữa các mục */}
+        {/* sm:space-y-0: đảm bảo không có khoảng cách dọc khi ở chế độ ngang */}
+        <div className="flex flex-col space-y-4 sm:flex-row sm:space-x-4 sm:space-y-0 justify-center mb-8 sm:mb-12">
           <Link href="/theory">
             <a className="btn-primary w-full sm:w-auto"> {/* Đảm bảo nút chiếm toàn bộ chiều rộng trên mobile */}
               Khám phá Lý thuyết
