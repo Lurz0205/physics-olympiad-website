@@ -2,9 +2,9 @@
 import React, { useState } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { useAuth } from '../../../context/AuthContext';
-import AdminLayout from '../../../components/AdminLayout';
-import Link from 'next/link'; // Import Link
+import { useAuth } from '../../../../context/AuthContext'; // Đã sửa đường dẫn
+import AdminLayout from '../../../../components/AdminLayout'; // Đã sửa đường dẫn
+import Link from 'next/link';
 
 const NewTheoryPage = () => {
   const { token } = useAuth();
@@ -14,12 +14,11 @@ const NewTheoryPage = () => {
   const [slug, setSlug] = useState('');
   const [description, setDescription] = useState('');
   const [content, setContent] = useState('');
-  const [category, setCategory] = useState('CƠ HỌC'); // Default category
+  const [category, setCategory] = useState('CƠ HỌC');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState('');
 
-  // Các category có sẵn (phải khớp với enum trong backend/models/Theory.js)
   const categories = ['CƠ HỌC', 'NHIỆT HỌC', 'ĐIỆN HỌC', 'QUANG HỌC', 'VẬT LÝ HẠT NHÂN', 'THUYẾT TƯƠNG ĐỐI', 'VẬT LÝ HIỆN ĐẠI', 'Chưa phân loại'];
 
   const handleSubmit = async (e) => {
@@ -28,7 +27,6 @@ const NewTheoryPage = () => {
     setError(null);
     setSuccess('');
 
-    // Client-side validation
     if (!title.trim() || !slug.trim() || !description.trim() || !content.trim() || !category.trim()) {
       setError('Vui lòng điền đầy đủ tất cả các trường bắt buộc.');
       setLoading(false);
@@ -52,7 +50,6 @@ const NewTheoryPage = () => {
       }
 
       setSuccess('Tạo bài lý thuyết mới thành công!');
-      // Có thể chuyển hướng về trang danh sách hoặc reset form
       router.push('/admin/theories');
     } catch (err) {
       console.error('Error creating theory:', err);
@@ -62,7 +59,6 @@ const NewTheoryPage = () => {
     }
   };
 
-  // Hàm tự động tạo slug từ title
   const handleTitleChange = (e) => {
     const newTitle = e.target.value;
     setTitle(newTitle);
@@ -71,15 +67,14 @@ const NewTheoryPage = () => {
 
   const generateSlug = (text) => {
     return text
-      .normalize("NFD") // Chuyển đổi Unicode sang dạng chuẩn NFKD (tách chữ có dấu thành chữ không dấu và dấu)
-      .replace(/[\u0300-\u036f]/g, "") // Xóa các ký tự dấu
-      .toLowerCase() // Chuyển về chữ thường
-      .trim() // Xóa khoảng trắng đầu cuối
-      .replace(/\s+/g, '-') // Thay thế khoảng trắng bằng dấu gạch ngang
-      .replace(/[^\w-]+/g, '') // Xóa tất cả các ký tự không phải chữ, số, hoặc gạch ngang
-      .replace(/--+/g, '-'); // Thay thế nhiều dấu gạch ngang thành một
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, '-')
+      .replace(/[^\w-]+/g, '')
+      .replace(/--+/g, '-');
   };
-
 
   return (
     <AdminLayout>
@@ -112,7 +107,7 @@ const NewTheoryPage = () => {
               type="text"
               id="title"
               value={title}
-              onChange={handleTitleChange} // Sử dụng hàm mới để tự động tạo slug
+              onChange={handleTitleChange}
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-200"
               required
             />
@@ -125,7 +120,7 @@ const NewTheoryPage = () => {
               value={slug}
               onChange={(e) => setSlug(e.target.value)}
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-200 bg-gray-50"
-              readOnly // Tùy chọn: chỉ đọc nếu bạn muốn slug được tạo tự động
+              readOnly
               required
             />
           </div>
