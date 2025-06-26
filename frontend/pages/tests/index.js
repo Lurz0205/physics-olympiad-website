@@ -1,7 +1,7 @@
 // physics-olympiad-website/frontend/pages/tests/index.js
 import React, { useState, useEffect, useContext } from 'react';
 import Link from 'next/link';
-import { AuthContext } from '../context/AuthContext'; // Giả định bạn có AuthContext
+import { AuthContext } from '../context/AuthContext'; // Đã sửa đường dẫn
 import Head from 'next/head';
 
 const TestsPage = () => {
