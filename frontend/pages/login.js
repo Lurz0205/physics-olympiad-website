@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useAuth } from '../context/AuthContext'; // Đảm bảo đường dẫn đúng
+import { useAuth } from '../context/AuthContext';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -12,19 +12,17 @@ const LoginPage = () => {
   const [error, setError] = useState(null);
 
   const router = useRouter();
-  const { login } = useAuth(); // Lấy hàm login từ AuthContext
+  const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
-    // THAY ĐỔI MỚI: Thêm console.log để kiểm tra giá trị email và password trước khi gửi
     console.log('Attempting login with:');
     console.log('Email:', email);
-    console.log('Password:', password); // KHÔNG log password trong môi trường production thực tế vì lý do bảo mật
+    // console.log('Password:', password); // KHÔNG log password trong môi trường production thực tế
 
-    // Client-side validation
     if (!email.trim() || !password.trim()) {
       setError('Vui lòng điền đầy đủ email và mật khẩu.');
       setLoading(false);
@@ -43,14 +41,20 @@ const LoginPage = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        // THAY ĐỔI MỚI: Log toàn bộ phản hồi lỗi từ backend
         console.error('Backend login error response:', data);
         throw new Error(data.message || 'Lỗi đăng nhập.');
       }
 
-      // Đăng nhập thành công
+      // Đăng nhập thành công, lưu thông tin người dùng và token vào AuthContext
       login(data.user, data.token);
-      router.push('/admin'); // Chuyển hướng về trang admin dashboard
+
+      // THAY ĐỔI QUAN TRỌNG: CHUYỂN HƯỚNG DỰA TRÊN VAI TRÒ
+      if (data.user && data.user.role === 'admin') {
+        router.push('/admin'); // Chuyển hướng Admin đến Admin Panel
+      } else {
+        router.push('/'); // Chuyển hướng người dùng thông thường về trang chủ
+      }
+
     } catch (err) {
       console.error('Error during login:', err);
       setError(err.message || 'Đã xảy ra lỗi không xác định trong quá trình đăng nhập.');
@@ -60,11 +64,11 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8 font-inter"> {/* Đã chỉnh background và font */}
       <Head>
         <title>Đăng nhập - Olympic Vật lý</title>
       </Head>
-      <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-xl shadow-lg border border-gray-100">
+      <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-2xl shadow-xl border border-gray-200"> {/* Đã chỉnh rounded, shadow, border */}
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             Đăng nhập vào tài khoản của bạn
@@ -72,7 +76,7 @@ const LoginPage = () => {
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative" role="alert"> {/* Đã chỉnh rounded */}
               {error}
             </div>
           )}
@@ -85,7 +89,7 @@ const LoginPage = () => {
                 type="email"
                 autoComplete="email"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg mb-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm" // Đã chỉnh rounded, thêm mb
                 placeholder="Địa chỉ Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -99,7 +103,7 @@ const LoginPage = () => {
                 type="password"
                 autoComplete="current-password"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm" // Đã chỉnh rounded
                 placeholder="Mật khẩu"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -110,14 +114,14 @@ const LoginPage = () => {
           <div>
             <button
               type="submit"
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-200"
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-200 shadow-md hover:shadow-lg" // Đã chỉnh rounded, shadow
               disabled={loading}
             >
               {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
             </button>
           </div>
         </form>
-        <div className="text-center text-sm text-gray-600">
+        <div className="text-center text-sm text-gray-600 mt-4">
           Chưa có tài khoản?{' '}
           <Link href="/register">
             <a className="font-medium text-blue-600 hover:text-blue-500">
