@@ -1,12 +1,14 @@
 // physics-olympiad-website/frontend/pages/admin/index.js
 import React from 'react';
 import Head from 'next/head';
-import Link from 'next/link'; // THAY ĐỔI MỚI: Import Link từ next/link
-import AdminLayout from '../../components/AdminLayout';
+import Link from 'next/link';
+// Không cần import AdminLayout ở đây nữa vì nó đã được bọc ở _app.js
+// import AdminLayout from '../../components/AdminLayout'; // Dòng này có thể bị xóa hoặc comment
 
 const AdminDashboard = () => {
   return (
-    <AdminLayout>
+    // THAY ĐỔI MỚI: XÓA THẺ AdminLayout BỌC NGOÀI
+    <> 
       <Head>
         <title>Admin Dashboard - Olympic Vật lý</title>
       </Head>
@@ -23,7 +25,7 @@ const AdminDashboard = () => {
           <DashboardCard title="Quản lý Người dùng" description="Xem, sửa vai trò hoặc xóa người dùng." link="/admin/users" />
         </div>
       </div>
-    </AdminLayout>
+    </> // THAY ĐỔI MỚI: Dùng Fragment thay vì AdminLayout
   );
 };
 
