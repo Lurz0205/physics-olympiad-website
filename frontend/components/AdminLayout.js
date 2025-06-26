@@ -2,20 +2,19 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useAuth } from '../context/AuthContext'; // Import useAuth để lấy thông tin người dùng và hàm logout
+import { useAuth } from '../context/AuthContext';
 
 const AdminLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const router = useRouter();
-  const { user, logout } = useAuth(); // Lấy user và logout từ AuthContext
+  const { user, logout } = useAuth();
 
   // Kiểm tra quyền admin
   if (!user || user.role !== 'admin') {
-    // Nếu không phải admin, chuyển hướng về trang chủ hoặc trang đăng nhập
-    if (typeof window !== 'undefined') { // Đảm bảo chỉ chạy ở client-side
-      router.push('/login'); // Hoặc '/' tùy vào bạn muốn
+    if (typeof window !== 'undefined') {
+      router.push('/login');
     }
-    return null; // Không render gì cả nếu không phải admin
+    return null;
   }
 
   const navItems = [
@@ -31,14 +30,12 @@ const AdminLayout = ({ children }) => {
         </svg>
       )
     },
-    // THAY ĐỔI: Đã đổi href từ /admin/exercises thành /admin/practice
     { name: 'Quản lý Bài tập', href: '/admin/practice', icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
         </svg>
       )
     },
-    // Bạn có thể thêm các mục khác như "Quản lý Đề thi", "Quản lý Người dùng" ở đây
   ];
 
   return (
@@ -82,7 +79,14 @@ const AdminLayout = ({ children }) => {
             </h2>
           </div>
 
-          <div className="flex items-center">
+          <div className="flex items-center space-x-4"> {/* THAY ĐỔI: Thêm space-x-4 để tạo khoảng cách giữa các nút */}
+            {/* THAY ĐỔI MỚI: Nút Quay về trang bình thường */}
+            <Link href="/">
+              <a className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none">
+                Về trang bình thường
+              </a>
+            </Link>
+            
             <span className="text-gray-800 mr-4">Xin chào, {user?.name || 'Admin'}!</span>
             <button onClick={logout} 
                     className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none">
