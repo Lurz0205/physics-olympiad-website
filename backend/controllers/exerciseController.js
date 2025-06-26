@@ -136,29 +136,25 @@ const deleteExercise = asyncHandler(async (req, res) => {
 // @access  Public
 const getAllExerciseCategories = async (req, res) => {
   try {
-    // Sử dụng aggregate để lấy các giá trị duy nhất của trường 'category'
     const categories = await Exercise.aggregate([
       {
         $group: {
-          _id: '$category', // Nhóm theo trường 'category'
-          count: { $sum: 1 } // Đếm số lượng bài tập trong mỗi danh mục (tùy chọn)
+          _id: '$category',
+          count: { $sum: 1 }
         }
       },
       {
         $project: {
-          _id: 0, // Không trả về _id của nhóm
-          category: '$_id', // Đổi tên _id thành category
-          count: 1 // Giữ lại count
+          _id: 0,
+          category: '$_id',
+          count: 1
         }
       },
       {
-        $sort: { category: 1 } // Sắp xếp theo tên danh mục tăng dần
+        $sort: { category: 1 }
       }
     ]);
-
-    // Lấy ra chỉ tên danh mục (nếu bạn chỉ muốn một mảng string)
     const categoryNames = categories.map(cat => cat.category);
-
     res.status(200).json(categoryNames);
   } catch (error) {
     console.error('Error fetching exercise categories:', error);
@@ -166,9 +162,9 @@ const getAllExerciseCategories = async (req, res) => {
   }
 };
 
+
 module.exports = {
-  getAllExercises,
-  getExercises,
+  getAllExercises, // THAY ĐỔI: Sửa từ getExercises thành getAllExercises
   getExerciseBySlug,
   getExerciseById,
   createExercise,
