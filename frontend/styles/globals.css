@@ -1,8 +1,12 @@
 /* physics-olympiad-website/frontend/styles/globals.css */
 
-/* Đảm bảo rằng nền của body là màu trắng */
-body {
+/* Đặt nền trắng tinh khiết cho toàn bộ trang */
+html, body {
   background-color: #FFFFFF; /* Màu trắng tinh khiết */
+  height: 100%; /* Đảm bảo body và html chiếm toàn bộ chiều cao */
+  margin: 0; /* Xóa margin mặc định của body */
+  padding: 0; /* Xóa padding mặc định của body */
+  font-family: 'Inter', sans-serif; /* Giữ font chữ */
 }
 
 /* Các chỉ thị Tailwind CSS */
