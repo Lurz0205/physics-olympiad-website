@@ -1,20 +1,16 @@
 // physics-olympiad-website/frontend/pages/_app.js
-import '../styles/globals.css';
-import { AuthProvider } from '../context/AuthContext';
-import Layout from '../components/Layout'; // Giả sử bạn có component Layout
+import '../styles/globals.css'; // Global CSS (quan trọng!)
+import { AuthProvider } from '../context/AuthContext'; // Auth Context
+import Layout from '../components/Layout'; // Layout Component
 
 function MyApp({ Component, pageProps }) {
   return (
     <AuthProvider>
-      {/* THAY ĐỔI: Loại bỏ hoặc thay thế bg-red-200 */}
-      {/* Ví dụ: chỉ giữ min-h-screen để div này vẫn chiếm hết chiều cao */}
-      {/* Hoặc thay thế bằng bg-white nếu bạn muốn div này có nền trắng rõ ràng */}
-      <div className="min-h-screen"> {/* Đã xóa bg-red-200 */}
-        {/* Đảm bảo Layout component của bạn cũng không có màu nền ghi đè */}
-        <Layout>
-          <Component {...pageProps} />
-        </Layout>
-      </div>
+      {/* Layout component sẽ bọc toàn bộ các trang */}
+      {/* Màu nền của ứng dụng sẽ được quản lý bởi Layout.js */}
+      <Layout>
+        <Component {...pageProps} />
+      </Layout>
     </AuthProvider>
   );
 }
