@@ -1,7 +1,7 @@
 // physics-olympiad-website/frontend/pages/practice/index.js
 import React, { useState, useEffect, useContext } from 'react';
 import Link from 'next/link';
-import { AuthContext } from '../context/AuthContext'; // Đã sửa đường dẫn
+import { AuthContext } from '../../context/AuthContext'; // ĐÃ SỬA ĐƯỜNG DẪN: ../../context/AuthContext
 import Head from 'next/head';
 
 const PracticeTopicsPage = () => {
