@@ -1,7 +1,13 @@
+// physics-olympiad-website/frontend/tailwind.config.js
+/** @type {import('tailwindcss').Config} */
 module.exports = {
+  // Đảm bảo các đường dẫn này chính xác và bao phủ tất cả các file chứa class Tailwind của bạn
   content: [
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
+    // Nếu bạn có thư mục 'app' (cho App Router trong Next.js 13+), hãy giữ dòng này.
+    // Nếu không, bạn có thể xóa nó. Với cấu trúc hiện tại của chúng ta (Page Router),
+    // hai dòng trên (pages và components) thường là đủ.
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
