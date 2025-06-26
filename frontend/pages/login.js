@@ -6,7 +6,7 @@ import { useRouter } from 'next/router';
 import { useAuth } from '../context/AuthContext';
 
 const LoginPage = () => {
-  const [identifier, setIdentifier] = useState(''); // Đổi từ email thành identifier
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -18,10 +18,6 @@ const LoginPage = () => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-
-    console.log('Attempting login with:');
-    console.log('Identifier (Email/Username):', identifier);
-    // console.log('Password:', password); // KHÔNG log password trong môi trường production thực tế
 
     if (!identifier.trim() || !password.trim()) {
       setError('Vui lòng điền đầy đủ tên đăng nhập/email và mật khẩu.');
@@ -35,7 +31,7 @@ const LoginPage = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ identifier, password }), // Gửi identifier thay vì email
+        body: JSON.stringify({ identifier, password }),
       });
 
       const data = await response.json();
@@ -45,14 +41,12 @@ const LoginPage = () => {
         throw new Error(data.message || 'Lỗi đăng nhập.');
       }
 
-      // Đăng nhập thành công, lưu thông tin người dùng và token vào AuthContext
       login(data.user, data.token);
 
-      // CHUYỂN HƯỚNG DỰA TRÊN VAI TRÒ
       if (data.user && data.user.role === 'admin') {
-        router.push('/admin'); // Chuyển hướng Admin đến Admin Panel
+        router.push('/admin');
       } else {
-        router.push('/'); // Chuyển hướng người dùng thông thường về trang chủ
+        router.push('/');
       }
 
     } catch (err) {
@@ -76,39 +70,38 @@ const LoginPage = () => {
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative" role="alert">
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-4" role="alert">
               {error}
             </div>
           )}
-          <div className="rounded-md shadow-sm -space-y-px">
-            <div>
-              <label htmlFor="identifier" className="sr-only">Tên đăng nhập hoặc Email</label> {/* Đổi label */}
-              <input
-                id="identifier" // Đổi id
-                name="identifier" // Đổi name
-                type="text" // Đổi type thành text để chấp nhận cả username và email
-                autoComplete="username email" // Gợi ý autocomplete
-                required
-                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg mb-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Tên đăng nhập hoặc Email" // Đổi placeholder
-                value={identifier}
-                onChange={(e) => setIdentifier(e.target.value)}
-              />
-            </div>
-            <div>
-              <label htmlFor="password" className="sr-only">Mật khẩu</label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Mật khẩu"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
+          {/* THAY ĐỔI: Thay thế div -space-y-px bằng cách thêm khoảng cách cho từng input */}
+          <div>
+            <label htmlFor="identifier" className="sr-only">Tên đăng nhập hoặc Email</label>
+            <input
+              id="identifier"
+              name="identifier"
+              type="text"
+              autoComplete="username email"
+              required
+              className="appearance-none block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm mb-4" // Thêm mb-4
+              placeholder="Tên đăng nhập hoặc Email"
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
+            />
+          </div>
+          <div>
+            <label htmlFor="password" className="sr-only">Mật khẩu</label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              autoComplete="current-password"
+              required
+              className="appearance-none block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+              placeholder="Mật khẩu"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
           </div>
 
           <div>
