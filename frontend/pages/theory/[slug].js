@@ -1,7 +1,7 @@
 // physics-olympiad-website/frontend/pages/theory/[slug].js
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-import { useAuth } from '../../context/AuthContext'; // Đã sửa đường dẫn
+import { useAuth } from '../../context/AuthContext'; // ĐÃ SỬA ĐƯỜNG DẪN: ../../context/AuthContext
 import Head from 'next/head';
 import Link from 'next/link';
 import MathContent from '../../components/MathContent'; // Import component MathContent
