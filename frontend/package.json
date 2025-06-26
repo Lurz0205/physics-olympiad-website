@@ -1,4 +1,3 @@
-// physics-olympiad-website/frontend/package.json
 {
   "name": "physics-olympiad-frontend",
   "version": "0.1.0",
@@ -15,10 +14,10 @@
     "react-dom": "^18"
   },
   "devDependencies": {
-    "postcss": "^8.4.38",   // Đảm bảo là phiên bản 8.x.x, tôi khuyến nghị 8.4.38
-    "tailwindcss": "^3.4.4", // Đảm bảo là phiên bản 3.x.x, tôi khuyến nghị 3.4.4
+    "postcss": "^8.4.38",   
+    "tailwindcss": "^3.4.4", 
     "eslint": "^8",
     "eslint-config-next": "14.2.3",
-    "autoprefixer": "^10.4.19" // Đảm bảo là phiên bản 10.x.x
+    "autoprefixer": "^10.4.19"
   }
 }
