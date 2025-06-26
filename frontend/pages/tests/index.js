@@ -1,13 +1,12 @@
 // physics-olympiad-website/frontend/pages/tests/index.js
 import React, { useState, useEffect, useContext } from 'react';
 import Link from 'next/link';
-import { AuthContext } from '../../context/AuthContext'; // ĐÃ SỬA ĐƯỜNG DẪN: ../../context/AuthContext
-import Head from 'next/head';
+import { AuthContext } from '../../context/AuthContext'; // Đã sửa đường dẫn
 
 const TestsPage = () => {
   const { user, authToken } = useContext(AuthContext); // Lấy user và authToken từ context
   const [tests, setTests] = useState([]);
-  const [loading, setLoading] = true);
+  const [loading, setLoading] = useState(true); // ĐÃ SỬA LỖI CÚ PHÁP Ở ĐÂY
   const [error, setError] = useState(null);
 
   useEffect(() => {
