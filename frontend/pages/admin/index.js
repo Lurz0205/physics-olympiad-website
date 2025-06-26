@@ -1,7 +1,8 @@
 // physics-olympiad-website/frontend/pages/admin/index.js
 import React from 'react';
 import Head from 'next/head';
-import AdminLayout from '../../components/AdminLayout'; // Đảm bảo đường dẫn đúng
+import Link from 'next/link'; // THAY ĐỔI MỚI: Import Link từ next/link
+import AdminLayout from '../../components/AdminLayout';
 
 const AdminDashboard = () => {
   return (
