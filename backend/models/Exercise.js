@@ -17,8 +17,10 @@ const exerciseSchema = mongoose.Schema(
     },
     description: { // Mô tả ngắn gọn về bài tập
       type: String,
-      required: [true, 'Please add a description'],
+      // THAY ĐỔI: Chỉnh required thành false để mô tả không bắt buộc
+      required: false, 
       trim: true,
+      default: '', // Đặt giá trị mặc định là chuỗi rỗng nếu không có
     },
     problemStatement: { // Nội dung đề bài (có thể chứa Markdown/LaTeX)
       type: String,
