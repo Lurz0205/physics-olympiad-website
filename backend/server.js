@@ -1,33 +1,26 @@
+// physics-olympiad-website/backend/server.js
 const express = require('express');
 const dotenv = require('dotenv');
-const cors = require('cors');
 const connectDB = require('./config/db');
+const cors = require('cors'); // Import cors
 const authRoutes = require('./routes/auth');
 const theoryRoutes = require('./routes/theory');
-const questionRoutes = require('./routes/questions');
-const testResultRoutes = require('./routes/testResults');
+const practiceRoutes = require('./routes/practice'); // Import the new practice routes
 
-// Load env vars
-dotenv.config({ path: './.env' });
+dotenv.config();
 
-// Connect to database (only for user accounts and test results)
 connectDB();
 
 const app = express();
 
-// Enable CORS
-app.use(cors());
+app.use(cors()); // Use cors middleware
+app.use(express.json()); // Body parser for JSON data
 
-// Body parser
-app.use(express.json());
-
-// Routes
+// API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/theory', theoryRoutes);
-app.use('/api/questions', questionRoutes);
-app.use('/api/test-results', testResultRoutes);
+app.use('/api/practice', practiceRoutes); // Use the new practice routes
 
-// Simple root route
 app.get('/', (req, res) => {
   res.send('API is running...');
 });
