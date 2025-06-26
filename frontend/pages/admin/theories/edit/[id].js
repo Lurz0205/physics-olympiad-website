@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useAuth } from '../../../../context/AuthContext';
-// XÓA DÒNG NÀY: import AdminLayout from '../../../../components/AdminLayout';
+import AdminLayout from '../../../../components/AdminLayout'; // THAY ĐỔI: ĐÃ THÊM LẠI DÒNG NÀY
 import Link from 'next/link';
 
 const EditTheoryPage = () => {
@@ -110,17 +110,19 @@ const EditTheoryPage = () => {
       .replace(/--+/g, '-');
   };
 
+  // GIỮ NGUYÊN AdminLayout cho trạng thái loading/error ban đầu
   if (loading) {
     return (
-      <AdminLayout> {/* Giữ AdminLayout ở đây cho trạng thái loading/error ban đầu */}
+      <AdminLayout>
         <div className="text-center p-6">Đang tải dữ liệu lý thuyết...</div>
       </AdminLayout>
     );
   }
 
+  // GIỮ NGUYÊN AdminLayout cho trạng thái error ban đầu
   if (error && !success) {
     return (
-      <AdminLayout> {/* Giữ AdminLayout ở đây cho trạng thái loading/error ban đầu */}
+      <AdminLayout>
         <div className="text-center text-red-600 p-6">Lỗi: {error}</div>
         <div className="flex justify-center mt-4">
             <Link href="/admin/theories">
@@ -132,7 +134,7 @@ const EditTheoryPage = () => {
   }
 
   return (
-    // THAY ĐỔI: Dùng Fragment <> </> thay vì AdminLayout
+    // THAY AdminLayout bằng React Fragment <> </> cho nội dung chính
     <>
       <Head>
         <title>Chỉnh sửa Lý thuyết - Admin</title>
@@ -225,7 +227,7 @@ const EditTheoryPage = () => {
           </button>
         </form>
       </div>
-    </> // THAY ĐỔI: Dùng Fragment
+    </>
   );
 };
 
