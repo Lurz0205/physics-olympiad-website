@@ -12,7 +12,7 @@ const Navbar = () => {
         {/* Logo/Tên ứng dụng */}
         <Link href="/">
           <a className="text-xl sm:text-2xl font-extrabold tracking-tight text-white hover:text-blue-200 transition-colors duration-300"> {/* Giảm font size: text-xl trên mobile, sm:text-2xl trên desktop */}
-            Vật lý HSG
+            HTB
           </a>
         </Link>
 
