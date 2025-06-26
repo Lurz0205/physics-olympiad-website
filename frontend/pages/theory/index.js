@@ -60,21 +60,25 @@ const TheoryTopicsPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8"> {/* Responsive padding */}
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
       <Head>
         <title>Chủ đề Lý thuyết - Olympic Vật lý</title>
       </Head>
-      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6 sm:p-8 border border-gray-100"> {/* Responsive padding */}
-        <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-6 text-center">Các Chủ đề Lý thuyết</h1> {/* Responsive font size */}
+      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6 sm:p-8 border border-gray-100">
+        <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-6 text-center">Các Chủ đề Lý thuyết</h1>
         {topics.length === 0 ? (
           <p className="text-center text-gray-600 text-lg">Chưa có chủ đề lý thuyết nào được đăng tải.</p>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"> {/* Grid-cols-1 trên mobile, 2 trên md, 3 trên lg */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch"> {/* items-stretch để các cột có chiều cao bằng nhau */}
             {topics.map((topic) => (
               <Link key={topic.slug} href={`/theory/${topic.slug}`}>
-                <a className="block bg-white hover:bg-gray-50 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-6 cursor-pointer border border-gray-200">
-                  <h2 className="text-xl font-semibold text-blue-700 mb-2">{topic.title}</h2>
-                  <p className="text-gray-700 text-sm">{topic.description}</p>
+                {/* THAY ĐỔI: Thêm h-full, flex flex-col, justify-between */}
+                <a className="block h-full flex flex-col justify-between bg-white hover:bg-gray-50 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-6 cursor-pointer border border-gray-200">
+                  <div> {/* Wrap title and description for flex distribution */}
+                    <h2 className="text-xl font-semibold text-blue-700 mb-2">{topic.title}</h2>
+                    <p className="text-gray-700 text-sm">{topic.description}</p>
+                  </div>
+                  {/* Có thể thêm một button hoặc link nhỏ ở đây để đẩy xuống dưới cùng */}
                 </a>
               </Link>
             ))}
