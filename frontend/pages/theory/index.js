@@ -6,7 +6,7 @@ import Head from 'next/head';
 
 const TheoryTopicsPage = () => {
   const { user, token: authToken } = useAuth();
-  const [topics, setTopics] = useState([]);
+  const [groupedTopics, setGroupedTopics] = useState({}); // State để lưu các chủ đề đã nhóm
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -31,7 +31,16 @@ const TheoryTopicsPage = () => {
         }
 
         const data = await response.json();
-        setTopics(data);
+        // Nhóm các chủ đề theo category
+        const categories = {};
+        data.forEach(topic => {
+          const categoryName = topic.category || 'Chưa phân loại'; // Nếu backend chưa có category
+          if (!categories[categoryName]) {
+            categories[categoryName] = [];
+          }
+          categories[categoryName].push(topic);
+        });
+        setGroupedTopics(categories);
       } catch (err) {
         console.error('Lỗi fetch topics:', err);
         setError('Đã xảy ra lỗi khi kết nối máy chủ: ' + err.message);
@@ -59,28 +68,38 @@ const TheoryTopicsPage = () => {
     );
   }
 
+  const categoryNames = Object.keys(groupedTopics).sort(); // Lấy tên các category và sắp xếp
+
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
       <Head>
         <title>Chủ đề Lý thuyết - Olympic Vật lý</title>
       </Head>
       <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6 sm:p-8 border border-gray-100">
-        <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-6 text-center">Các Chủ đề Lý thuyết</h1>
-        {topics.length === 0 ? (
+        <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-8 text-center">Các Chủ đề Lý thuyết</h1>
+        
+        {categoryNames.length === 0 ? (
           <p className="text-center text-gray-600 text-lg">Chưa có chủ đề lý thuyết nào được đăng tải.</p>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch"> {/* items-stretch để các cột có chiều cao bằng nhau */}
-            {topics.map((topic) => (
-              <Link key={topic.slug} href={`/theory/${topic.slug}`}>
-                {/* THAY ĐỔI: Thêm h-full, flex flex-col, justify-between */}
-                <a className="block h-full flex flex-col justify-between bg-white hover:bg-gray-50 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-6 cursor-pointer border border-gray-200">
-                  <div> {/* Wrap title and description for flex distribution */}
-                    <h2 className="text-xl font-semibold text-blue-700 mb-2">{topic.title}</h2>
-                    <p className="text-gray-700 text-sm">{topic.description}</p>
-                  </div>
-                  {/* Có thể thêm một button hoặc link nhỏ ở đây để đẩy xuống dưới cùng */}
-                </a>
-              </Link>
+          <div className="space-y-8"> {/* Thêm khoảng cách giữa các nhóm category */}
+            {categoryNames.map(categoryName => (
+              <div key={categoryName} className="bg-gray-50 rounded-xl shadow-sm p-5 border border-gray-200">
+                <h2 className="text-2xl font-bold text-blue-800 mb-6 border-b-2 border-blue-200 pb-3">
+                  {categoryName}
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
+                  {groupedTopics[categoryName].map((topic) => (
+                    <Link key={topic.slug} href={`/theory/${topic.slug}`}>
+                      <a className="block h-full flex flex-col justify-between bg-white hover:bg-gray-50 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-6 cursor-pointer border border-gray-200">
+                        <div>
+                          <h3 className="text-xl font-semibold text-blue-700 mb-2">{topic.title}</h3>
+                          <p className="text-gray-700 text-sm">{topic.description}</p>
+                        </div>
+                      </a>
+                    </Link>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         )}
