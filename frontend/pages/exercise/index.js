@@ -2,26 +2,23 @@
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
-import { useAuth } from '../../context/AuthContext'; // Import useAuth
-import { useRouter } from 'next/router'; // Import useRouter
+import { useAuth } from '../../context/AuthContext';
+import { useRouter } from 'next/router';
 
 const ExerciseListPage = () => {
-  const { user, token, loading: authLoading } = useAuth(); // Lấy user, token, và trạng thái loading của auth
+  const { user, token, loading: authLoading } = useAuth();
   const router = useRouter();
 
   const [exercises, setExercises] = useState([]);
-  const [loading, setLoading] = useState(true); // Loading cho dữ liệu bài tập
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [groupedExercises, setGroupedExercises] = useState({});
 
   useEffect(() => {
-    // Chỉ chạy khi authLoading đã hoàn tất và user/token đã sẵn sàng
     if (!authLoading) {
-      if (!user) { // Nếu không có user (chưa đăng nhập), hiển thị thông báo
+      if (!user) {
         setError('Bạn cần đăng nhập để xem các bài tập.');
-        setLoading(false); // Dừng loading
-        // Tùy chọn: chuyển hướng về trang đăng nhập sau 2 giây
-        // setTimeout(() => router.push('/login'), 2000); 
+        setLoading(false);
         return;
       }
 
@@ -31,7 +28,7 @@ const ExerciseListPage = () => {
         try {
           const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/exercises`, {
             headers: {
-              'Authorization': `Bearer ${token}`, // Gửi token
+              'Authorization': `Bearer ${token}`,
             },
           });
           
@@ -72,7 +69,7 @@ const ExerciseListPage = () => {
 
       fetchExercises();
     }
-  }, [user, token, authLoading]); // Dependency array: chạy khi user, token, authLoading thay đổi
+  }, [user, token, authLoading]);
 
   if (authLoading || loading) {
     return (
@@ -101,7 +98,6 @@ const ExerciseListPage = () => {
     );
   }
 
-  // Content khi không có bài tập
   if (exercises.length === 0) {
     return (
       <div className="min-h-screen bg-gray-100 p-4 sm:p-6 lg:p-8 font-inter">
@@ -154,7 +150,7 @@ const ExerciseListPage = () => {
                     <a>
                       <h3 className="text-lg font-semibold text-gray-800 mb-2 hover:text-blue-600 transition-colors duration-200 line-clamp-2">{exercise.title}</h3>
                       <p className="text-sm text-gray-600 mb-3 line-clamp-3">{exercise.description}</p>
-                      <div className="flex flex-wrap justify-between items-center text-xs mt-3">
+                      <div className="flex flex-wrap justify-between items-center text-xs mt-3 gap-2"> {/* THAY ĐỔI: Thêm gap-2 */}
                         <span className={`py-1 px-3 rounded-full text-white font-semibold ${
                             exercise.difficulty === 'Dễ' ? 'bg-green-500' :
                             exercise.difficulty === 'Trung bình' ? 'bg-yellow-600' :
@@ -162,6 +158,12 @@ const ExerciseListPage = () => {
                             'bg-red-600'
                           }`}>
                           {exercise.difficulty}
+                        </span>
+                        {/* THAY ĐỔI MỚI: Hiển thị loại bài tập (Tự luận/Trắc nghiệm) */}
+                        <span className={`py-1 px-3 rounded-full text-sm font-semibold ${
+                          exercise.type === 'Tự luận' ? 'bg-indigo-500 text-white' : 'bg-purple-500 text-white'
+                        }`}>
+                          {exercise.type}
                         </span>
                         {exercise.tags && exercise.tags.length > 0 && (
                           <div className="flex flex-wrap gap-1 mt-2 sm:mt-0">
