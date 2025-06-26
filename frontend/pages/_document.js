@@ -11,41 +11,26 @@ export default function Document() {
           rel="stylesheet"
         />
 
-        {/* KaTeX CSS - RẤT QUAN TRỌNG: Đảm bảo link này đúng và có sẵn */}
+        {/* KaTeX CSS - RẤT QUAN TRỌNG */}
         <link
           rel="stylesheet"
           href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"
-          // Xóa thuộc tính integrity nếu nó gây lỗi hoặc không cần thiết.
-          // Để đơn giản, chúng ta sẽ không dùng nó ở đây.
           crossOrigin="anonymous"
         />
 
-        {/* KaTeX JS Core - Tải core KaTeX */}
+        {/* KaTeX JS Core */}
         <script
           defer
           src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"
-          // Xóa thuộc tính integrity
           crossOrigin="anonymous"
         ></script>
         
-        {/* KaTeX Auto-render Extension - RẤT QUAN TRỌNG CHO VIỆC TỰ ĐỘNG RENDER */}
-        {/* Script này sẽ tìm các công thức LaTeX trong văn bản và render chúng */}
+        {/* KaTeX Auto-render Extension - Tải nhưng KHÔNG kích hoạt ngay trên document.body */}
+        {/* Việc kích hoạt sẽ do MathContent component xử lý từng phần tử riêng biệt */}
         <script
           defer
           src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
-          // Xóa thuộc tính integrity
           crossOrigin="anonymous"
-          // Kích hoạt auto-render sau khi toàn bộ trang được tải
-          onLoad="renderMathInElement(document.body, {
-            // Cấu hình để KaTeX nhận diện dấu $ và $$
-            delimiters: [
-                {left: '$$', right: '$$', display: true},
-                {left: '$', right: '$', display: false},
-                {left: '\\(', right: '\\)', display: false},
-                {left: '\\[', right: '\\]', display: true}
-            ],
-            throwOnError : false // Không ném lỗi nếu cú pháp LaTeX sai
-          });"
         ></script>
       </Head>
       <body>
