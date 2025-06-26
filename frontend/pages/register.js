@@ -1,19 +1,37 @@
-import { useState } from 'react';
-import { useRouter } from 'next/router';
+// physics-olympiad-website/frontend/pages/register.js
+import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
+import { useAuth } from '../context/AuthContext'; // Đảm bảo đường dẫn đúng
 
 const RegisterPage = () => {
-  const [username, setUsername] = useState('');
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const { login, user, loading: authLoading } = useAuth(); // Lấy login function và user, authLoading từ context
   const router = useRouter();
+
+  useEffect(() => {
+    // Nếu người dùng đã đăng nhập, chuyển hướng về trang chủ
+    if (!authLoading && user) {
+      router.push('/');
+    }
+  }, [user, authLoading, router]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
+    setLoading(true);
+    setError(null);
+
+    if (password !== confirmPassword) {
+      setError('Mật khẩu xác nhận không khớp.');
+      setLoading(false);
+      return;
+    }
 
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/register`, {
@@ -21,79 +39,126 @@ const RegisterPage = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ name, email, password }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        setSuccess('Đăng ký thành công! Bạn có thể đăng nhập ngay bây giờ.');
-        setUsername('');
-        setPassword('');
-        // Optional: Redirect to login page after a delay
-        setTimeout(() => {
-          router.push('/login');
-        }, 2000);
+        // Tự động đăng nhập sau khi đăng ký thành công
+        login(data.user, data.token); // Lưu user và token vào context và localStorage
+        router.push('/'); // Chuyển hướng về trang chủ
       } else {
         setError(data.message || 'Đăng ký thất bại.');
       }
     } catch (err) {
       console.error('Lỗi đăng ký:', err);
-      setError('Đã có lỗi xảy ra. Vui lòng thử lại sau.');
+      setError('Đã xảy ra lỗi khi kết nối máy chủ.');
+    } finally {
+      setLoading(false);
     }
   };
 
+  // Nếu đang loading auth (kiểm tra token), hiển thị trạng thái chờ
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-white">
+        <p className="text-xl text-gray-700">Đang kiểm tra trạng thái đăng nhập...</p>
+      </div>
+    );
+  }
+
   return (
-    <>
+    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4"> {/* Nền hơi xám nhạt, căn giữa */}
       <Head>
-        <title>Đăng ký - Vật lý HSG</title>
+        <title>Đăng ký - Olympic Vật lý</title>
       </Head>
-      <div className="flex flex-col items-center justify-center min-h-[70vh] w-full max-w-md p-6 bg-white rounded-xl shadow-xl mt-8">
-        <h2 className="text-4xl font-bold text-primary mb-8">Đăng ký tài khoản</h2>
-        {error && <p className="text-red-600 mb-4">{error}</p>}
-        {success && <p className="text-green-600 mb-4">{success}</p>}
-        <form onSubmit={handleSubmit} className="w-full space-y-6">
+
+      <div className="w-full max-w-lg bg-white rounded-xl shadow-lg p-8 border border-gray-100"> {/* Tăng max-w, bo tròn, shadow, border */}
+        <h1 className="text-4xl font-bold text-gray-800 mb-6 text-center">Đăng ký</h1>
+
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <span className="block sm:inline">{error}</span>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label htmlFor="username" className="block text-gray-700 text-sm font-bold mb-2">
-              Tên đăng nhập:
+            <label htmlFor="name" className="block text-gray-700 text-sm font-medium mb-2">
+              Tên của bạn:
             </label>
             <input
               type="text"
-              id="username"
-              className="shadow appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              id="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+              placeholder="Nhập tên của bạn"
               required
             />
           </div>
           <div>
-            <label htmlFor="password" className="block text-gray-700 text-sm font-bold mb-2">
+            <label htmlFor="email" className="block text-gray-700 text-sm font-medium mb-2">
+              Email:
+            </label>
+            <input
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+              placeholder="Nhập email của bạn"
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="password" className="block text-gray-700 text-sm font-medium mb-2">
               Mật khẩu:
             </label>
             <input
               type="password"
               id="password"
-              className="shadow appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+              placeholder="Nhập mật khẩu của bạn"
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="confirmPassword" className="block text-gray-700 text-sm font-medium mb-2">
+              Xác nhận mật khẩu:
+            </label>
+            <input
+              type="password"
+              id="confirmPassword"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+              placeholder="Xác nhận mật khẩu của bạn"
               required
             />
           </div>
           <button
             type="submit"
-            className="bg-primary text-white font-bold py-3 px-6 rounded-full w-full hover:bg-blue-700 transition duration-300 shadow-md transform hover:scale-105"
+            className="w-full btn-primary" {/* Sử dụng class chung */}
+            disabled={loading}
           >
-            Đăng ký
+            {loading ? 'Đang đăng ký...' : 'Đăng ký'}
           </button>
         </form>
-        <p className="mt-6 text-gray-600">
+
+        <p className="text-center text-gray-600 mt-6">
           Đã có tài khoản?{' '}
-          <Link href="/login" className="text-primary hover:underline font-semibold">
-            Đăng nhập
+          <Link href="/login">
+            <a className="text-blue-600 hover:text-blue-800 font-semibold transition-colors duration-200">
+              Đăng nhập ngay
+            </a>
           </Link>
         </p>
       </div>
-    </>
+    </div>
   );
 };
 
