@@ -26,8 +26,15 @@ const RegisterPage = () => {
     setLoading(true);
     setError(null);
 
+    // Thêm kiểm tra phía client cho tất cả các trường
+    if (!name || !email || !password || !confirmPassword) {
+      setError('Vui lòng nhập đầy đủ Tên của bạn, Email, Mật khẩu và Xác nhận mật khẩu.');
+      setLoading(false);
+      return;
+    }
+
     if (password !== confirmPassword) {
-      setError('Mật khẩu xác nhận không khớp.');
+      setError('Mật khẩu xác nhận không khớp. Vui lòng kiểm tra lại.'); // Rõ ràng hơn về lỗi này
       setLoading(false);
       return;
     }
@@ -47,6 +54,7 @@ const RegisterPage = () => {
         login(data.user, data.token);
         router.push('/');
       } else {
+        // Xử lý lỗi từ backend
         setError(data.message || 'Đăng ký thất bại.');
       }
     } catch (err) {
@@ -66,13 +74,13 @@ const RegisterPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4 sm:p-6">
       <Head>
         <title>Đăng ký - Olympic Vật lý</title>
       </Head>
 
-      <div className="w-full max-w-lg bg-white rounded-xl shadow-lg p-8 border border-gray-100">
-        <h1 className="text-4xl font-bold text-gray-800 mb-6 text-center">Đăng ký</h1>
+      <div className="w-full max-w-sm sm:max-w-md lg:max-w-lg bg-white rounded-xl shadow-lg p-6 sm:p-8 border border-gray-100">
+        <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-6 text-center">Đăng ký</h1>
 
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
@@ -137,17 +145,16 @@ const RegisterPage = () => {
               required
             />
           </div>
-          {/* SỬA LỖI Ở ĐÂY: Xóa comment bên trong className */}
           <button
             type="submit"
-            className="w-full btn-primary" 
+            className="w-full btn-primary"
             disabled={loading}
           >
             {loading ? 'Đang đăng ký...' : 'Đăng ký'}
           </button>
         </form>
 
-        <p className="text-center text-gray-600 mt-6">
+        <p className="text-center text-gray-600 mt-6 text-sm sm:text-base">
           Đã có tài khoản?{' '}
           <Link href="/login">
             <a className="text-blue-600 hover:text-blue-800 font-semibold transition-colors duration-200">
