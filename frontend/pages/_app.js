@@ -1,16 +1,23 @@
 // physics-olympiad-website/frontend/pages/_app.js
-import '../styles/globals.css'; // Global CSS (quan trọng!)
-import { AuthProvider } from '../context/AuthContext'; // Auth Context
-import Layout from '../components/Layout'; // Layout Component
+import '../styles/globals.css';
+import { AuthProvider } from '../context/AuthContext';
+import Layout from '../components/Layout'; // Layout cho người dùng thông thường
+import AdminLayout from '../components/AdminLayout'; // THAY ĐỔI MỚI: Import AdminLayout
 
 function MyApp({ Component, pageProps }) {
+  // THAY ĐỔI MỚI: Kiểm tra nếu component hiện tại thuộc Admin Panel
+  const isAdminPage = Component.displayName?.startsWith('Admin') || Component.name?.startsWith('Admin');
+  // Hoặc bạn có thể dùng `router.pathname.startsWith('/admin')` nếu truy cập router ở đây
+  // Nhưng để đơn giản, chúng ta sẽ dựa vào tên component bắt đầu bằng 'Admin'
+
+  const SelectedLayout = isAdminPage ? AdminLayout : Layout;
+
   return (
     <AuthProvider>
-      {/* Layout component sẽ bọc toàn bộ các trang */}
-      {/* Màu nền của ứng dụng sẽ được quản lý bởi Layout.js */}
-      <Layout>
+      {/* Sử dụng SelectedLayout dựa trên việc đây có phải trang admin hay không */}
+      <SelectedLayout>
         <Component {...pageProps} />
-      </Layout>
+      </SelectedLayout>
     </AuthProvider>
   );
 }
