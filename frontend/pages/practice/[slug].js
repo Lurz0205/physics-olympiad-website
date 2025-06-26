@@ -1,14 +1,15 @@
 // physics-olympiad-website/frontend/pages/practice/[slug].js
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react'; // Xóa useContext
 import { useRouter } from 'next/router';
-import { AuthContext } from '../../context/AuthContext'; // ĐÃ SỬA ĐƯỜNG DẪN: ../../context/AuthContext
+import { useAuth } from '../../context/AuthContext'; // THAY ĐỔI: Import useAuth hook
 import Head from 'next/head';
 import MathContent from '../../components/MathContent'; // Import MathContent component
 
 const TopicQuestionsPage = () => {
   const router = useRouter();
   const { slug } = router.query; // Lấy slug từ URL
-  const { user, authToken } = useContext(AuthContext);
+  // THAY ĐỔI: Sử dụng useAuth hook để lấy user và token (đổi tên token thành authToken cho nhất quán)
+  const { user, token: authToken } = useAuth();
   const [topicData, setTopicData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
