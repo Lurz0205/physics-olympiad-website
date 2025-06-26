@@ -45,7 +45,7 @@ const PracticeTopicsPage = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-white"> {/* Nền trắng */}
+      <div className="flex items-center justify-center min-h-screen bg-white">
         <p className="text-xl text-gray-700">Đang tải chủ đề bài tập...</p>
       </div>
     );
@@ -53,27 +53,27 @@ const PracticeTopicsPage = () => {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-white p-4"> {/* Nền trắng */}
+      <div className="flex items-center justify-center min-h-screen bg-white p-4">
         <p className="text-xl text-red-600 text-center">{error}</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 sm:p-8"> {/* Nền hơi xám nhạt */}
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8"> {/* Responsive padding */}
       <Head>
         <title>Chủ đề Bài tập - Olympic Vật lý</title>
       </Head>
-      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6 sm:p-8 border border-gray-100"> {/* Tăng bo tròn, shadow, thêm border */}
-        <h1 className="text-3xl font-bold text-gray-800 mb-6 text-center">Các Chủ đề Bài tập</h1>
+      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6 sm:p-8 border border-gray-100"> {/* Responsive padding */}
+        <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-6 text-center">Các Chủ đề Bài tập</h1> {/* Responsive font size */}
         {topics.length === 0 ? (
           <p className="text-center text-gray-600 text-lg">Chưa có chủ đề bài tập nào được đăng tải.</p>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"> {/* Grid-cols-1 trên mobile, 2 trên md, 3 trên lg */}
             {topics.map((topic) => (
               <Link key={topic.slug} href={`/practice/${topic.slug}`}>
-                <a className="block bg-white hover:bg-gray-50 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-6 cursor-pointer border border-gray-200"> {/* Nền trắng, bo tròn, shadow, border */}
-                  <h2 className="text-xl font-semibold text-blue-700 mb-2">{topic.title}</h2> {/* Màu chữ xanh đậm hơn */}
+                <a className="block bg-white hover:bg-gray-50 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-6 cursor-pointer border border-gray-200">
+                  <h2 className="text-xl font-semibold text-blue-700 mb-2">{topic.title}</h2>
                   <p className="text-gray-700 text-sm">{topic.description}</p>
                 </a>
               </Link>
