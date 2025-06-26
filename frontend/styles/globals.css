@@ -1,22 +1,21 @@
-/* frontend/styles/globals.css */
+/* physics-olympiad-website/frontend/styles/globals.css */
 
-/* Đảm bảo nền của body là màu trắng hoặc màu nền mong muốn */
+/* Đảm bảo rằng nền của body là màu trắng */
 body {
-  background-color: #fff; /* Hoặc bg-white trong Tailwind */
+  background-color: #FFFFFF; /* Màu trắng tinh khiết */
 }
 
-/* Các styles khác của bạn */
+/* Các chỉ thị Tailwind CSS */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Thêm các font imports nếu không có trong _document.js */
-/*
+/* Đảm bảo các font imports (nếu có) */
+/* Ví dụ:
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap&subset=vietnamese');
 */
 
-/* Custom CSS cho KaTeX nếu cần tùy chỉnh thêm */
-.katex-display > .katex {
-  /* margin-top: 1em; */
-  /* margin-bottom: 0.5em; */
-}
+/* Các CSS tùy chỉnh khác của bạn */
+/* .prose img {
+  border-radius: 0.5rem;
+} */
