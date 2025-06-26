@@ -10,9 +10,8 @@ const register = async (req, res) => {
   const { name, email, password } = req.body;
 
   try {
-    // Kiểm tra xem tất cả các trường cần thiết có được cung cấp không (kiểm tra cơ bản)
+    // Backend validation: Kiểm tra tất cả các trường cần thiết
     if (!name || !email || !password) {
-      // Thông báo lỗi này sẽ trùng với thông báo frontend nếu thiếu trường
       return res.status(400).json({ message: 'Vui lòng nhập đầy đủ tên người dùng, email và mật khẩu.' });
     }
 
@@ -21,7 +20,7 @@ const register = async (req, res) => {
         return res.status(400).json({ message: 'Mật khẩu phải có ít nhất 6 ký tự.' });
     }
 
-    // Kiểm tra xem người dùng đã tồn tại bằng email hoặc tên người dùng chưa
+    // Kiểm tra xem người dùng đã tồn tại bằng email HOẶC tên người dùng chưa
     const userExists = await User.findOne({ $or: [{ email }, { name }] });
 
     if (userExists) {
@@ -41,6 +40,7 @@ const register = async (req, res) => {
     });
 
     if (user) {
+      // Nếu tạo thành công, tạo JWT và trả về thông tin user/token
       const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
       res.status(201).json({
         message: 'Đăng ký thành công',
@@ -52,9 +52,12 @@ const register = async (req, res) => {
     }
   } catch (error) {
     console.error('Lỗi đăng ký:', error);
-    // Đây có thể là lỗi từ MongoDB nếu unique: true bị vi phạm mà không được bắt ở trên
-    if (error.code === 11000) { // Mã lỗi 11000 là lỗi trùng lặp key (unique index)
-        return res.status(400).json({ message: 'Email hoặc tên người dùng đã tồn tại.' });
+    // Bắt lỗi trùng lặp key (unique index) từ MongoDB nếu có
+    if (error.code === 11000) {
+        // Kiểm tra lỗi cụ thể để đưa ra thông báo rõ ràng hơn
+        const field = Object.keys(error.keyValue)[0];
+        const value = error.keyValue[field];
+        return res.status(400).json({ message: `Trường '${field}' với giá trị '${value}' đã tồn tại. Vui lòng chọn giá trị khác.` });
     }
     res.status(500).json({ message: 'Lỗi máy chủ trong quá trình đăng ký.' });
   }
@@ -67,7 +70,12 @@ const login = async (req, res) => {
   const { identifier, password } = req.body; // 'identifier' có thể là email hoặc tên người dùng
 
   try {
-    // Tìm người dùng bằng email hoặc tên người dùng
+    // Kiểm tra xem identifier và password có được cung cấp không
+    if (!identifier || !password) {
+      return res.status(400).json({ message: 'Vui lòng nhập đầy đủ Email/Tên người dùng và Mật khẩu.' });
+    }
+
+    // Tìm người dùng bằng email HOẶC tên người dùng
     const user = await User.findOne({
       $or: [
         { email: identifier },
