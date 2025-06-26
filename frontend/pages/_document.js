@@ -8,18 +8,19 @@ export default function Document() {
         {/* Favicon - Đảm bảo bạn có file favicon.ico trong thư mục public */}
         <link rel="icon" href="/favicon.ico" />
 
-        {/* Google Fonts - Inter */}
-        {/* THAY ĐỔI QUAN TRỌNG: font-display=block để loại bỏ CLS do font */}
+        {/* Google Fonts - Inter (Tải stylesheet chính) */}
+        {/* Vẫn dùng font-display=block để loại bỏ CLS do font, đồng thời đảm bảo subset tiếng Việt */}
         <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=block&subset=vietnamese" // Đã thay đổi 'swap' thành 'block'
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=block&subset=vietnamese"
           rel="stylesheet"
         />
-        {/* Preload các trọng số (weights) của font Inter mà bạn đang sử dụng */}
-        <link rel="preload" href="https://fonts.gstatic.com/s/inter/v13/UcCOyFect0rcMhC-CcI.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
-        <link rel="preload" href="https://fonts.gstatic.com/s/inter/v13/UcCOyFect0rcMhC-Boc.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
-        <link rel="preload" href="https://fonts.gstatic.com/s/inter/v13/UcCOyFect0rcMhC-BLc.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
-        <link rel="preload" href="https://fonts.gstatic.com/s/inter/v13/UcCOyFect0rcMhC-BHc.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
-        <link rel="preload" href="https://fonts.gstatic.com/s/inter/v13/UcCOyFect0rcMhC-BGc.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        {/* THAY ĐỔI QUAN TRỌNG: Cập nhật URL preload font WOFF2 chính xác cho subset tiếng Việt */}
+        {/* Preload giúp trình duyệt tải font sớm hơn với ưu tiên cao nhất */}
+        <link rel="preload" href="https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iL-Wn7cSWVA2u4B-vH0FzY.woff2" as="font" type="font/woff2" crossOrigin="anonymous" /> {/* wght 300 */}
+        <link rel="preload" href="https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iL-Wn7cSWVA2u_B-vH0FzY.woff2" as="font" type="font/woff2" crossOrigin="anonymous" /> {/* wght 400 - default latin, but common */}
+        <link rel="preload" href="https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iL-Wn7cSWVA2u8B-vH0FzY.woff2" as="font" type="font/woff2" crossOrigin="anonymous" /> {/* wght 500 */}
+        <link rel="preload" href="https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iL-Wn7cSWVA2u_D-vH0FzY.woff2" as="font" type="font/woff2" crossOrigin="anonymous" /> {/* wght 600 */}
+        <link rel="preload" href="https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iL-Wn7cSWVA2u5D-vH0FzY.woff2" as="font" type="font/woff2" crossOrigin="anonymous" /> {/* wght 700 */}
         
 
         {/* KaTeX CSS - StyleSheet cho KaTeX */}
