@@ -1,7 +1,7 @@
 // physics-olympiad-website/backend/routes/exercise.js
 const express = require('express');
 const router = express.Router();
-const exerciseController = require('../controllers/exerciseController'); // THAY ĐỔI: THÊM DÒNG NÀY
+const exerciseController = require('../controllers/exerciseController');
 
 const {
   getAllExercises,
@@ -10,17 +10,18 @@ const {
   createExercise,
   updateExercise,
   deleteExercise,
-  getAllExerciseCategories, // Đảm bảo dòng này đã có nếu bạn đã thêm nó
+  getAllExerciseCategories,
 } = require('../controllers/exerciseController');
 const protect = require('../middleware/authMiddleware');
 const adminProtect = require('../middleware/adminAuthMiddleware');
 
-// GET /api/exercises - Lấy tất cả bài tập (Public)
-// POST /api/exercises - Tạo bài tập mới (Admin)
-router.route('/').get(getAllExercises).post(protect, adminProtect, createExercise);
+// THAY ĐỔI QUAN TRỌNG: Thêm protect middleware cho GET /api/exercises
+// Bây giờ, để lấy tất cả bài tập, người dùng phải được xác thực.
+router.route('/').get(protect, getAllExercises).post(protect, adminProtect, createExercise);
 
-// GET /api/exercises/slug/:slug - Lấy chi tiết bài tập theo slug (Public)
-router.route('/slug/:slug').get(getExerciseBySlug);
+// GET /api/exercises/slug/:slug - Lấy chi tiết bài tập theo slug (Public - có thể thay đổi sau)
+// THAY ĐỔI QUAN TRỌNG: Có thể thêm protect ở đây nếu bạn muốn trang chi tiết cũng yêu cầu đăng nhập
+router.route('/slug/:slug').get(getExerciseBySlug); 
 
 // GET /api/exercises/:id - Lấy chi tiết bài tập theo ID (Admin)
 // PUT /api/exercises/:id - Cập nhật bài tập (Admin)
@@ -30,8 +31,8 @@ router.route('/:id')
   .put(protect, adminProtect, updateExercise)
   .delete(protect, adminProtect, deleteExercise);
 
-// THAY ĐỔI: Route để lấy TẤT CẢ các danh mục (category) duy nhất của bài tập
-// Sử dụng exerciseController đã được import
-router.get('/categories', exerciseController.getAllExerciseCategories);
+// Route để lấy TẤT CẢ các danh mục (category) duy nhất của bài tập
+// THAY ĐỔI QUAN TRỌNG: Thêm protect middleware cho /categories
+router.get('/categories', protect, getAllExerciseCategories);
 
 module.exports = router;
