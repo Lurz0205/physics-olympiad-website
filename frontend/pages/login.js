@@ -6,7 +6,7 @@ import { useRouter } from 'next/router';
 import { useAuth } from '../context/AuthContext';
 
 const LoginPage = () => {
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState(''); // Đổi từ email thành identifier
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -20,11 +20,11 @@ const LoginPage = () => {
     setError(null);
 
     console.log('Attempting login with:');
-    console.log('Email:', email);
+    console.log('Identifier (Email/Username):', identifier);
     // console.log('Password:', password); // KHÔNG log password trong môi trường production thực tế
 
-    if (!email.trim() || !password.trim()) {
-      setError('Vui lòng điền đầy đủ email và mật khẩu.');
+    if (!identifier.trim() || !password.trim()) {
+      setError('Vui lòng điền đầy đủ tên đăng nhập/email và mật khẩu.');
       setLoading(false);
       return;
     }
@@ -35,7 +35,7 @@ const LoginPage = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ identifier, password }), // Gửi identifier thay vì email
       });
 
       const data = await response.json();
@@ -48,7 +48,7 @@ const LoginPage = () => {
       // Đăng nhập thành công, lưu thông tin người dùng và token vào AuthContext
       login(data.user, data.token);
 
-      // THAY ĐỔI QUAN TRỌNG: CHUYỂN HƯỚNG DỰA TRÊN VAI TRÒ
+      // CHUYỂN HƯỚNG DỰA TRÊN VAI TRÒ
       if (data.user && data.user.role === 'admin') {
         router.push('/admin'); // Chuyển hướng Admin đến Admin Panel
       } else {
@@ -64,11 +64,11 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8 font-inter"> {/* Đã chỉnh background và font */}
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8 font-inter">
       <Head>
         <title>Đăng nhập - Olympic Vật lý</title>
       </Head>
-      <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-2xl shadow-xl border border-gray-200"> {/* Đã chỉnh rounded, shadow, border */}
+      <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-2xl shadow-xl border border-gray-200">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             Đăng nhập vào tài khoản của bạn
@@ -76,23 +76,23 @@ const LoginPage = () => {
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative" role="alert"> {/* Đã chỉnh rounded */}
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative" role="alert">
               {error}
             </div>
           )}
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
-              <label htmlFor="email-address" className="sr-only">Địa chỉ Email</label>
+              <label htmlFor="identifier" className="sr-only">Tên đăng nhập hoặc Email</label> {/* Đổi label */}
               <input
-                id="email-address"
-                name="email"
-                type="email"
-                autoComplete="email"
+                id="identifier" // Đổi id
+                name="identifier" // Đổi name
+                type="text" // Đổi type thành text để chấp nhận cả username và email
+                autoComplete="username email" // Gợi ý autocomplete
                 required
-                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg mb-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm" // Đã chỉnh rounded, thêm mb
-                placeholder="Địa chỉ Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg mb-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder="Tên đăng nhập hoặc Email" // Đổi placeholder
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
               />
             </div>
             <div>
@@ -103,7 +103,7 @@ const LoginPage = () => {
                 type="password"
                 autoComplete="current-password"
                 required
-                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm" // Đã chỉnh rounded
+                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                 placeholder="Mật khẩu"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -114,7 +114,7 @@ const LoginPage = () => {
           <div>
             <button
               type="submit"
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-200 shadow-md hover:shadow-lg" // Đã chỉnh rounded, shadow
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-200 shadow-md hover:shadow-lg"
               disabled={loading}
             >
               {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
