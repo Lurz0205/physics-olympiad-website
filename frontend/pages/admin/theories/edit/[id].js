@@ -2,13 +2,13 @@
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { useAuth } from '../../../context/AuthContext';
-import AdminLayout from '../../../components/AdminLayout';
+import { useAuth } from '../../../../context/AuthContext'; // Đã sửa đường dẫn
+import AdminLayout from '../../../../components/AdminLayout'; // Đã sửa đường dẫn
 import Link from 'next/link';
 
 const EditTheoryPage = () => {
   const router = useRouter();
-  const { id } = router.query; // Lấy ID của bài lý thuyết từ URL
+  const { id } = router.query;
   const { token } = useAuth();
 
   const [title, setTitle] = useState('');
@@ -16,12 +16,11 @@ const EditTheoryPage = () => {
   const [description, setDescription] = useState('');
   const [content, setContent] = useState('');
   const [category, setCategory] = useState('CƠ HỌC');
-  const [loading, setLoading] = useState(true); // Trạng thái loading ban đầu khi fetch dữ liệu
-  const [submitting, setSubmitting] = useState(false); // Trạng thái loading khi submit form
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState('');
 
-  // Các category có sẵn (phải khớp với enum trong backend/models/Theory.js)
   const categories = ['CƠ HỌC', 'NHIỆT HỌC', 'ĐIỆN HỌC', 'QUANG HỌC', 'VẬT LÝ HẠT NHÂN', 'THUYẾT TƯƠNG ĐỐI', 'VẬT LÝ HIỆN ĐẠI', 'Chưa phân loại'];
 
   useEffect(() => {
@@ -33,7 +32,7 @@ const EditTheoryPage = () => {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/theory/${id}`, { // Fetch theo ID
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/theory/${id}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
@@ -42,7 +41,6 @@ const EditTheoryPage = () => {
         if (!response.ok) {
           throw new Error(data.message || 'Lỗi khi tải dữ liệu lý thuyết.');
         }
-        // Điền dữ liệu vào state form
         setTitle(data.title);
         setSlug(data.slug);
         setDescription(data.description);
@@ -56,7 +54,7 @@ const EditTheoryPage = () => {
       }
     };
     fetchTheory();
-  }, [id, token]); // Effect chạy khi ID hoặc token thay đổi
+  }, [id, token]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -64,7 +62,6 @@ const EditTheoryPage = () => {
     setError(null);
     setSuccess('');
 
-    // Client-side validation
     if (!title.trim() || !slug.trim() || !description.trim() || !content.trim() || !category.trim()) {
       setError('Vui lòng điền đầy đủ tất cả các trường bắt buộc.');
       setSubmitting(false);
@@ -72,7 +69,7 @@ const EditTheoryPage = () => {
     }
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/theory/${id}`, { // Gửi PUT request theo ID
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/theory/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -88,8 +85,6 @@ const EditTheoryPage = () => {
       }
 
       setSuccess('Cập nhật bài lý thuyết thành công!');
-      // Có thể chuyển hướng về trang danh sách sau khi cập nhật
-      // router.push('/admin/theories'); 
     } catch (err) {
       console.error('Error updating theory:', err);
       setError(err.message || 'Đã xảy ra lỗi không xác định.');
@@ -98,7 +93,6 @@ const EditTheoryPage = () => {
     }
   };
 
-  // Hàm tự động tạo slug từ title
   const handleTitleChange = (e) => {
     const newTitle = e.target.value;
     setTitle(newTitle);
@@ -124,7 +118,7 @@ const EditTheoryPage = () => {
     );
   }
 
-  if (error && !success) { // Hiển thị lỗi nếu không có dữ liệu hoặc lỗi ban đầu
+  if (error && !success) {
     return (
       <AdminLayout>
         <div className="text-center text-red-600 p-6">Lỗi: {error}</div>
@@ -136,7 +130,6 @@ const EditTheoryPage = () => {
       </AdminLayout>
     );
   }
-
 
   return (
     <AdminLayout>
