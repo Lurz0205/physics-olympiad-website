@@ -3,26 +3,29 @@ const express = require('express');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 const cors = require('cors'); // Import cors
-const authRoutes = require('./routes/auth');
+
+// Import các file route
+const authRoutes = require('./routes/auth'); // Đảm bảo đã import authRoutes
 const theoryRoutes = require('./routes/theory');
 const practiceRoutes = require('./routes/practice');
-const testRoutes = require('./routes/testRoutes'); // Import the new test routes
+const testRoutes = require('./routes/testRoutes');
 
 dotenv.config();
 
-connectDB();
+connectDB(); // Kết nối MongoDB
 
 const app = express();
 
-app.use(cors()); // Use cors middleware
-app.use(express.json()); // Body parser for JSON data
+app.use(cors()); // Sử dụng middleware CORS
+app.use(express.json()); // Body parser cho dữ liệu JSON
 
-// API routes
-app.use('/api/auth', authRoutes);
+// Định nghĩa các API routes
+app.use('/api/auth', authRoutes); // Sử dụng authRoutes
 app.use('/api/theory', theoryRoutes);
 app.use('/api/practice', practiceRoutes);
-app.use('/api/tests', testRoutes); // Use the new test routes
+app.use('/api/tests', testRoutes);
 
+// Route gốc
 app.get('/', (req, res) => {
   res.send('API is running...');
 });
