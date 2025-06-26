@@ -1,10 +1,10 @@
 // physics-olympiad-website/frontend/pages/theory/[slug].js
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-import { useAuth } from '../../context/AuthContext'; // ĐÃ SỬA ĐƯỜNG DẪN: ../../context/AuthContext
+import { useAuth } from '../../context/AuthContext';
 import Head from 'next/head';
 import Link from 'next/link';
-import MathContent from '../../components/MathContent'; // Import component MathContent
+import MathContent from '../../components/MathContent';
 
 const TheoryDetail = () => {
   const router = useRouter();
@@ -47,36 +47,48 @@ const TheoryDetail = () => {
   }, [slug, token, authLoading]);
 
   if (loading || authLoading) {
-    return <div className="text-center text-primary text-xl mt-16">Đang tải nội dung...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-white"> {/* Nền trắng */}
+        <p className="text-xl text-gray-700">Đang tải nội dung...</p>
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="text-center text-red-600 text-xl mt-16">{error}</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-white p-4"> {/* Nền trắng */}
+        <p className="text-xl text-red-600 text-center">{error}</p>
+      </div>
+    );
   }
 
   if (!theory) {
-    return <div className="text-center text-gray-600 text-xl mt-16">Không tìm thấy nội dung lý thuyết.</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-white"> {/* Nền trắng */}
+        <p className="text-xl text-gray-700">Không tìm thấy nội dung lý thuyết.</p>
+      </div>
+    );
   }
 
   return (
-    <>
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-8"> {/* Nền hơi xám nhạt */}
       <Head>
         <title>{theory.title} - Lý thuyết Vật lý HSG</title>
       </Head>
-      <div className="w-full max-w-4xl bg-white p-8 rounded-xl shadow-xl mt-8">
-        <h1 className="text-4xl font-bold text-primary mb-6 text-center">{theory.title}</h1>
+      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6 sm:p-8 border border-gray-100"> {/* Tăng bo tròn, shadow, thêm border */}
+        <h1 className="text-3xl font-bold text-gray-800 mb-4 text-center">{theory.title}</h1>
         <p className="text-lg text-gray-700 mb-6">{theory.description}</p>
         <div className="prose max-w-none text-gray-800 leading-relaxed">
           <MathContent content={theory.content} />
         </div>
         <Link
           href="/theory"
-          className="mt-8 inline-block bg-gray-300 text-gray-800 px-6 py-3 rounded-full hover:bg-gray-400 transition duration-300 shadow-md transform hover:scale-105"
+          className="mt-8 inline-block bg-gray-300 text-gray-800 px-6 py-3 rounded-full hover:bg-gray-400 transition duration-300 shadow-md transform hover:scale-105" // Nút bo tròn, hiệu ứng
         >
           &larr; Quay lại
         </Link>
       </div>
-    </>
+    </div>
   );
 };
 
