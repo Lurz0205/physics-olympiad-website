@@ -1,8 +1,10 @@
+// physics-olympiad-website/frontend/pages/theory/[slug].js
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import Head from 'next/head';
 import Link from 'next/link';
+import MathContent from '../../components/MathContent'; // Import component MathContent
 
 const TheoryDetail = () => {
   const router = useRouter();
@@ -64,8 +66,9 @@ const TheoryDetail = () => {
       <div className="w-full max-w-4xl bg-white p-8 rounded-xl shadow-xl mt-8">
         <h1 className="text-4xl font-bold text-primary mb-6 text-center">{theory.title}</h1>
         <p className="text-lg text-gray-700 mb-6">{theory.description}</p>
-        <div className="prose max-w-none text-gray-800 leading-relaxed" dangerouslySetInnerHTML={{ __html: theory.content }}>
-          {/* Content will be rendered here */}
+        {/* SỬ DỤNG MATHCONTENT THAY VÌ DANGEROUSLYSETINNERHTML */}
+        <div className="prose max-w-none text-gray-800 leading-relaxed">
+          <MathContent content={theory.content} />
         </div>
         <Link
           href="/theory"
