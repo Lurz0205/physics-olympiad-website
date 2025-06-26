@@ -34,7 +34,7 @@ const HomePage = () => {
         </div>
 
         <section className="mt-8 sm:mt-12">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 sm:mb-8">Điểm nổi bật của nền tảng</h2> {/* Responsive font sizes */}
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 sm:mb-8">✨ Chúng ta có gì? ✨</h2> {/* Responsive font sizes */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8"> {/* Grid-cols-1 trên mobile, 3 trên md */}
             <div className="bg-gray-50 p-6 rounded-xl shadow-sm border border-gray-200">
               <h3 className="text-lg sm:text-xl font-semibold text-blue-700 mb-3">Lý thuyết chuyên sâu</h3> {/* Responsive font sizes */}
