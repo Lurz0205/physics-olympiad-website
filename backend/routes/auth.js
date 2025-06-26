@@ -1,23 +1,43 @@
+// physics-olympiad-website/backend/routes/auth.js
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
-// Hàm tạo token
+// Function to generate JWT token
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: '1h', // Token hết hạn sau 1 giờ
+    expiresIn: '1h', // Token expires in 1 hour
   });
 };
 
 // @route   POST /api/auth/register
-// @desc    Đăng ký người dùng mới
+// @desc    Register a new user
 // @access  Public
 router.post('/register', async (req, res) => {
   const { username, password } = req.body;
 
+  // Input validation
   if (!username || !password) {
     return res.status(400).json({ message: 'Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu.' });
+  }
+
+  // Username length validation
+  if (username.length < 8) {
+    return res.status(400).json({ message: 'Tên đăng nhập phải có ít nhất 8 ký tự.' });
+  }
+
+  // Password length validation
+  if (password.length < 8) {
+    return res.status(400).json({ message: 'Mật khẩu phải có ít nhất 8 ký tự.' });
+  }
+
+  // Password complexity validation: at least 1 letter and 1 number
+  const hasLetter = /[a-zA-Z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+
+  if (!hasLetter || !hasNumber) {
+    return res.status(400).json({ message: 'Mật khẩu phải chứa ít nhất một chữ cái và một số.' });
   }
 
   try {
@@ -50,7 +70,7 @@ router.post('/register', async (req, res) => {
 });
 
 // @route   POST /api/auth/login
-// @desc    Đăng nhập người dùng
+// @desc    Authenticate user
 // @access  Public
 router.post('/login', async (req, res) => {
   const { username, password } = req.body;
