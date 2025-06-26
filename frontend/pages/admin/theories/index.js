@@ -2,8 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
-import { useAuth } from '../../../../context/AuthContext'; // Đã sửa đường dẫn
-import AdminLayout from '../../../../components/AdminLayout'; // Đã sửa đường dẫn
+import { useAuth } from '../../../context/AuthContext'; // Đã sửa đường dẫn: 3 dấu ../
+import AdminLayout from '../../../components/AdminLayout'; // Đã sửa đường dẫn: 3 dấu ../
 
 const AdminTheoriesPage = () => {
   const { token } = useAuth();
