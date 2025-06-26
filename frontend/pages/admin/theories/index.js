@@ -2,19 +2,19 @@
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
-import { useAuth } from '../../../context/AuthContext';
-import AdminLayout from '../../../components/AdminLayout';
+import { useAuth } from '../../../../context/AuthContext'; // Đã sửa đường dẫn
+import AdminLayout from '../../../../components/AdminLayout'; // Đã sửa đường dẫn
 
 const AdminTheoriesPage = () => {
   const { token } = useAuth();
   const [theories, setTheories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [deleteStatus, setDeleteStatus] = useState(''); // Để hiển thị thông báo xóa
+  const [deleteStatus, setDeleteStatus] = useState('');
 
   useEffect(() => {
     fetchTheories();
-  }, [token]); // Fetch lại khi token thay đổi (đăng nhập/đăng xuất)
+  }, [token]);
 
   const fetchTheories = async () => {
     if (!token) {
@@ -47,7 +47,7 @@ const AdminTheoriesPage = () => {
   };
 
   const handleDelete = async (theoryId) => {
-    if (!confirm('Bạn có chắc chắn muốn xóa bài lý thuyết này?')) { // Sử dụng confirm tạm thời
+    if (!confirm('Bạn có chắc chắn muốn xóa bài lý thuyết này?')) {
       return;
     }
     setDeleteStatus('Đang xóa...');
@@ -65,7 +65,7 @@ const AdminTheoriesPage = () => {
       }
 
       setDeleteStatus('Xóa thành công!');
-      fetchTheories(); // Tải lại danh sách sau khi xóa
+      fetchTheories();
     } catch (err) {
       console.error('Error deleting theory:', err);
       setDeleteStatus('Lỗi khi xóa: ' + err.message);
@@ -110,7 +110,7 @@ const AdminTheoriesPage = () => {
         {theories.length === 0 ? (
           <p className="text-gray-600 text-center">Chưa có bài lý thuyết nào. Hãy thêm mới!</p>
         ) : (
-          <div className="overflow-x-auto"> {/* Thêm overflow cho bảng trên mobile */}
+          <div className="overflow-x-auto">
             <table className="min-w-full bg-white border border-gray-200 rounded-lg">
               <thead>
                 <tr className="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
