@@ -1,41 +1,28 @@
 // physics-olympiad-website/backend/routes/theory.js
 const express = require('express');
 const router = express.Router();
-// SỬA ĐỔI: Thay đổi cách import protect để nhận trực tiếp hàm
-const protect = require('../middleware/authMiddleware');
-const theoriesData = require('../data/theoriesData'); // Import dữ liệu lý thuyết cứng
+const {
+  getTheoryTopics,
+  getTheoryBySlug,
+  createTheory,
+  updateTheory,
+  deleteTheory,
+} = require('../controllers/theoryController');
+const protect = require('../middleware/authMiddleware'); // Middleware bảo vệ route nếu cần
 
-// @route   GET /api/theory
-// @desc    Lấy tất cả các chủ đề lý thuyết từ dữ liệu cứng
-// @access  Private (yêu cầu đăng nhập)
-router.get('/', protect, async (req, res) => {
-  try {
-    // Trả về tất cả dữ liệu lý thuyết cứng
-    res.json(theoriesData);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Lỗi server khi lấy lý thuyết.' });
-  }
-});
+// Các route cơ bản cho lý thuyết
+// GET /api/theory - Lấy tất cả các chủ đề
+// POST /api/theory - Tạo chủ đề mới (có thể cần protect)
+router.route('/').get(getTheoryTopics).post(protect, createTheory);
 
-// @route   GET /api/theory/:slug
-// @desc    Lấy chi tiết một chủ đề lý thuyết theo slug từ dữ liệu cứng
-// @access  Private (yêu cầu đăng nhập)
-router.get('/:slug', protect, async (req, res) => {
-  try {
-    const { slug } = req.params;
-    // Tìm lý thuyết theo slug trong mảng dữ liệu cứng
-    const theory = theoriesData.find(t => t.slug === slug);
+// GET /api/theory/:slug - Lấy chi tiết chủ đề theo slug
+// PUT /api/theory/:id - Cập nhật chủ đề (có thể cần protect)
+// DELETE /api/theory/:id - Xóa chủ đề (có thể cần protect)
+router.route('/:slug') // Đã thay đổi từ :id sang :slug cho GET
+  .get(getTheoryBySlug);
 
-    if (theory) {
-      res.json(theory);
-    } else {
-      res.status(404).json({ message: 'Không tìm thấy chủ đề lý thuyết.' });
-    }
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Lỗi server khi lấy chi tiết lý thuyết.' });
-  }
-});
+router.route('/:id') // Dùng :id cho PUT/DELETE nếu bạn muốn cập nhật/xóa bằng ID
+  .put(protect, updateTheory)
+  .delete(protect, deleteTheory);
 
 module.exports = router;
