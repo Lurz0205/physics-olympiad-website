@@ -3,18 +3,17 @@ import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useAuth } from '../context/AuthContext'; // Đảm bảo đường dẫn đúng
+import { useAuth } from '../context/AuthContext';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const { login, user, loading: authLoading } = useAuth(); // Lấy login function và user, authLoading từ context
+  const { login, user, loading: authLoading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    // Nếu người dùng đã đăng nhập, chuyển hướng về trang chủ
     if (!authLoading && user) {
       router.push('/');
     }
@@ -37,8 +36,8 @@ const LoginPage = () => {
       const data = await response.json();
 
       if (response.ok) {
-        login(data.user, data.token); // Lưu user và token vào context và localStorage
-        router.push('/'); // Chuyển hướng về trang chủ sau khi đăng nhập thành công
+        login(data.user, data.token);
+        router.push('/');
       } else {
         setError(data.message || 'Đăng nhập thất bại.');
       }
@@ -50,7 +49,6 @@ const LoginPage = () => {
     }
   };
 
-  // Nếu đang loading auth (kiểm tra token), hiển thị trạng thái chờ
   if (authLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-white">
@@ -60,12 +58,12 @@ const LoginPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4"> {/* Nền hơi xám nhạt, căn giữa */}
+    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
       <Head>
         <title>Đăng nhập - Olympic Vật lý</title>
       </Head>
 
-      <div className="w-full max-w-lg bg-white rounded-xl shadow-lg p-8 border border-gray-100"> {/* Tăng max-w, bo tròn, shadow, border */}
+      <div className="w-full max-w-lg bg-white rounded-xl shadow-lg p-8 border border-gray-100">
         <h1 className="text-4xl font-bold text-gray-800 mb-6 text-center">Đăng nhập</h1>
 
         {error && (
@@ -103,9 +101,10 @@ const LoginPage = () => {
               required
             />
           </div>
+          {/* SỬA LỖI Ở ĐÂY: Xóa comment bên trong className */}
           <button
             type="submit"
-            className="w-full btn-primary" {/* Sử dụng class chung */}
+            className="w-full btn-primary" 
             disabled={loading}
           >
             {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
