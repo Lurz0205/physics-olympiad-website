@@ -6,14 +6,12 @@ import Layout from '../components/Layout'; // Giả sử bạn có component Lay
 function MyApp({ Component, pageProps }) {
   return (
     <AuthProvider>
-      {/* Thay đổi màu nền của div bọc toàn bộ ứng dụng */}
-      {/* Ví dụ: bg-white hoặc bg-gray-50 */}
-      <div className="bg-white min-h-screen"> {/* Đã sửa bg-red-200 thành bg-white */}
-        <Layout> {/* Nếu bạn có Layout component */}
+      {/* Áp dụng class bg-pure-white để đảm bảo nền trắng */}
+      <div className="min-h-screen bg-pure-white"> {/* Đã thêm class bg-pure-white */}
+        {/* Đảm bảo Layout component của bạn cũng không có màu nền ghi đè */}
+        <Layout>
           <Component {...pageProps} />
         </Layout>
-        {/* Hoặc nếu không có Layout: */}
-        {/* <Component {...pageProps} /> */}
       </div>
     </AuthProvider>
   );
