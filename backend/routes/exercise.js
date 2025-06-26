@@ -19,6 +19,7 @@ router.route('/').get(getAllExercises).post(protect, adminProtect, createExercis
 // GET /api/exercises/slug/:slug - Lấy chi tiết bài tập theo slug (Public)
 router.route('/slug/:slug').get(getExerciseBySlug);
 
+
 // GET /api/exercises/:id - Lấy chi tiết bài tập theo ID (Admin)
 // PUT /api/exercises/:id - Cập nhật bài tập (Admin)
 // DELETE /api/exercises/:id - Xóa bài tập (Admin)
@@ -27,4 +28,7 @@ router.route('/:id')
   .put(protect, adminProtect, updateExercise)
   .delete(protect, adminProtect, deleteExercise);
 
+router.get('/categories', exerciseController.getAllExerciseCategories);
+
 module.exports = router;
+
