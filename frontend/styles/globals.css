@@ -1,12 +1,17 @@
 /* physics-olympiad-website/frontend/styles/globals.css */
 
-/* Đặt nền trắng tinh khiết cho toàn bộ trang */
-html, body {
-  background-color: #FFFFFF; /* Màu trắng tinh khiết */
-  height: 100%; /* Đảm bảo body và html chiếm toàn bộ chiều cao */
-  margin: 0; /* Xóa margin mặc định của body */
-  padding: 0; /* Xóa padding mặc định của body */
+/* Đảm bảo nền trắng tuyệt đối cho toàn bộ trang */
+html, body, #__next, #root { /* Bao gồm #__next và #root để đảm bảo bao phủ ứng dụng React */
+  background-color: #FFFFFF !important; /* Sử dụng !important để ghi đè */
+  height: 100%; /* Đảm bảo chiếm toàn bộ chiều cao */
+  margin: 0; /* Xóa margin mặc định */
+  padding: 0; /* Xóa padding mặc định */
   font-family: 'Inter', sans-serif; /* Giữ font chữ */
+}
+
+/* Định nghĩa một class nền trắng có thể tái sử dụng */
+.bg-pure-white {
+  background-color: #FFFFFF !important;
 }
 
 /* Các chỉ thị Tailwind CSS */
@@ -14,12 +19,4 @@ html, body {
 @tailwind components;
 @tailwind utilities;
 
-/* Đảm bảo các font imports (nếu có) */
-/* Ví dụ:
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap&subset=vietnamese');
-*/
-
 /* Các CSS tùy chỉnh khác của bạn */
-/* .prose img {
-  border-radius: 0.5rem;
-} */
