@@ -1,10 +1,12 @@
+// physics-olympiad-website/frontend/components/Layout.js
 import Navbar from './Navbar';
 import { AuthProvider } from '../context/AuthContext';
 
 const Layout = ({ children }) => {
   return (
     <AuthProvider>
-      <div className="min-h-screen flex flex-col">
+      {/* Thêm class bg-red-200 vào đây để kiểm tra */}
+      <div className="min-h-screen flex flex-col bg-red-200">
         <Navbar />
         <main className="flex-grow container mx-auto p-4 flex flex-col items-center">
           {children}
