@@ -8,21 +8,21 @@ const {
   updateTheory,
   deleteTheory,
 } = require('../controllers/theoryController');
-const protect = require('../middleware/authMiddleware'); // Middleware bảo vệ route nếu cần
+const protect = require('../middleware/authMiddleware'); // Middleware bảo vệ (kiểm tra đăng nhập)
+const adminProtect = require('../middleware/adminAuthMiddleware'); // THAY ĐỔI MỚI: Import middleware adminProtect
 
-// Các route cơ bản cho lý thuyết
-// GET /api/theory - Lấy tất cả các chủ đề
-// POST /api/theory - Tạo chủ đề mới (có thể cần protect)
-router.route('/').get(getTheoryTopics).post(protect, createTheory);
+// GET /api/theory - Lấy tất cả các chủ đề (Public - ai cũng xem được)
+// POST /api/theory - Tạo chủ đề mới (Chỉ Admin)
+router.route('/').get(getTheoryTopics).post(protect, adminProtect, createTheory); // Áp dụng protect và adminProtect
 
-// GET /api/theory/:slug - Lấy chi tiết chủ đề theo slug
-// PUT /api/theory/:id - Cập nhật chủ đề (có thể cần protect)
-// DELETE /api/theory/:id - Xóa chủ đề (có thể cần protect)
-router.route('/:slug') // Đã thay đổi từ :id sang :slug cho GET
+// GET /api/theory/:slug - Lấy chi tiết chủ đề theo slug (Public - ai cũng xem được)
+router.route('/:slug')
   .get(getTheoryBySlug);
 
-router.route('/:id') // Dùng :id cho PUT/DELETE nếu bạn muốn cập nhật/xóa bằng ID
-  .put(protect, updateTheory)
-  .delete(protect, deleteTheory);
+// PUT /api/theory/:id - Cập nhật chủ đề (Chỉ Admin)
+// DELETE /api/theory/:id - Xóa chủ đề (Chỉ Admin)
+router.route('/:id')
+  .put(protect, adminProtect, updateTheory)    // Áp dụng protect và adminProtect
+  .delete(protect, adminProtect, deleteTheory); // Áp dụng protect và adminProtect
 
 module.exports = router;
