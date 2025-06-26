@@ -3,18 +3,17 @@ import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useAuth } from '../../../context/AuthContext';
-// KHÔNG CẦN import AdminLayout ở đây vì _app.js đã bọc layout cho tất cả các trang /admin
 
 const AdminPracticeListPage = () => {
   const { token, user } = useAuth();
   const [exercises, setExercises] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [deleteStatus, setDeleteStatus] = useState(null); // Để hiển thị thông báo xóa
+  const [deleteStatus, setDeleteStatus] = useState(null);
 
   useEffect(() => {
     const fetchExercises = async () => {
-      if (!token) { // Đảm bảo có token trước khi gọi API
+      if (!token) {
         setLoading(false);
         setError('Bạn không có quyền truy cập. Vui lòng đăng nhập với tài khoản Admin.');
         return;
@@ -22,7 +21,7 @@ const AdminPracticeListPage = () => {
 
       setLoading(true);
       setError(null);
-      setDeleteStatus(null); // Reset trạng thái xóa khi tải lại danh sách
+      setDeleteStatus(null);
 
       try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/exercises`, {
@@ -45,16 +44,15 @@ const AdminPracticeListPage = () => {
     };
 
     fetchExercises();
-  }, [token, deleteStatus]); // Thêm deleteStatus vào dependency để refresh sau khi xóa
+  }, [token, deleteStatus]);
 
   const handleDelete = async (exerciseId) => {
-    // THAY ĐỔI: Sử dụng modal tùy chỉnh thay vì confirm()
-    const confirmation = window.confirm('Bạn có chắc chắn muốn xóa bài tập này?'); // Tạm dùng confirm()
+    const confirmation = window.confirm('Bạn có chắc chắn muốn xóa bài tập này?');
     if (!confirmation) {
       return;
     }
 
-    setDeleteStatus(null); // Reset trạng thái
+    setDeleteStatus(null);
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/exercises/${exerciseId}`, {
         method: 'DELETE',
@@ -70,7 +68,6 @@ const AdminPracticeListPage = () => {
       }
 
       setDeleteStatus('Bài tập đã được xóa thành công!');
-      // Tối ưu: Lọc bỏ bài tập đã xóa khỏi state thay vì fetch lại toàn bộ
       setExercises(prevExercises => prevExercises.filter(ex => ex._id !== exerciseId)); 
 
     } catch (err) {
@@ -79,20 +76,19 @@ const AdminPracticeListPage = () => {
     }
   };
 
-  // Nếu không phải admin hoặc chưa có token, sẽ tự động chuyển hướng bởi AdminLayout
   if (!user || user.role !== 'admin') {
-    return null; // AdminLayout đã xử lý việc chuyển hướng
+    return null;
   }
 
   return (
-    <> {/* _app.js sẽ tự động bọc AdminLayout */}
+    <>
       <Head>
         <title>Quản lý Bài tập - Admin</title>
       </Head>
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-3xl font-bold text-gray-800">Quản lý Bài tập</h2>
-          <Link href="/admin/practice/new"> {/* Link tới trang thêm bài tập mới */}
+          <Link href="/admin/practice/new">
             <a className="btn-primary">Thêm Bài tập Mới</a>
           </Link>
         </div>
@@ -120,7 +116,12 @@ const AdminPracticeListPage = () => {
                 {exercises.map((exercise) => (
                   <tr key={exercise._id} className="border-b border-gray-200 hover:bg-gray-50">
                     <td className="py-3 px-6 text-left whitespace-nowrap">
-                      <div className="font-semibold">{exercise.title}</div>
+                      {/* THAY ĐỔI: Thêm Link đến trang chi tiết bài tập */}
+                      <Link href={`/exercise/${exercise.slug}`}>
+                        <a className="font-semibold text-blue-600 hover:underline">
+                          {exercise.title}
+                        </a>
+                      </Link>
                       <div className="text-gray-500 text-xs">{exercise.slug}</div>
                     </td>
                     <td className="py-3 px-6 text-left">
@@ -140,7 +141,6 @@ const AdminPracticeListPage = () => {
                     </td>
                     <td className="py-3 px-6 text-center">
                       <div className="flex item-center justify-center space-x-2">
-                        {/* Link đến trang chỉnh sửa bài tập (sẽ tạo sau) */}
                         <Link href={`/admin/practice/edit/${exercise._id}`}>
                           <a className="w-8 h-8 rounded-full bg-blue-100 hover:bg-blue-200 text-blue-600 flex items-center justify-center transition-colors duration-200" title="Sửa">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
