@@ -1,13 +1,17 @@
 // backend/server.js (Hoặc app.js - đây là file khởi chạy chính của backend)
 const express = require('express');
 const dotenv = require('dotenv').config(); // Để tải biến môi trường từ .env
-const colors = require('colors'); // Để làm đẹp console log (tùy chọn)
+const colors = require('colors'); // Để làm đẹp console log (đã thêm vào package.json rồi)
 const connectDB = require('./config/db'); // Import hàm kết nối database của bạn
 const cors = require('cors'); // Middleware để xử lý Cross-Origin Resource Sharing
 
 // Import các file routes
-const userRoutes = require('./routes/userRoutes'); // Giả sử bạn có userRoutes
-const theoryRoutes = require('./routes/theory'); // <--- ĐÂY LÀ ĐIỀU QUAN TRỌNG: Import theoryRoutes
+// const userRoutes = require('./routes/userRoutes'); // <--- DÒNG NÀY ĐÃ BỊ XÓA HOẶC COMMENT LẠI
+const authRoutes = require('./routes/auth');
+const theoryRoutes = require('./routes/theory');
+const practiceRoutes = require('./routes/practice');
+const testRoutes = require('./routes/testRoutes');
+
 
 const app = express();
 
@@ -25,12 +29,13 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 // Định nghĩa các Route API
-// Sử dụng userRoutes cho các endpoint bắt đầu bằng '/api/users'
-app.use('/api/users', userRoutes);
+// app.use('/api/users', userRoutes); // <--- DÒNG NÀY ĐÃ BỊ XÓA HOẶC COMMENT LẠI
 
-// <--- ĐÂY LÀ ĐIỀU QUAN TRỌNG:
-// Sử dụng theoryRoutes cho các endpoint bắt đầu bằng '/api/theory'
+// Các route hiện có của bạn
+app.use('/api/auth', authRoutes);
 app.use('/api/theory', theoryRoutes); 
+app.use('/api/practice', practiceRoutes);
+app.use('/api/tests', testRoutes);
 
 // Route mặc định cho kiểm tra server
 app.get('/', (req, res) => {
