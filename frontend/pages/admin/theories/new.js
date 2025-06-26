@@ -2,8 +2,8 @@
 import React, { useState } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { useAuth } from '../../../../context/AuthContext'; // Đã sửa đường dẫn
-import AdminLayout from '../../../../components/AdminLayout'; // Đã sửa đường dẫn
+import { useAuth } from '../../../context/AuthContext'; // Đã sửa đường dẫn: 3 dấu ../
+import AdminLayout from '../../../components/AdminLayout'; // Đã sửa đường dẫn: 3 dấu ../
 import Link from 'next/link';
 
 const NewTheoryPage = () => {
