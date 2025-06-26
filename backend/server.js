@@ -5,7 +5,8 @@ const connectDB = require('./config/db');
 const cors = require('cors'); // Import cors
 const authRoutes = require('./routes/auth');
 const theoryRoutes = require('./routes/theory');
-const practiceRoutes = require('./routes/practice'); // Import the new practice routes
+const practiceRoutes = require('./routes/practice');
+const testRoutes = require('./routes/testRoutes'); // Import the new test routes
 
 dotenv.config();
 
@@ -19,7 +20,8 @@ app.use(express.json()); // Body parser for JSON data
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/theory', theoryRoutes);
-app.use('/api/practice', practiceRoutes); // Use the new practice routes
+app.use('/api/practice', practiceRoutes);
+app.use('/api/tests', testRoutes); // Use the new test routes
 
 app.get('/', (req, res) => {
   res.send('API is running...');
