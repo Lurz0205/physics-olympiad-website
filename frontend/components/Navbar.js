@@ -12,14 +12,17 @@ const Navbar = () => {
   };
 
   return (
-    // THAY ĐỔI: Thêm min-h-[64px] (hoặc height) để cố định chiều cao Navbar
-    // Điều này giúp ngăn chặn các phần tử khác bị dịch chuyển khi Navbar load
+    // Đảm bảo chiều cao cố định cho Navbar để ngăn chặn dịch chuyển dọc của toàn bộ thanh
+    // min-h-[64px] (tương đương h-16) cho một chiều cao chuẩn.
+    // flex items-center để căn giữa nội dung bên trong theo chiều dọc.
     <nav className="bg-gradient-to-r from-blue-700 to-blue-900 text-white shadow-lg p-2 sm:p-3 sticky top-0 z-50 rounded-b-xl min-h-[64px] flex items-center">
-      <div className="max-w-7xl mx-auto flex flex-wrap justify-between items-center w-full"> {/* Đảm bảo w-full cho div bên trong */}
+      <div className="max-w-7xl mx-auto flex flex-wrap justify-between items-center w-full">
         {/* Logo/Tên ứng dụng */}
         <Link href="/">
-          {/* THAY ĐỔI: Căn giữa văn bản, đảm bảo ổn định vertical align */}
-          <a className="text-xl sm:text-2xl font-extrabold tracking-tight text-white hover:text-blue-200 transition-colors duration-300 inline-block align-middle leading-none">
+          {/* THAY ĐỔI: Đảm bảo min-width cho logo để giữ không gian, tránh giật ngang */}
+          {/* leading-none để kiểm soát line-height chặt chẽ, tránh dịch chuyển dọc */}
+          {/* inline-block và align-middle giúp căn chỉnh tốt hơn */}
+          <a className="text-xl sm:text-2xl font-extrabold tracking-tight text-white hover:text-blue-200 transition-colors duration-300 inline-block align-middle leading-none min-w-[50px] sm:min-w-[60px]">
             HTB
           </a>
         </Link>
@@ -27,7 +30,6 @@ const Navbar = () => {
         {/* Hamburger menu icon cho mobile */}
         <div className="md:hidden flex items-center">
           <button onClick={toggleMenu} className="focus:outline-none p-2 rounded-md hover:bg-blue-600 transition-colors duration-300">
-            {/* Icon hamburger hoặc X */}
             {isOpen ? (
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -48,7 +50,8 @@ const Navbar = () => {
           
           {user ? (
             <>
-              <span className="text-sm sm:text-base font-medium whitespace-nowrap">
+              {/* Cần đảm bảo các span này có chiều cao và căn chỉnh ổn định */}
+              <span className="text-sm sm:text-base font-medium whitespace-nowrap leading-none min-h-[40px] inline-flex items-center justify-center">
                 Xin chào, {user.name ? user.name.split(' ')[0] : 'Bạn'}
               </span>
               <button
@@ -77,7 +80,8 @@ const Navbar = () => {
             
             {user ? (
               <>
-                <span className="text-white text-base font-medium px-4 py-2">
+                {/* Cần đảm bảo các span này có chiều cao và căn chỉnh ổn định */}
+                <span className="text-white text-base font-medium px-4 py-2 leading-none min-h-[48px] inline-flex items-center justify-center">
                   Xin chào, {user.name ? user.name.split(' ')[0] : 'Bạn'}
                 </span>
                 <button
@@ -103,9 +107,12 @@ const Navbar = () => {
 // Helper component cho các liên kết điều hướng Desktop
 const NavLink = ({ href, children }) => (
   <Link href={href}>
-    {/* THAY ĐỔI: Thêm min-h-[40px] và leading-none để cố định chiều cao và căn chỉnh văn bản */}
     <a className="text-sm sm:text-base font-medium px-2.5 py-1 sm:px-3 py-1.5 rounded-full hover:bg-blue-600 transition-colors duration-300 whitespace-nowrap inline-flex items-center justify-center min-h-[40px] leading-none">
-      {children}
+      {/* THAY ĐỔI: Bao quanh children trong span để kiểm soát min-width của text, tránh giật ngang */}
+      {/* Đặt một min-width tương đối cho span để dành không gian cho chữ */}
+      <span className="inline-block" style={{ minWidth: 'fit-content' }}>
+        {children}
+      </span>
     </a>
   </Link>
 );
@@ -113,9 +120,12 @@ const NavLink = ({ href, children }) => (
 // Helper component cho các liên kết điều hướng Mobile
 const NavLinkMobile = ({ href, children, onClick }) => (
   <Link href={href}>
-    {/* THAY ĐỔI: Thêm min-h-[48px] và leading-none để cố định chiều cao và căn chỉnh văn bản */}
     <a onClick={onClick} className="text-white text-base font-medium w-full text-center py-2 hover:bg-blue-600 transition-colors duration-300 rounded-md inline-flex items-center justify-center min-h-[48px] leading-none">
-      {children}
+      {/* THAY ĐỔI: Bao quanh children trong span để kiểm soát min-width của text, tránh giật ngang */}
+      {/* Đặt một min-width tương đối cho span để dành không gian cho chữ */}
+      <span className="inline-block" style={{ minWidth: 'fit-content' }}>
+        {children}
+      </span>
     </a>
   </Link>
 );
