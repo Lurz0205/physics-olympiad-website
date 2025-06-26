@@ -17,7 +17,7 @@ const HomePage = () => {
         </h1>
         <p className="text-base sm:text-lg text-gray-700 mb-6 sm:mb-8 max-w-2xl mx-auto"> {/* Responsive font sizes */}
           Cung cấp tài liệu lý thuyết chuyên sâu, hệ thống bài tập đa dạng và đề thi chọn lọc
-          giúp bạn đạt kết quả tốt nhất trong các kỳ thi học sinh giỏi Vật lý bằng không chuyên.
+          giúp bạn đạt kết quả tốt nhất trong các kỳ thi học sinh giỏi Vật lí bảng không chuyên.
         </p>
 
         <div className="flex flex-col sm:flex-row justify-center gap-4 mb-8 sm:mb-12"> {/* Flex-col trên mobile, flex-row trên sm */}
