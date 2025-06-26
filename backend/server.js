@@ -10,8 +10,10 @@ const { errorHandler } = require('./middleware/errorMiddleware');
 const authRoutes = require('./routes/auth');
 const theoryRoutes = require('./routes/theory');
 const exerciseRoutes = require('./routes/exercise');
-// const practiceRoutes = require('./routes/practice'); // THAY ĐỔI: TẠM THỜI VÔ HIỆU HÓA DÒNG NÀY
-// const testRoutes = require('./routes/test'); // THAY ĐỔI: TẠM THỜI VÔ HIỆU HÓA DÒNG NÀY (Nếu bạn có file test.js)
+const examRoutes = require('./routes/exam'); // THAY ĐỔI MỚI: Import examRoutes
+
+// const practiceRoutes = require('./routes/practice'); // Vẫn giữ comment nếu bạn chưa muốn dùng
+// const testRoutes = require('./routes/test'); // Vẫn giữ comment nếu bạn chưa muốn dùng
 
 connectDB();
 
@@ -52,9 +54,10 @@ app.use(express.urlencoded({ extended: false }));
 app.use('/api/auth', authRoutes);
 app.use('/api/theory', theoryRoutes);
 app.use('/api/exercises', exerciseRoutes);
-// app.use('/api/practice', practiceRoutes); // THAY ĐỔI: TẠM THỜI VÔ HIỆU HÓA DÒNG NÀY
-// app.use('/api/tests', testRoutes); // THAY ĐỔI: TẠM THỜI VÔ HIỆU HÓA DÒNG NÀY (Nếu bạn có file test.js)
+app.use('/api/exams', examRoutes); // THAY ĐỔI MỚI: Thêm Exam Routes
 
+// app.use('/api/practice', practiceRoutes); // Vẫn giữ comment nếu bạn chưa muốn dùng
+// app.use('/api/tests', testRoutes); // Vẫn giữ comment nếu bạn chưa muốn dùng
 
 if (process.env.NODE_ENV === 'production') {
   // Production static file serving (if applicable)
