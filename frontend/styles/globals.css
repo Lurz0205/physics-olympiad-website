@@ -1,8 +1,22 @@
+/* frontend/styles/globals.css */
+
+/* Đảm bảo nền của body là màu trắng hoặc màu nền mong muốn */
+body {
+  background-color: #fff; /* Hoặc bg-white trong Tailwind */
+}
+
+/* Các styles khác của bạn */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: 'Inter', sans-serif;
-  @apply bg-secondary text-dark;
+/* Thêm các font imports nếu không có trong _document.js */
+/*
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap&subset=vietnamese');
+*/
+
+/* Custom CSS cho KaTeX nếu cần tùy chỉnh thêm */
+.katex-display > .katex {
+  /* margin-top: 1em; */
+  /* margin-bottom: 0.5em; */
 }
