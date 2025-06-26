@@ -131,11 +131,48 @@ const deleteExercise = asyncHandler(async (req, res) => {
   res.status(200).json({ message: 'Exercise removed successfully' });
 });
 
+// @desc    Get all unique exercise categories
+// @route   GET /api/exercises/categories
+// @access  Public
+const getAllExerciseCategories = async (req, res) => {
+  try {
+    // Sử dụng aggregate để lấy các giá trị duy nhất của trường 'category'
+    const categories = await Exercise.aggregate([
+      {
+        $group: {
+          _id: '$category', // Nhóm theo trường 'category'
+          count: { $sum: 1 } // Đếm số lượng bài tập trong mỗi danh mục (tùy chọn)
+        }
+      },
+      {
+        $project: {
+          _id: 0, // Không trả về _id của nhóm
+          category: '$_id', // Đổi tên _id thành category
+          count: 1 // Giữ lại count
+        }
+      },
+      {
+        $sort: { category: 1 } // Sắp xếp theo tên danh mục tăng dần
+      }
+    ]);
+
+    // Lấy ra chỉ tên danh mục (nếu bạn chỉ muốn một mảng string)
+    const categoryNames = categories.map(cat => cat.category);
+
+    res.status(200).json(categoryNames);
+  } catch (error) {
+    console.error('Error fetching exercise categories:', error);
+    res.status(500).json({ message: 'Lỗi máy chủ khi lấy danh mục bài tập.' });
+  }
+};
+
 module.exports = {
   getAllExercises,
+  getExercises,
   getExerciseBySlug,
   getExerciseById,
   createExercise,
   updateExercise,
   deleteExercise,
+  getAllExerciseCategories,
 };
