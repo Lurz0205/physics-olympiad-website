@@ -1,35 +1,56 @@
 // physics-olympiad-website/frontend/components/Navbar.js
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { useAuth } from '../context/AuthContext'; // Đảm bảo đường dẫn đúng
+import { useAuth } from '../context/AuthContext';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
+  const [isOpen, setIsOpen] = useState(false); // State để điều khiển menu mobile
+
+  const toggleMenu = () => {
+    setIsOpen(!isOpen);
+  };
 
   return (
-    <nav className="bg-gradient-to-r from-blue-700 to-blue-900 text-white shadow-lg p-2 sm:p-3 sticky top-0 z-50 rounded-b-xl"> {/* Giảm padding: p-2 trên mobile, sm:p-3 trên desktop */}
+    <nav className="bg-gradient-to-r from-blue-700 to-blue-900 text-white shadow-lg p-2 sm:p-3 sticky top-0 z-50 rounded-b-xl">
       <div className="max-w-7xl mx-auto flex flex-wrap justify-between items-center">
         {/* Logo/Tên ứng dụng */}
         <Link href="/">
-          <a className="text-xl sm:text-2xl font-extrabold tracking-tight text-white hover:text-blue-200 transition-colors duration-300"> {/* Giảm font size: text-xl trên mobile, sm:text-2xl trên desktop */}
-            HTB
+          <a className="text-xl sm:text-2xl font-extrabold tracking-tight text-white hover:text-blue-200 transition-colors duration-300">
+            Vật lý HSG
           </a>
         </Link>
 
-        {/* Các liên kết điều hướng */}
-        <div className="flex items-center space-x-2 sm:space-x-4 mt-2 sm:mt-0 flex-wrap justify-end"> {/* Giảm space-x: space-x-2 trên mobile, sm:space-x-4 trên desktop */}
+        {/* Hamburger menu icon cho mobile */}
+        <div className="md:hidden flex items-center">
+          <button onClick={toggleMenu} className="focus:outline-none p-2 rounded-md hover:bg-blue-600 transition-colors duration-300">
+            {/* Icon hamburger hoặc X */}
+            {isOpen ? (
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            ) : (
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path>
+              </svg>
+            )}
+          </button>
+        </div>
+
+        {/* Các liên kết điều hướng cho Desktop */}
+        <div className="hidden md:flex items-center space-x-4"> {/* hidden trên mobile, flex trên md+ */}
           <NavLink href="/theory">Lý thuyết</NavLink>
           <NavLink href="/practice">Bài tập</NavLink>
           <NavLink href="/tests">Đề thi Online</NavLink>
           
           {user ? (
             <>
-              <span className="text-sm sm:text-base font-medium whitespace-nowrap"> {/* Giảm font size: text-sm trên mobile, sm:text-base trên desktop */}
+              <span className="text-sm sm:text-base font-medium whitespace-nowrap">
                 Xin chào, {user.name ? user.name.split(' ')[0] : 'Bạn'}
               </span>
               <button
                 onClick={logout}
-                className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 sm:px-4 sm:py-1.5 rounded-full font-semibold transition-colors duration-300 shadow-md transform hover:scale-105 whitespace-nowrap text-sm sm:text-base" /* Giảm padding và font size */
+                className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 sm:px-4 sm:py-1.5 rounded-full font-semibold transition-colors duration-300 shadow-md transform hover:scale-105 whitespace-nowrap text-sm sm:text-base"
               >
                 Đăng xuất
               </button>
@@ -42,14 +63,53 @@ const Navbar = () => {
           )}
         </div>
       </div>
+
+      {/* Mobile Menu Overlay */}
+      {isOpen && (
+        <div className="md:hidden absolute top-full left-0 w-full bg-blue-800 shadow-lg pb-4 rounded-b-xl z-40"> {/* Menu trượt xuống */}
+          <div className="flex flex-col items-center space-y-4 py-4"> {/* Các liên kết dọc */}
+            <NavLinkMobile href="/theory" onClick={toggleMenu}>Lý thuyết</NavLinkMobile>
+            <NavLinkMobile href="/practice" onClick={toggleMenu}>Bài tập</NavLinkMobile>
+            <NavLinkMobile href="/tests" onClick={toggleMenu}>Đề thi Online</NavLinkMobile>
+            
+            {user ? (
+              <>
+                <span className="text-white text-base font-medium px-4 py-2">
+                  Xin chào, {user.name ? user.name.split(' ')[0] : 'Bạn'}
+                </span>
+                <button
+                  onClick={() => { logout(); toggleMenu(); }} // Đóng menu sau khi đăng xuất
+                  className="bg-red-500 hover:bg-red-600 text-white px-4 py-1.5 rounded-full font-semibold transition-colors duration-300 shadow-md"
+                >
+                  Đăng xuất
+                </button>
+              </>
+            ) : (
+              <>
+                <NavLinkMobile href="/login" onClick={toggleMenu}>Đăng nhập</NavLinkMobile>
+                <NavLinkMobile href="/register" onClick={toggleMenu}>Đăng ký</NavLinkMobile>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </nav>
   );
 };
 
-// Helper component cho các liên kết điều hướng
+// Helper component cho các liên kết điều hướng Desktop
 const NavLink = ({ href, children }) => (
   <Link href={href}>
-    <a className="text-sm sm:text-base font-medium px-2.5 py-1 sm:px-3 py-1.5 rounded-full hover:bg-blue-600 transition-colors duration-300 whitespace-nowrap"> {/* Giảm padding và font size */}
+    <a className="text-sm sm:text-base font-medium px-2.5 py-1 sm:px-3 py-1.5 rounded-full hover:bg-blue-600 transition-colors duration-300 whitespace-nowrap">
+      {children}
+    </a>
+  </Link>
+);
+
+// Helper component cho các liên kết điều hướng Mobile
+const NavLinkMobile = ({ href, children, onClick }) => (
+  <Link href={href}>
+    <a onClick={onClick} className="text-white text-base font-medium w-full text-center py-2 hover:bg-blue-600 transition-colors duration-300 rounded-md">
       {children}
     </a>
   </Link>
