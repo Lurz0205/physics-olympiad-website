@@ -11,7 +11,7 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto flex justify-between items-center">
         <Link href="/">
           <a className="text-3xl font-extrabold tracking-tight text-white hover:text-blue-200 transition-colors duration-300">
-            Vật lý HSG
+            HTB
           </a>
         </Link>
 
