@@ -1,94 +1,103 @@
 // physics-olympiad-website/frontend/pages/admin/tests/index.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
-import { useAuth } from '../../../context/AuthContext';
 import { useRouter } from 'next/router';
+import { useAuth } from '../../../../context/AuthContext'; // Sửa đường dẫn nếu cần
 
-const AdminExamsListPage = () => {
-  const { token, user } = useAuth();
+const AdminTestsPage = () => {
   const router = useRouter();
+  const { token, user } = useAuth();
   const [exams, setExams] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [deleteStatus, setDeleteStatus] = useState(null);
+  const [deletingId, setDeletingId] = useState(null); // ID của đề thi đang được xóa
+  const [showConfirmModal, setShowConfirmModal] = useState(false); // Trạng thái hiển thị modal xác nhận xóa
 
   // Chuyển hướng nếu không phải admin
   useEffect(() => {
-    if (!user || user.role !== 'admin') {
+    if (user && user.role !== 'admin') {
       router.push('/login'); // Hoặc trang lỗi
     }
   }, [user, router]);
 
-  useEffect(() => {
-    const fetchExams = async () => {
-      if (!token) {
-        setLoading(false);
-        setError('Bạn không có quyền truy cập. Vui lòng đăng nhập với tài khoản Admin.');
-        return;
-      }
+  // Hàm tải danh sách đề thi
+  const fetchExams = useCallback(async () => {
+    if (!token) return; // Đảm bảo có token trước khi gọi API
 
-      setLoading(true);
-      setError(null);
-      setDeleteStatus(null); // Reset trạng thái xóa khi tải lại danh sách
-
-      try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/exams`, {
-          headers: {
-            'Authorization': `Bearer ${token}`, // Admin cần token để lấy tất cả đề thi
-          },
-        });
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.message || 'Lỗi khi tải danh sách đề thi.');
-        }
-        setExams(data);
-      } catch (err) {
-        console.error('Error fetching exams:', err);
-        setError(err.message || 'Đã xảy ra lỗi khi tải danh sách đề thi.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchExams();
-  }, [token, deleteStatus]); // Thêm deleteStatus vào dependency để refresh sau khi xóa
-
-  const handleDelete = async (examId) => {
-    const confirmation = window.confirm('Bạn có chắc chắn muốn xóa đề thi này?');
-    if (!confirmation) {
-      return;
-    }
-
-    setDeleteStatus(null);
+    setLoading(true);
+    setError(null);
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/exams/${examId}`, {
-        method: 'DELETE',
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/exams`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${token}`, // Gửi token để xác thực admin
         },
       });
-
       const data = await response.json();
 
       if (!response.ok) {
+        throw new Error(data.message || 'Lỗi khi tải danh sách đề thi.');
+      }
+      setExams(data);
+    } catch (err) {
+      console.error('Lỗi khi tải danh sách đề thi:', err);
+      setError(err.message || 'Không thể tải danh sách đề thi.');
+    } finally {
+      setLoading(false);
+    }
+  }, [token]);
+
+  // Gọi hàm tải danh sách đề thi khi component mount hoặc token thay đổi
+  useEffect(() => {
+    fetchExams();
+  }, [fetchExams]);
+
+  // Xử lý xác nhận xóa đề thi (hiển thị modal)
+  const handleDeleteClick = (examId) => {
+    setDeletingId(examId);
+    setShowConfirmModal(true);
+  };
+
+  // Xử lý xóa đề thi sau khi xác nhận
+  const confirmDelete = async () => {
+    if (!deletingId || !token) return;
+
+    setShowConfirmModal(false); // Đóng modal
+    setLoading(true); // Hiển thị loading trong khi xóa
+    setError(null);
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/exams/${deletingId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`, // Gửi token admin
+        },
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
         throw new Error(data.message || 'Lỗi khi xóa đề thi.');
       }
 
-      setDeleteStatus('Đề thi đã được xóa thành công!');
-      // Tối ưu: Lọc bỏ đề thi đã xóa khỏi state thay vì fetch lại toàn bộ
-      setExams(prevExams => prevExams.filter(exam => exam._id !== examId)); 
-
+      setSuccess('Xóa đề thi thành công!');
+      // Cập nhật lại danh sách sau khi xóa
+      fetchExams();
     } catch (err) {
-      console.error('Error deleting exam:', err);
-      setDeleteStatus(`Lỗi xóa: ${err.message || 'Đã xảy ra lỗi không xác định.'}`);
+      console.error('Lỗi khi xóa đề thi:', err);
+      setError(err.message || 'Đã xảy ra lỗi khi xóa đề thi.');
+      setLoading(false); // Tắt loading nếu có lỗi
+    } finally {
+      setDeletingId(null); // Reset ID đang xóa
     }
   };
 
-  // Nếu không phải admin hoặc chưa có token, sẽ tự động chuyển hướng bởi AdminLayout (hoặc useEffect trên)
+  const cancelDelete = () => {
+    setShowConfirmModal(false);
+    setDeletingId(null);
+  };
+
   if (!user || user.role !== 'admin') {
-    return null;
+    return null; // AdminLayout đã xử lý chuyển hướng
   }
 
   return (
@@ -99,76 +108,100 @@ const AdminExamsListPage = () => {
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-3xl font-bold text-gray-800">Quản lý Đề thi Online</h2>
-          <Link href="/admin/tests/new"> {/* Link tới trang thêm đề thi mới */}
-            <a className="btn-primary">Thêm Đề thi Mới</a>
+          <Link href="/admin/tests/new">
+            <a className="btn-primary">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
+              </svg>
+              Thêm Đề thi Mới
+            </a>
           </Link>
         </div>
 
-        {loading && <div className="text-center p-4">Đang tải danh sách đề thi...</div>}
-        {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">{error}</div>}
-        {deleteStatus && <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4">{deleteStatus}</div>}
-
-        {!loading && !error && exams.length === 0 && (
-          <div className="text-center p-4 text-gray-600">Chưa có đề thi nào. Hãy thêm đề thi mới!</div>
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+            {error}
+          </div>
         )}
-
-        {!loading && !error && exams.length > 0 && (
-          <div className="overflow-x-auto">
-            <table className="min-w-full bg-white border border-gray-200 rounded-lg">
-              <thead>
-                <tr className="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
-                  <th className="py-3 px-6 text-left">Tiêu đề</th>
-                  <th className="py-3 px-6 text-left">Slug</th>
-                  <th className="py-3 px-6 text-center">Thời gian</th>
-                  <th className="py-3 px-6 text-center">Xuất bản</th>
-                  <th className="py-3 px-6 text-center">Hành động</th>
+        {loading ? (
+          <div className="flex items-center justify-center min-h-[30vh]">
+            <svg className="animate-spin h-10 w-10 text-blue-500 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p className="ml-3 text-lg text-gray-700">Đang tải đề thi...</p>
+          </div>
+        ) : exams.length === 0 ? (
+          <div className="text-center py-10">
+            <p className="text-gray-600 text-lg">Chưa có đề thi nào được tạo.</p>
+            <p className="text-gray-500 mt-2">Hãy nhấn "Thêm Đề thi Mới" để bắt đầu!</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto rounded-lg shadow border border-gray-200">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Tiêu đề
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Slug
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Thời lượng
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Danh mục
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Xuất bản
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Hành động
+                  </th>
                 </tr>
               </thead>
-              <tbody className="text-gray-700 text-sm font-light">
+              <tbody className="bg-white divide-y divide-gray-200">
                 {exams.map((exam) => (
-                  <tr key={exam._id} className="border-b border-gray-200 hover:bg-gray-50">
-                    <td className="py-3 px-6 text-left whitespace-nowrap">
-                      {/* Link đến trang chi tiết đề thi công khai */}
-                      <Link href={`/tests/${exam.slug}`}>
-                        <a className="font-semibold text-blue-600 hover:underline">
-                          {exam.title}
+                  <tr key={exam._id}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">{exam.title}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-500">{exam.slug}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-500">{exam.duration} phút</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                        {exam.category}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                      {exam.isPublished ? (
+                        <span className="text-green-600 font-bold">✔</span>
+                      ) : (
+                        <span className="text-red-600 font-bold">✖</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <Link href={`/admin/tests/edit/${exam._id}`}>
+                        <a className="text-indigo-600 hover:text-indigo-900 mr-3 p-2 rounded-full hover:bg-indigo-50 transition duration-150" title="Chỉnh sửa">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 inline-block" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M13.586 3.586a2 2 0 112.828 2.828l-7.664 7.664a1 1 0 01-.328.232l-3 1a1 1 0 01-1.264-1.264l1-3a1 1 0 01.232-.328l7.664-7.664zM16 17v-1.586l-7.664-7.664-2.828 2.828 7.664 7.664H16z" />
+                          </svg>
                         </a>
                       </Link>
-                    </td>
-                    <td className="py-3 px-6 text-left">
-                      <span className="text-gray-500 text-xs">{exam.slug}</span>
-                    </td>
-                    <td className="py-3 px-6 text-center">
-                      <span className="py-1 px-3 rounded-full text-xs font-semibold bg-gray-200 text-gray-800">
-                        {exam.duration} phút
-                      </span>
-                    </td>
-                    <td className="py-3 px-6 text-center">
-                      <span className={`py-1 px-3 rounded-full text-xs font-semibold ${
-                        exam.isPublished ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'
-                      }`}>
-                        {exam.isPublished ? 'Đã XB' : 'Chưa XB'}
-                      </span>
-                    </td>
-                    <td className="py-3 px-6 text-center">
-                      <div className="flex item-center justify-center space-x-2">
-                        <Link href={`/admin/tests/edit/${exam._id}`}>
-                          <a className="w-8 h-8 rounded-full bg-blue-100 hover:bg-blue-200 text-blue-600 flex items-center justify-center transition-colors duration-200" title="Sửa">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                            </svg>
-                          </a>
-                        </Link>
-                        <button
-                          onClick={() => handleDelete(exam._id)}
-                          className="w-8 h-8 rounded-full bg-red-100 hover:bg-red-200 text-red-600 flex items-center justify-center transition-colors duration-200"
-                          title="Xóa"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
-                      </div>
+                      <button
+                        onClick={() => handleDeleteClick(exam._id)}
+                        className="text-red-600 hover:text-red-900 p-2 rounded-full hover:bg-red-50 transition duration-150"
+                        title="Xóa"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 inline-block" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm6 0a1 1 0 11-2 0v6a1 1 0 112 0V8z" clipRule="evenodd" />
+                        </svg>
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -177,8 +210,32 @@ const AdminExamsListPage = () => {
           </div>
         )}
       </div>
+
+      {/* Modal xác nhận xóa */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full mx-auto">
+            <h3 className="text-xl font-bold text-gray-800 mb-4">Xác nhận Xóa</h3>
+            <p className="text-gray-700 mb-6">Bạn có chắc chắn muốn xóa đề thi này? Hành động này không thể hoàn tác.</p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={cancelDelete}
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition duration-200"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-200"
+              >
+                Xóa
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };
 
-export default AdminExamsListPage;
+export default AdminTestsPage;
