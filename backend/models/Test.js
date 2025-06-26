@@ -7,37 +7,34 @@ const testSchema = mongoose.Schema(
       type: String,
       required: true,
       unique: true,
+      trim: true,
     },
-    slug: { // Dùng cho URL thân thiện
+    slug: {
       type: String,
       required: true,
       unique: true,
+      lowercase: true,
+      trim: true,
     },
     description: {
       type: String,
       required: true,
     },
-    duration: { // Thời lượng làm bài bằng phút
+    duration: { // Thời lượng đề thi tính bằng phút
       type: Number,
       required: true,
+      min: 1,
     },
-    questions: [ // Mảng chứa các câu hỏi của đề thi
-      {
-        questionText: { type: String, required: true },
-        options: [{ type: String, required: true }],
-        correctAnswer: { type: String, required: true },
-        explanation: { type: String }, // Giải thích cho đáp án
-        // Bạn có thể thêm type: String cho loại câu hỏi (trắc nghiệm, tự luận) nếu cần
-      },
-    ],
-    createdBy: { // User tạo đề thi (nếu có hệ thống admin)
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User', // Giả định có User model
-      required: true,
+    category: { // Tương tự như Theory và PracticeTopic
+      type: String,
+      required: [true, 'Vui lòng chọn một danh mục cho đề thi.'],
+      enum: ['ĐỀ THI HSG TỈNH', 'ĐỀ THI HSG QUỐC GIA', 'ĐỀ THI THỬ', 'ĐỀ THI CÁC TRƯỜNG'],
+      default: 'ĐỀ THI THỬ',
     },
+    // exams: [{ type: mongoose.Schema.Types.ObjectId, ref: 'ExamResult' }] // Nếu muốn lưu kết quả thi của users
   },
   {
-    timestamps: true, // Thêm createdAt và updatedAt
+    timestamps: true,
   }
 );
 
