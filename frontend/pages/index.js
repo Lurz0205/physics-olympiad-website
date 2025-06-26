@@ -37,15 +37,15 @@ const HomePage = () => {
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 sm:mb-8">✨ Chúng ta có gì? ✨</h2> {/* Responsive font sizes */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8"> {/* Grid-cols-1 trên mobile, 3 trên md */}
             <div className="bg-gray-50 p-6 rounded-xl shadow-sm border border-gray-200">
-              <h3 className="text-lg sm:text-xl font-semibold text-blue-700 mb-3">Lý thuyết chuyên sâu</h3> {/* Responsive font sizes */}
+              <h3 className="text-lg sm:text-xl font-semibold text-blue-700 mb-3">📝 Lý thuyết chuyên sâu</h3> {/* Responsive font sizes */}
               <p className="text-sm sm:text-base text-gray-700">Tóm tắt và trình bày chi tiết các chuyên đề vật lý trọng tâm, giúp bạn nắm vững kiến thức từ cơ bản đến nâng cao.</p>
             </div>
             <div className="bg-gray-50 p-6 rounded-xl shadow-sm border border-gray-200">
-              <h3 className="text-lg sm:text-xl font-semibold text-blue-700 mb-3">Hệ thống bài tập đa dạng</h3>
+              <h3 className="text-lg sm:text-xl font-semibold text-blue-700 mb-3">📚 Hệ thống bài tập đa dạng</h3>
               <p className="text-sm sm:text-base text-gray-700">Hàng trăm bài tập được chọn lọc, phân loại theo chủ đề và độ khó, kèm lời giải chi tiết giúp bạn rèn luyện kỹ năng giải bài.</p>
             </div>
             <div className="bg-gray-50 p-6 rounded-xl shadow-sm border border-gray-200">
-              <h3 className="text-lg sm:text-xl font-semibold text-blue-700 mb-3">Đề thi chọn lọc & cập nhật</h3>
+              <h3 className="text-lg sm:text-xl font-semibold text-blue-700 mb-3">📄 Đề thi chọn lọc & cập nhật</h3>
               <p className="text-sm sm:text-base text-gray-700">Tổng hợp các đề thi học sinh giỏi từ các năm trước và đề thi thử mới nhất, giúp bạn làm quen với cấu trúc và áp lực phòng thi.</p>
             </div>
           </div>
