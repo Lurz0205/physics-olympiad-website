@@ -14,6 +14,14 @@ export default function Document() {
           href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap&subset=vietnamese"
           rel="stylesheet"
         />
+        {/* THAY ĐỔI MỚI: Preload các trọng số (weights) của font Inter mà bạn đang sử dụng */}
+        {/* Preload giúp trình duyệt tải font sớm hơn, giảm CLS */}
+        <link rel="preload" href="https://fonts.gstatic.com/s/inter/v13/UcCOyFect0rcMhC-CcI.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <link rel="preload" href="https://fonts.gstatic.com/s/inter/v13/UcCOyFect0rcMhC-Boc.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <link rel="preload" href="https://fonts.gstatic.com/s/inter/v13/UcCOyFect0rcMhC-BLc.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <link rel="preload" href="https://fonts.gstatic.com/s/inter/v13/UcCOyFect0rcMhC-BHc.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <link rel="preload" href="https://fonts.gstatic.com/s/inter/v13/UcCOyFect0rcMhC-BGc.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        
 
         {/* KaTeX CSS - RẤT QUAN TRỌNG: StyleSheet cho KaTeX */}
         <link
@@ -30,8 +38,6 @@ export default function Document() {
         ></script>
         
         {/* KaTeX Auto-render Extension - Mở rộng để tự động render LaTeX */}
-        {/* Tải nhưng KHÔNG kích hoạt ngay trên document.body ở đây. */}
-        {/* Việc kích hoạt sẽ do MathContent component xử lý từng phần tử riêng biệt */}
         <script
           defer // Defer để script không chặn render HTML
           src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
