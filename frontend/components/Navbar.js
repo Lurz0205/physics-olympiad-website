@@ -5,29 +5,21 @@ import { useAuth } from '../context/AuthContext';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
-  const [isOpen, setIsOpen] = useState(false); // State để điều khiển menu mobile
+  const [isOpen, setIsOpen] = useState(false);
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
   };
 
   return (
-    // Đảm bảo chiều cao cố định cho Navbar để ngăn chặn dịch chuyển dọc của toàn bộ thanh
-    // min-h-[64px] (tương đương h-16) cho một chiều cao chuẩn.
-    // flex items-center để căn giữa nội dung bên trong theo chiều dọc.
     <nav className="bg-gradient-to-r from-blue-700 to-blue-900 text-white shadow-lg p-2 sm:p-3 sticky top-0 z-50 rounded-b-xl min-h-[64px] flex items-center">
       <div className="max-w-7xl mx-auto flex flex-wrap justify-between items-center w-full">
-        {/* Logo/Tên ứng dụng */}
         <Link href="/">
-          {/* THAY ĐỔI: Đảm bảo chiều cao cố định cho logo và căn chỉnh văn bản */}
-          {/* min-w-[50px] sm:min-w-[60px]: Giữ không gian cho chữ HTB để tránh giật ngang */}
-          {/* h-full: Đảm bảo chiều cao bằng parent (Navbar), flex/items-center/justify-center: căn giữa text */}
           <a className="text-xl sm:text-2xl font-extrabold tracking-tight text-white hover:text-blue-200 transition-colors duration-300 inline-flex items-center justify-center h-full min-w-[50px] sm:min-w-[60px]">
             HTB
           </a>
         </Link>
 
-        {/* Hamburger menu icon cho mobile */}
         <div className="md:hidden flex items-center">
           <button onClick={toggleMenu} className="focus:outline-none p-2 rounded-md hover:bg-blue-600 transition-colors duration-300">
             {isOpen ? (
@@ -42,21 +34,20 @@ const Navbar = () => {
           </button>
         </div>
 
-        {/* Các liên kết điều hướng cho Desktop */}
         <div className="hidden md:flex items-center space-x-4">
           <NavLink href="/theory">Lý thuyết</NavLink>
-          <NavLink href="/practice">Bài tập</NavLink>
+          {/* THAY ĐỔI: Đảm bảo link Bài tập trỏ đến /exercise */}
+          <NavLink href="/exercise">Bài tập</NavLink> 
           <NavLink href="/tests">Đề thi Online</NavLink>
           
           {user ? (
             <>
-              {/* THAY ĐỔI: Đảm bảo span 'Xin chào' có chiều cao và min-width cố định */}
-              <span className="text-sm sm:text-base font-medium whitespace-nowrap inline-flex items-center justify-center h-10 min-w-[100px]"> {/* h-10 tương đương py-1.5 */}
+              <span className="text-sm sm:text-base font-medium whitespace-nowrap inline-flex items-center justify-center h-10 min-w-[100px]">
                 Xin chào, {user.name ? user.name.split(' ')[0] : 'Bạn'}
               </span>
               <button
                 onClick={logout}
-                className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 sm:px-4 sm:py-1.5 rounded-full font-semibold transition-colors duration-300 shadow-md transform hover:scale-105 whitespace-nowrap text-sm sm:text-base h-10 inline-flex items-center justify-center" // Thêm h-10, inline-flex
+                className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 sm:px-4 sm:py-1.5 rounded-full font-semibold transition-colors duration-300 shadow-md transform hover:scale-105 whitespace-nowrap text-sm sm:text-base h-10 inline-flex items-center justify-center"
               >
                 Đăng xuất
               </button>
@@ -70,23 +61,22 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile Menu Overlay */}
       {isOpen && (
         <div className="md:hidden absolute top-full left-0 w-full bg-blue-800 shadow-lg pb-4 rounded-b-xl z-40">
           <div className="flex flex-col items-center space-y-4 py-4">
             <NavLinkMobile href="/theory" onClick={toggleMenu}>Lý thuyết</NavLinkMobile>
-            <NavLinkMobile href="/practice" onClick={toggleMenu}>Bài tập</NavLinkMobile>
+            {/* THAY ĐỔI: Đảm bảo link Bài tập trỏ đến /exercise */}
+            <NavLinkMobile href="/exercise" onClick={toggleMenu}>Bài tập</NavLinkMobile>
             <NavLinkMobile href="/tests" onClick={toggleMenu}>Đề thi Online</NavLinkMobile>
             
             {user ? (
               <>
-                {/* THAY ĐỔI: Đảm bảo span 'Xin chào' trong mobile menu cũng có chiều cao và min-width cố định */}
-                <span className="text-white text-base font-medium px-4 py-2 inline-flex items-center justify-center h-12 min-w-[120px]"> {/* h-12 tương đương py-2 */}
+                <span className="text-white text-base font-medium px-4 py-2 inline-flex items-center justify-center h-12 min-w-[120px]">
                   Xin chào, {user.name ? user.name.split(' ')[0] : 'Bạn'}
                 </span>
                 <button
                   onClick={() => { logout(); toggleMenu(); }}
-                  className="bg-red-500 hover:bg-red-600 text-white px-4 py-1.5 rounded-full font-semibold transition-colors duration-300 shadow-md inline-flex items-center justify-center h-12" // Thêm h-12, inline-flex
+                  className="bg-red-500 hover:bg-red-600 text-white px-4 py-1.5 rounded-full font-semibold transition-colors duration-300 shadow-md inline-flex items-center justify-center h-12"
                 >
                   Đăng xuất
                 </button>
@@ -104,24 +94,22 @@ const Navbar = () => {
   );
 };
 
-// Helper component cho các liên kết điều hướng Desktop
 const NavLink = ({ href, children }) => (
   <Link href={href}>
-    {/* THAY ĐỔI: Đặt min-width cụ thể và chiều cao cố định cho các liên kết điều hướng */}
-    {/* Sử dụng h-10 để khớp với chiều cao nút Đăng xuất */}
     <a className="text-sm sm:text-base font-medium px-2.5 py-1 sm:px-3 py-1.5 rounded-full hover:bg-blue-600 transition-colors duration-300 whitespace-nowrap inline-flex items-center justify-center h-10 min-w-[80px]">
-      {children}
+      <span className="inline-block" style={{ minWidth: 'fit-content' }}>
+        {children}
+      </span>
     </a>
   </Link>
 );
 
-// Helper component cho các liên kết điều hướng Mobile
 const NavLinkMobile = ({ href, children, onClick }) => (
   <Link href={href}>
-    {/* THAY ĐỔI: Đặt chiều cao cố định và min-width cho các liên kết điều hướng mobile */}
-    {/* Sử dụng h-12 để khớp với chiều cao nút Đăng xuất mobile */}
     <a onClick={onClick} className="text-white text-base font-medium w-full text-center py-2 hover:bg-blue-600 transition-colors duration-300 rounded-md inline-flex items-center justify-center h-12 min-w-[120px]">
-      {children}
+      <span className="inline-block" style={{ minWidth: 'fit-content' }}>
+        {children}
+      </span>
     </a>
   </Link>
 );
