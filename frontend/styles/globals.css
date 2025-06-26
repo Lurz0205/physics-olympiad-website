@@ -1,24 +1,5 @@
 /* physics-olympiad-website/frontend/styles/globals.css */
 
-/* Đảm bảo nền trắng tuyệt đối cho toàn bộ trang */
-html, body {
-  background-color: #FFFFFF !important; /* Màu trắng tinh khiết, dùng !important để ghi đè */
-  height: 100%; /* Đảm bảo body và html chiếm toàn bộ chiều cao */
-  margin: 0; /* Xóa margin mặc định của body */
-  padding: 0; /* Xóa padding mặc định của body */
-  font-family: 'Inter', sans-serif; /* Giữ font chữ Inter */
-  color: #374151; /* Màu chữ mặc định cho toàn bộ trang (gray-700) */
-  line-height: 1.6; /* Tăng line-height cho dễ đọc */
-}
-
-/* Đảm bảo container #__next của Next.js cũng có nền trắng */
-#__next {
-  background-color: #FFFFFF !important;
-  min-height: 100vh; /* Đảm bảo nó chiếm ít nhất 100% chiều cao viewport */
-  display: flex;
-  flex-direction: column;
-}
-
 /* Các chỉ thị Tailwind CSS */
 @tailwind base;
 @tailwind components;
@@ -31,11 +12,30 @@ html, body {
   /* margin-bottom: 0.5em; */
 }
 
-/* Các style chung cho nút bấm (nếu không được bao phủ bởi Tailwind classes đủ) */
+/* Các style chung cho nút bấm (đã thêm kích thước cố định để giảm CLS) */
 .btn-primary {
+  /* Áp dụng các style hiện có */
   @apply px-6 py-3 bg-blue-600 text-white font-semibold rounded-full shadow-md hover:bg-blue-700 transition-all duration-300 transform hover:scale-105;
+  /* THAY ĐỔI MỚI: Thêm min-width và height cố định */
+  /* Điều này giúp dành sẵn không gian chính xác cho nút, tránh nhảy layout */
+  min-width: 150px; /* Đảm bảo chiều rộng tối thiểu cho nút */
+  height: 48px; /* Đảm bảo chiều cao cố định */
+  display: inline-flex; /* Đảm bảo flexbox cho căn giữa nội dung */
+  align-items: center; /* Căn giữa dọc nội dung */
+  justify-content: center; /* Căn giữa ngang nội dung */
+  text-align: center; /* Căn giữa văn bản trong nút */
+  box-sizing: border-box; /* Đảm bảo padding và border được tính vào kích thước */
 }
 
 .btn-secondary {
+  /* Áp dụng các style hiện có */
   @apply px-6 py-3 bg-gray-300 text-gray-800 font-semibold rounded-full shadow-md hover:bg-gray-400 transition-colors duration-300 transform hover:scale-105;
+  /* THAY ĐỔI MỚI: Thêm min-width và height cố định */
+  min-width: 150px; /* Đảm bảo chiều rộng tối thiểu cho nút */
+  height: 48px; /* Đảm bảo chiều cao cố định */
+  display: inline-flex; /* Đảm bảo flexbox cho căn giữa nội dung */
+  align-items: center; /* Căn giữa dọc nội dung */
+  justify-content: center; /* Căn giữa ngang nội dung */
+  text-align: center; /* Căn giữa văn bản trong nút */
+  box-sizing: border-box; /* Đảm bảo padding và border được tính vào kích thước */
 }
