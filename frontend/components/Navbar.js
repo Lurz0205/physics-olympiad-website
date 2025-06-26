@@ -12,11 +12,14 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-gradient-to-r from-blue-700 to-blue-900 text-white shadow-lg p-2 sm:p-3 sticky top-0 z-50 rounded-b-xl">
-      <div className="max-w-7xl mx-auto flex flex-wrap justify-between items-center">
+    // THAY ĐỔI: Thêm min-h-[64px] (hoặc height) để cố định chiều cao Navbar
+    // Điều này giúp ngăn chặn các phần tử khác bị dịch chuyển khi Navbar load
+    <nav className="bg-gradient-to-r from-blue-700 to-blue-900 text-white shadow-lg p-2 sm:p-3 sticky top-0 z-50 rounded-b-xl min-h-[64px] flex items-center">
+      <div className="max-w-7xl mx-auto flex flex-wrap justify-between items-center w-full"> {/* Đảm bảo w-full cho div bên trong */}
         {/* Logo/Tên ứng dụng */}
         <Link href="/">
-          <a className="text-xl sm:text-2xl font-extrabold tracking-tight text-white hover:text-blue-200 transition-colors duration-300">
+          {/* THAY ĐỔI: Căn giữa văn bản, đảm bảo ổn định vertical align */}
+          <a className="text-xl sm:text-2xl font-extrabold tracking-tight text-white hover:text-blue-200 transition-colors duration-300 inline-block align-middle leading-none">
             HTB
           </a>
         </Link>
@@ -38,7 +41,7 @@ const Navbar = () => {
         </div>
 
         {/* Các liên kết điều hướng cho Desktop */}
-        <div className="hidden md:flex items-center space-x-4"> {/* hidden trên mobile, flex trên md+ */}
+        <div className="hidden md:flex items-center space-x-4">
           <NavLink href="/theory">Lý thuyết</NavLink>
           <NavLink href="/practice">Bài tập</NavLink>
           <NavLink href="/tests">Đề thi Online</NavLink>
@@ -66,8 +69,8 @@ const Navbar = () => {
 
       {/* Mobile Menu Overlay */}
       {isOpen && (
-        <div className="md:hidden absolute top-full left-0 w-full bg-blue-800 shadow-lg pb-4 rounded-b-xl z-40"> {/* Menu trượt xuống */}
-          <div className="flex flex-col items-center space-y-4 py-4"> {/* Các liên kết dọc */}
+        <div className="md:hidden absolute top-full left-0 w-full bg-blue-800 shadow-lg pb-4 rounded-b-xl z-40">
+          <div className="flex flex-col items-center space-y-4 py-4">
             <NavLinkMobile href="/theory" onClick={toggleMenu}>Lý thuyết</NavLinkMobile>
             <NavLinkMobile href="/practice" onClick={toggleMenu}>Bài tập</NavLinkMobile>
             <NavLinkMobile href="/tests" onClick={toggleMenu}>Đề thi Online</NavLinkMobile>
@@ -78,7 +81,7 @@ const Navbar = () => {
                   Xin chào, {user.name ? user.name.split(' ')[0] : 'Bạn'}
                 </span>
                 <button
-                  onClick={() => { logout(); toggleMenu(); }} // Đóng menu sau khi đăng xuất
+                  onClick={() => { logout(); toggleMenu(); }}
                   className="bg-red-500 hover:bg-red-600 text-white px-4 py-1.5 rounded-full font-semibold transition-colors duration-300 shadow-md"
                 >
                   Đăng xuất
@@ -100,7 +103,8 @@ const Navbar = () => {
 // Helper component cho các liên kết điều hướng Desktop
 const NavLink = ({ href, children }) => (
   <Link href={href}>
-    <a className="text-sm sm:text-base font-medium px-2.5 py-1 sm:px-3 py-1.5 rounded-full hover:bg-blue-600 transition-colors duration-300 whitespace-nowrap">
+    {/* THAY ĐỔI: Thêm min-h-[40px] và leading-none để cố định chiều cao và căn chỉnh văn bản */}
+    <a className="text-sm sm:text-base font-medium px-2.5 py-1 sm:px-3 py-1.5 rounded-full hover:bg-blue-600 transition-colors duration-300 whitespace-nowrap inline-flex items-center justify-center min-h-[40px] leading-none">
       {children}
     </a>
   </Link>
@@ -109,7 +113,8 @@ const NavLink = ({ href, children }) => (
 // Helper component cho các liên kết điều hướng Mobile
 const NavLinkMobile = ({ href, children, onClick }) => (
   <Link href={href}>
-    <a onClick={onClick} className="text-white text-base font-medium w-full text-center py-2 hover:bg-blue-600 transition-colors duration-300 rounded-md">
+    {/* THAY ĐỔI: Thêm min-h-[48px] và leading-none để cố định chiều cao và căn chỉnh văn bản */}
+    <a onClick={onClick} className="text-white text-base font-medium w-full text-center py-2 hover:bg-blue-600 transition-colors duration-300 rounded-md inline-flex items-center justify-center min-h-[48px] leading-none">
       {children}
     </a>
   </Link>
