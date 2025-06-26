@@ -1,17 +1,22 @@
 /* physics-olympiad-website/frontend/styles/globals.css */
 
 /* Đảm bảo nền trắng tuyệt đối cho toàn bộ trang */
-html, body, #__next, #root { /* Bao gồm #__next và #root để đảm bảo bao phủ ứng dụng React */
-  background-color: #FFFFFF !important; /* Sử dụng !important để ghi đè */
-  height: 100%; /* Đảm bảo chiếm toàn bộ chiều cao */
-  margin: 0; /* Xóa margin mặc định */
-  padding: 0; /* Xóa padding mặc định */
-  font-family: 'Inter', sans-serif; /* Giữ font chữ */
+html, body {
+  background-color: #FFFFFF !important; /* Màu trắng tinh khiết, dùng !important để ghi đè */
+  height: 100%; /* Đảm bảo body và html chiếm toàn bộ chiều cao */
+  margin: 0; /* Xóa margin mặc định của body */
+  padding: 0; /* Xóa padding mặc định của body */
+  font-family: 'Inter', sans-serif; /* Giữ font chữ Inter */
+  color: #374151; /* Màu chữ mặc định cho toàn bộ trang (gray-700) */
+  line-height: 1.6; /* Tăng line-height cho dễ đọc */
 }
 
-/* Định nghĩa một class nền trắng có thể tái sử dụng */
-.bg-pure-white {
+/* Đảm bảo container #__next của Next.js cũng có nền trắng */
+#__next {
   background-color: #FFFFFF !important;
+  min-height: 100vh; /* Đảm bảo nó chiếm ít nhất 100% chiều cao viewport */
+  display: flex;
+  flex-direction: column;
 }
 
 /* Các chỉ thị Tailwind CSS */
@@ -19,4 +24,18 @@ html, body, #__next, #root { /* Bao gồm #__next và #root để đảm bảo b
 @tailwind components;
 @tailwind utilities;
 
-/* Các CSS tùy chỉnh khác của bạn */
+/* Custom CSS cho KaTeX (nếu cần điều chỉnh hiển thị LaTeX) */
+.katex-display > .katex {
+  /* Các thuộc tính KaTeX mặc định thường ổn, nhưng có thể tùy chỉnh margin nếu cần */
+  /* margin-top: 1em; */
+  /* margin-bottom: 0.5em; */
+}
+
+/* Các style chung cho nút bấm (nếu không được bao phủ bởi Tailwind classes đủ) */
+.btn-primary {
+  @apply px-6 py-3 bg-blue-600 text-white font-semibold rounded-full shadow-md hover:bg-blue-700 transition-all duration-300 transform hover:scale-105;
+}
+
+.btn-secondary {
+  @apply px-6 py-3 bg-gray-300 text-gray-800 font-semibold rounded-full shadow-md hover:bg-gray-400 transition-colors duration-300 transform hover:scale-105;
+}
