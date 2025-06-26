@@ -1,6 +1,6 @@
 // physics-olympiad-website/frontend/components/MathContent.js
 import React, { useEffect, useRef } from 'react';
-// import 'katex/dist/katex.min.css'; // Dòng này đã bị xóa
+// import 'katex/dist/katex.min.css'; // Dòng này ĐÃ BỊ XÓA
 
 /**
  * Component để hiển thị nội dung có chứa công thức toán học LaTeX.
