@@ -7,7 +7,7 @@ const HomePage = () => {
   return (
     <div className="min-h-screen bg-white flex flex-col items-center justify-center p-4">
       <Head>
-        <title>Nền tảng Ôn thi HSG Vật lý</title>
+        <title>NỀN TẢNG ÔN THI HSG VẬT LÍ THPT</title>
         <meta name="description" content="Nền tảng ôn thi học sinh giỏi Vật lý" />
       </Head>
 
