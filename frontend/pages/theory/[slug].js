@@ -48,7 +48,7 @@ const TheoryDetail = () => {
 
   if (loading || authLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-white"> {/* Nền trắng */}
+      <div className="flex items-center justify-center min-h-screen bg-white">
         <p className="text-xl text-gray-700">Đang tải nội dung...</p>
       </div>
     );
@@ -56,7 +56,7 @@ const TheoryDetail = () => {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-white p-4"> {/* Nền trắng */}
+      <div className="flex items-center justify-center min-h-screen bg-white p-4">
         <p className="text-xl text-red-600 text-center">{error}</p>
       </div>
     );
@@ -64,26 +64,27 @@ const TheoryDetail = () => {
 
   if (!theory) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-white"> {/* Nền trắng */}
+      <div className="flex items-center justify-center min-h-screen bg-white">
         <p className="text-xl text-gray-700">Không tìm thấy nội dung lý thuyết.</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 sm:p-8"> {/* Nền hơi xám nhạt */}
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8"> {/* Responsive padding */}
       <Head>
         <title>{theory.title} - Lý thuyết Vật lý HSG</title>
       </Head>
-      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6 sm:p-8 border border-gray-100"> {/* Tăng bo tròn, shadow, thêm border */}
-        <h1 className="text-3xl font-bold text-gray-800 mb-4 text-center">{theory.title}</h1>
-        <p className="text-lg text-gray-700 mb-6">{theory.description}</p>
-        <div className="prose max-w-none text-gray-800 leading-relaxed">
+      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6 sm:p-8 border border-gray-100"> {/* Responsive padding */}
+        <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-4 sm:mb-6 text-center">{theory.title}</h1> {/* Responsive font size */}
+        <p className="text-base sm:text-lg text-gray-700 mb-6">{theory.description}</p> {/* Responsive font size */}
+        {/* Prose class của Tailwind giúp định dạng nội dung rich text tốt hơn */}
+        <div className="prose max-w-none text-gray-800 leading-relaxed text-sm sm:text-base"> {/* Responsive font size */}
           <MathContent content={theory.content} />
         </div>
         <Link
           href="/theory"
-          className="mt-8 inline-block bg-gray-300 text-gray-800 px-6 py-3 rounded-full hover:bg-gray-400 transition duration-300 shadow-md transform hover:scale-105" // Nút bo tròn, hiệu ứng
+          className="mt-8 inline-block btn-secondary" // Sử dụng class chung
         >
           &larr; Quay lại
         </Link>
