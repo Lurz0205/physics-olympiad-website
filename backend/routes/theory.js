@@ -1,6 +1,8 @@
+// physics-olympiad-website/backend/routes/theory.js
 const express = require('express');
 const router = express.Router();
-const { protect } = require('../middleware/authMiddleware');
+// SỬA ĐỔI: Thay đổi cách import protect để nhận trực tiếp hàm
+const protect = require('../middleware/authMiddleware');
 const theoriesData = require('../data/theoriesData'); // Import dữ liệu lý thuyết cứng
 
 // @route   GET /api/theory
