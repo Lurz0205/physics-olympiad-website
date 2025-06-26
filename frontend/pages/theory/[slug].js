@@ -1,55 +1,53 @@
 // physics-olympiad-website/frontend/pages/theory/[slug].js
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
-import { useAuth } from '../../context/AuthContext';
 import Head from 'next/head';
-import Link from 'next/link';
-import MathContent from '../../components/MathContent';
+import { useAuth } from '../../context/AuthContext'; // Import useAuth nếu bạn muốn kiểm tra trạng thái đăng nhập
 
-const TheoryDetail = () => {
+const TheoryDetailPage = () => {
   const router = useRouter();
-  const { slug } = router.query;
-  const { token, loading: authLoading } = useAuth();
+  const { slug } = router.query; // Lấy slug từ URL
+  const { token } = useAuth(); // Lấy token để xác thực nếu API cần (ở đây không cần cho getBySlug public)
+
   const [theory, setTheory] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (slug && !authLoading) {
-      if (!token) {
+    const fetchTheory = async () => {
+      if (!slug) { // Đảm bảo slug đã có trước khi fetch
         setLoading(false);
-        setError('Vui lòng đăng nhập để xem nội dung này.');
         return;
       }
+      setLoading(true);
+      setError(null);
+      try {
+        // THAY ĐỔI QUAN TRỌNG: Gọi đúng API theo slug
+        // Không cần Authorization header nếu API /api/theory/slug/:slug là public
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/theory/slug/${slug}`); 
+        
+        const data = await response.json();
 
-      const fetchTheory = async () => {
-        try {
-          const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/theory/${slug}`, {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          });
-          const data = await response.json();
-          if (response.ok) {
-            setTheory(data);
-          } else {
-            setError(data.message || 'Không tìm thấy nội dung lý thuyết.');
-          }
-        } catch (err) {
-          console.error('Lỗi khi lấy chi tiết lý thuyết:', err);
-          setError('Đã xảy ra lỗi khi kết nối máy chủ.');
-        } finally {
-          setLoading(false);
+        if (!response.ok) {
+          throw new Error(data.message || 'Lỗi khi tải nội dung lý thuyết.');
         }
-      };
-      fetchTheory();
-    }
-  }, [slug, token, authLoading]);
 
-  if (loading || authLoading) {
+        setTheory(data);
+      } catch (err) {
+        console.error('Error fetching theory detail:', err);
+        setError(err.message || 'Đã xảy ra lỗi khi tải nội dung lý thuyết.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTheory();
+  }, [slug]); // Effect chạy khi slug thay đổi
+
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-white">
-        <p className="text-xl text-gray-700">Đang tải nội dung...</p>
+        <p className="text-xl text-gray-700">Đang tải nội dung lý thuyết...</p>
       </div>
     );
   }
@@ -64,33 +62,28 @@ const TheoryDetail = () => {
 
   if (!theory) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-white">
-        <p className="text-xl text-gray-700">Không tìm thấy nội dung lý thuyết.</p>
+      <div className="flex items-center justify-center min-h-screen bg-white p-4">
+        <p className="text-xl text-gray-600 text-center">Không tìm thấy bài lý thuyết này.</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8"> {/* Responsive padding */}
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
       <Head>
-        <title>{theory.title} - Lý thuyết Vật lý HSG</title>
+        <title>{theory.title} - Lý thuyết</title>
       </Head>
-      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6 sm:p-8 border border-gray-100"> {/* Responsive padding */}
-        <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-4 sm:mb-6 text-center">{theory.title}</h1> {/* Responsive font size */}
-        <p className="text-base sm:text-lg text-gray-700 mb-6">{theory.description}</p> {/* Responsive font size */}
-        {/* Prose class của Tailwind giúp định dạng nội dung rich text tốt hơn */}
-        <div className="prose max-w-none text-gray-800 leading-relaxed text-sm sm:text-base"> {/* Responsive font size */}
-          <MathContent content={theory.content} />
+      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6 sm:p-8 border border-gray-100">
+        <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-4 text-center">{theory.title}</h1>
+        <p className="text-gray-600 text-lg mb-6 text-center">{theory.description}</p>
+        
+        {/* Render nội dung lý thuyết */}
+        <div className="prose max-w-none text-gray-800 leading-relaxed" dangerouslySetInnerHTML={{ __html: theory.content }}>
+          {/* dangerouslySetInnerHTML được sử dụng để render HTML từ Markdown/LaTeX đã được xử lý */}
         </div>
-        <Link
-          href="/theory"
-          className="mt-8 inline-block btn-secondary" // Sử dụng class chung
-        >
-          &larr; Quay lại
-        </Link>
       </div>
     </div>
   );
 };
 
-export default TheoryDetail;
+export default TheoryDetailPage;
