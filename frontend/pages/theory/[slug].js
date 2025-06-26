@@ -2,12 +2,13 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
-import { useAuth } from '../../context/AuthContext'; // Import useAuth nếu bạn muốn kiểm tra trạng thái đăng nhập
+import { useAuth } from '../../context/AuthContext';
+import MathContent from '../../components/MathContent'; // BẮT BUỘC: Import MathContent
 
 const TheoryDetailPage = () => {
   const router = useRouter();
-  const { slug } = router.query; // Lấy slug từ URL
-  const { token } = useAuth(); // Lấy token để xác thực nếu API cần (ở đây không cần cho getBySlug public)
+  const { slug } = router.query;
+  const { token } = useAuth(); // Vẫn giữ để có thể dùng cho các logic khác sau này nếu cần
 
   const [theory, setTheory] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -15,15 +16,15 @@ const TheoryDetailPage = () => {
 
   useEffect(() => {
     const fetchTheory = async () => {
-      if (!slug) { // Đảm bảo slug đã có trước khi fetch
+      if (!slug) {
         setLoading(false);
         return;
       }
       setLoading(true);
       setError(null);
       try {
-        // THAY ĐỔI QUAN TRỌNG: Gọi đúng API theo slug
-        // Không cần Authorization header nếu API /api/theory/slug/:slug là public
+        // Gọi API backend để lấy dữ liệu lý thuyết theo slug
+        // Route /api/theory/slug/:slug đã được cấu hình public ở backend
         const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/theory/slug/${slug}`); 
         
         const data = await response.json();
@@ -77,10 +78,9 @@ const TheoryDetailPage = () => {
         <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-4 text-center">{theory.title}</h1>
         <p className="text-gray-600 text-lg mb-6 text-center">{theory.description}</p>
         
-        {/* Render nội dung lý thuyết */}
-        <div className="prose max-w-none text-gray-800 leading-relaxed" dangerouslySetInnerHTML={{ __html: theory.content }}>
-          {/* dangerouslySetInnerHTML được sử dụng để render HTML từ Markdown/LaTeX đã được xử lý */}
-        </div>
+        {/* BẮT BUỘC: SỬ DỤNG COMPONENT MathContent để render nội dung có LaTeX */}
+        {/* Truyền content từ database vào component này */}
+        <MathContent content={theory.content} />
       </div>
     </div>
   );
