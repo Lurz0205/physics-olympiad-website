@@ -1,122 +1,119 @@
 // physics-olympiad-website/backend/controllers/authController.js
-const jwt = require('jsonwebtoken');
+
+const User = require('../models/User'); // Đảm bảo đường dẫn đúng tới model User
 const bcrypt = require('bcryptjs');
-const User = require('../models/User');
+const jwt = require('jsonwebtoken');
 
-// @desc    Đăng ký người dùng mới
-// @route   POST /api/auth/register
-// @access  Public
+// Hàm đăng ký người dùng mới
 const register = async (req, res) => {
-  console.log('Register request body:', req.body);
-
-  const { name, email, password } = req.body;
+  const { name, email, password, role } = req.body;
 
   try {
-    if (!name || !email || !password) {
-      return res.status(400).json({ message: 'Vui lòng nhập đầy đủ tên người dùng, email và mật khẩu.' });
-    }
-    
-    if (name.trim() === '') {
-        return res.status(400).json({ message: 'Tên người dùng không được để trống.' });
-    }
-
-    if (password.length < 6) {
-        return res.status(400).json({ message: 'Mật khẩu phải có ít nhất 6 ký tự.' });
-    }
-
-    // Kiểm tra tồn tại user dựa trên email HOẶC tên
-    const userExists = await User.findOne({ $or: [{ email }, { name }] });
-
+    // Kiểm tra xem người dùng đã tồn tại chưa (email hoặc username)
+    let userExists = await User.findOne({ $or: [{ email }, { name }] });
     if (userExists) {
       if (userExists.email === email) {
-        return res.status(400).json({ message: 'Email này đã được sử dụng bởi tài khoản khác.' });
+        return res.status(400).json({ message: 'Email đã tồn tại.' });
       }
       if (userExists.name === name) {
-        return res.status(400).json({ message: 'Tên người dùng này đã tồn tại. Vui lòng chọn tên khác.' });
+        return res.status(400).json({ message: 'Tên người dùng đã tồn tại.' });
       }
     }
 
-    const user = await User.create({
+    // Hash mật khẩu
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Tạo người dùng mới
+    const newUser = new User({
       name,
       email,
-      password,
+      password: hashedPassword,
+      role: role || 'user', // Mặc định là 'user' nếu không có vai trò được cung cấp
     });
 
-    if (user) {
-      const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
-      res.status(201).json({
-        message: 'Đăng ký thành công',
-        user: { id: user._id, name: user.name, email: user.email, role: user.role },
-        token,
-      });
-    } else {
-      res.status(400).json({ message: 'Dữ liệu người dùng không hợp lệ.' });
-    }
+    await newUser.save();
+
+    res.status(201).json({ message: 'Đăng ký thành công!' });
   } catch (error) {
-    console.error('Lỗi đăng ký:', error);
-    if (error.code === 11000) {
-        const field = Object.keys(error.keyValue)[0];
-        const value = error.keyValue[field];
-        if (field === 'name') {
-            return res.status(400).json({ message: `Tên người dùng '${value}' đã tồn tại. Vui lòng chọn tên khác.` });
-        } else if (field === 'email') {
-            return res.status(400).json({ message: `Email '${value}' đã được sử dụng. Vui lòng chọn email khác.` });
-        }
-        return res.status(400).json({ message: `Trường '${field}' với giá trị '${value}' đã tồn tại. Vui lòng chọn giá trị khác.` });
-    }
-    res.status(500).json({ message: 'Lỗi máy chủ trong quá trình đăng ký.' });
+    console.error('Lỗi khi đăng ký người dùng:', error);
+    res.status(500).json({ message: 'Lỗi máy chủ nội bộ khi đăng ký.' });
   }
 };
 
-// @desc    Đăng nhập người dùng
-// @route   POST /api/auth/login
-// @access  Public
-const login = async (req, res) => { // Định nghĩa hàm login
-  const { email, password } = req.body;
+// Hàm đăng nhập người dùng
+const login = async (req, res) => {
+  const { identifier, password } = req.body; // Đổi từ 'email' thành 'identifier'
 
   try {
-    if (!email || !password) {
-      return res.status(400).json({ message: 'Vui lòng nhập email và mật khẩu.' });
+    // Tìm người dùng bằng email HOẶC username (name)
+    const user = await User.findOne({
+      $or: [
+        { email: identifier },
+        { name: identifier }
+      ]
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: 'Email hoặc tên người dùng không tồn tại.' });
     }
 
-    const user = await User.findOne({ email });
-
-    if (user && (await bcrypt.compare(password, user.password))) {
-      const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
-      res.json({
-        message: 'Đăng nhập thành công',
-        user: { id: user._id, name: user.name, email: user.email, role: user.role },
-        token,
-      });
-    } else {
-      res.status(401).json({ message: 'Email hoặc mật khẩu không đúng.' });
+    // So sánh mật khẩu
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Mật khẩu không đúng.' });
     }
+
+    // Tạo JWT token
+    const token = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' } // Token hết hạn sau 1 giờ
+    );
+
+    // Trả về thông tin người dùng và token (không bao gồm mật khẩu hash)
+    res.status(200).json({
+      message: 'Đăng nhập thành công!',
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
   } catch (error) {
-    console.error('Lỗi đăng nhập:', error);
-    res.status(500).json({ message: 'Lỗi máy chủ trong quá trình đăng nhập.' });
+    console.error('Lỗi khi đăng nhập:', error);
+    res.status(500).json({ message: 'Lỗi máy chủ nội bộ khi đăng nhập.' });
   }
 };
 
-// @desc    Lấy thông tin người dùng hiện tại
-// @route   GET /api/auth/me
-// @access  Private
-const getMe = async (req, res) => { // Định nghĩa hàm getMe
+// Hàm lấy thông tin người dùng (cho xác thực token)
+const getUser = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('-password'); // Bỏ trường password
-    if (user) {
-      res.json({ id: user._id, name: user.name, email: user.email, role: user.role });
-    } else {
-      res.status(404).json({ message: 'Không tìm thấy người dùng.' });
+    const user = await User.findById(req.user.id).select('-password'); // Lấy user mà không có mật khẩu
+    if (!user) {
+      return res.status(404).json({ message: 'Không tìm thấy người dùng.' });
     }
+    res.json(user);
   } catch (error) {
-    console.error('Lỗi lấy thông tin người dùng:', error);
-    res.status(500).json({ message: 'Lỗi máy chủ khi lấy thông tin người dùng.' });
+    console.error('Lỗi khi lấy thông tin người dùng:', error);
+    res.status(500).json({ message: 'Lỗi máy chủ nội bộ khi lấy thông tin người dùng.' });
   }
 };
 
-// Export tất cả các hàm sau khi chúng đã được định nghĩa
+// Hàm kiểm tra quyền admin
+const authorizeAdmin = (req, res, next) => {
+  if (req.user && req.user.role === 'admin') {
+    next(); // Cho phép tiếp tục nếu là admin
+  } else {
+    res.status(403).json({ message: 'Không có quyền truy cập. Yêu cầu quyền admin.' });
+  }
+};
+
 module.exports = {
   register,
   login,
-  getMe,
+  getUser,
+  authorizeAdmin,
 };
