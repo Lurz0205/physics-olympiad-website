@@ -6,8 +6,10 @@ import Layout from '../components/Layout'; // Giả sử bạn có component Lay
 function MyApp({ Component, pageProps }) {
   return (
     <AuthProvider>
-      {/* Áp dụng class bg-pure-white để đảm bảo nền trắng */}
-      <div className="min-h-screen bg-pure-white"> {/* Đã thêm class bg-pure-white */}
+      {/* THAY ĐỔI: Loại bỏ hoặc thay thế bg-red-200 */}
+      {/* Ví dụ: chỉ giữ min-h-screen để div này vẫn chiếm hết chiều cao */}
+      {/* Hoặc thay thế bằng bg-white nếu bạn muốn div này có nền trắng rõ ràng */}
+      <div className="min-h-screen"> {/* Đã xóa bg-red-200 */}
         {/* Đảm bảo Layout component của bạn cũng không có màu nền ghi đè */}
         <Layout>
           <Component {...pageProps} />
