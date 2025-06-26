@@ -1,17 +1,19 @@
 // physics-olympiad-website/frontend/pages/practice/index.js
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react'; // Xóa useContext
 import Link from 'next/link';
-import { AuthContext } from '../../context/AuthContext'; // ĐÃ SỬA ĐƯỜNG DẪN: ../../context/AuthContext
+import { useAuth } from '../../context/AuthContext'; // THAY ĐỔI: Import useAuth hook
 import Head from 'next/head';
 
 const PracticeTopicsPage = () => {
-  const { user, authToken } = useContext(AuthContext); // Lấy user và authToken từ context
+  // THAY ĐỔI: Sử dụng useAuth hook để lấy user và token (đổi tên token thành authToken cho nhất quán)
+  const { user, token: authToken } = useAuth(); 
   const [topics, setTopics] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchTopics = async () => {
+      // Kiểm tra user và authToken từ useAuth
       if (!user || !authToken) {
         setError('Bạn cần đăng nhập để xem các chủ đề bài tập.');
         setLoading(false);
