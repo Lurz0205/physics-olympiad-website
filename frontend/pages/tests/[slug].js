@@ -1,22 +1,21 @@
 // physics-olympiad-website/frontend/pages/tests/[slug].js
-import React, { useState, useEffect } from 'react'; // Xóa useContext
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { useAuth } from '../../context/AuthContext'; // THAY ĐỔI: Import useAuth hook
+import { useAuth } from '../../context/AuthContext';
 import Head from 'next/head';
-import MathContent from '../../components/MathContent'; // Import MathContent component
+import MathContent from '../../components/MathContent';
 
 const TestDetailPage = () => {
   const router = useRouter();
-  const { slug } = router.query; // Lấy slug từ URL
-  // THAY ĐỔI: Sử dụng useAuth hook để lấy user và token (đổi tên token thành authToken cho nhất quán)
+  const { slug } = router.query;
   const { user, token: authToken } = useAuth();
   const [testData, setTestData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [userAnswers, setUserAnswers] = useState({});
-  const [showResults, setShowResults] = useState(false); // State để hiển thị kết quả và đáp án
-  const [score, setScore] = useState(0); // Điểm số của người dùng
-  const [correctAnswers, setCorrectAnswers] = useState({}); // Lưu trữ đáp án đúng và giải thích từ API riêng
+  const [showResults, setShowResults] = useState(false);
+  const [score, setScore] = useState(0);
+  const [correctAnswers, setCorrectAnswers] = useState({});
 
   useEffect(() => {
     const fetchTestDetails = async () => {
@@ -28,7 +27,6 @@ const TestDetailPage = () => {
       }
 
       try {
-        // Fetch test questions
         const testResponse = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/tests/${slug}`, {
           headers: {
             'Authorization': `Bearer ${authToken}`,
@@ -61,7 +59,7 @@ const TestDetailPage = () => {
   }, [slug, user, authToken]);
 
   const handleOptionChange = (questionId, selectedOption) => {
-    if (!showResults) { // Chỉ cho phép chọn đáp án khi chưa nộp bài
+    if (!showResults) {
       setUserAnswers(prevAnswers => ({
         ...prevAnswers,
         [questionId]: selectedOption,
@@ -76,7 +74,6 @@ const TestDetailPage = () => {
     setError(null);
 
     try {
-      // Lấy đáp án đúng và giải thích từ API riêng
       const answersResponse = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/tests/${slug}/answers`, {
         headers: {
           'Authorization': `Bearer ${authToken}`,
@@ -105,7 +102,7 @@ const TestDetailPage = () => {
         }
       });
       setScore(correctCount);
-      setShowResults(true); // Hiển thị kết quả
+      setShowResults(true);
 
     } catch (err) {
       console.error('Lỗi khi nộp bài:', err);
@@ -117,7 +114,7 @@ const TestDetailPage = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <div className="flex items-center justify-center min-h-screen bg-white"> {/* Nền trắng */}
         <p className="text-xl text-gray-700">Đang tải đề thi...</p>
       </div>
     );
@@ -125,7 +122,7 @@ const TestDetailPage = () => {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4">
+      <div className="flex items-center justify-center min-h-screen bg-white p-4"> {/* Nền trắng */}
         <p className="text-xl text-red-600 text-center">{error}</p>
       </div>
     );
@@ -133,18 +130,18 @@ const TestDetailPage = () => {
 
   if (!testData) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <div className="flex items-center justify-center min-h-screen bg-white"> {/* Nền trắng */}
         <p className="text-xl text-gray-700">Không tìm thấy đề thi này.</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4 sm:p-8">
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-8"> {/* Nền hơi xám nhạt */}
       <Head>
         <title>{testData.title} - Đề thi Online</title>
       </Head>
-      <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-6 sm:p-8">
+      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6 sm:p-8 border border-gray-100"> {/* Tăng bo tròn, shadow, thêm border */}
         <h1 className="text-3xl font-bold text-gray-800 mb-4 text-center">{testData.title}</h1>
         <p className="text-gray-600 text-center mb-2">{testData.description}</p>
         <p className="text-gray-600 text-center mb-8">Thời lượng: {testData.duration} phút</p>
@@ -154,7 +151,7 @@ const TestDetailPage = () => {
         ) : (
           <div className="space-y-8">
             {testData.questions.map((q, index) => (
-              <div key={q._id} className="bg-white rounded-lg shadow-sm p-5 border border-gray-200">
+              <div key={q._id} className="bg-white rounded-xl shadow-md p-5 border border-gray-200"> {/* Bo tròn, shadow */}
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">
                   Câu hỏi {index + 1}: <MathContent content={q.questionText} />
                 </h3>
@@ -176,7 +173,7 @@ const TestDetailPage = () => {
                         checked={userAnswers[q._id] === option}
                         onChange={() => handleOptionChange(q._id, option)}
                         className="form-radio h-5 w-5 text-blue-600"
-                        disabled={showResults} // Vô hiệu hóa nút radio sau khi nộp bài
+                        disabled={showResults}
                       />
                       <span className="text-gray-800 text-base">
                         <MathContent content={option} />
@@ -185,7 +182,7 @@ const TestDetailPage = () => {
                   ))}
                 </div>
                 {showResults && correctAnswers[q._id] && (
-                  <div className="mt-4 p-4 rounded-md bg-gray-50 border border-gray-200">
+                  <div className="mt-4 p-4 rounded-lg border bg-gray-50 border-gray-200"> {/* Bo tròn, border */}
                     <p className="font-semibold mb-2">Đáp án đúng: <MathContent content={correctAnswers[q._id].correctAnswer} /></p>
                     {correctAnswers[q._id].explanation && (
                       <div>
@@ -201,7 +198,7 @@ const TestDetailPage = () => {
               <div className="flex justify-center mt-8">
                 <button
                   onClick={handleSubmitTest}
-                  className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75"
+                  className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-full shadow-md hover:bg-blue-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 transform hover:scale-105"
                 >
                   Nộp bài và xem kết quả
                 </button>
@@ -211,8 +208,8 @@ const TestDetailPage = () => {
               <div className="mt-8 text-center">
                 <p className="text-2xl font-bold text-blue-700">Bạn đã trả lời đúng {score} / {testData.questions.length} câu hỏi.</p>
                 <button
-                  onClick={() => router.push('/tests')} // Quay về trang danh sách đề thi
-                  className="mt-4 px-6 py-3 bg-gray-300 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-gray-400 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-75"
+                  onClick={() => router.push('/tests')}
+                  className="mt-4 px-6 py-3 bg-gray-300 text-gray-800 font-semibold rounded-full shadow-md hover:bg-gray-400 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-75 transform hover:scale-105"
                 >
                   Quay lại danh sách đề thi
                 </button>
