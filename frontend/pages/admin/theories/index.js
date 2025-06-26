@@ -3,8 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useAuth } from '../../../context/AuthContext';
-// KHÔNG CẦN IMPORT AdminLayout ở đây vì nó đã được bọc ở _app.js
-// import AdminLayout from '../../../components/AdminLayout'; // Dòng này có thể bị xóa hoặc comment
+// XÓA DÒNG NÀY: import AdminLayout from '../../../components/AdminLayout';
 
 const AdminTheoriesPage = () => {
   const { token } = useAuth();
@@ -74,17 +73,15 @@ const AdminTheoriesPage = () => {
   };
 
   if (loading) {
-    // Không cần AdminLayout ở đây nữa, chỉ trả về nội dung tải
     return <div className="text-center p-6">Đang tải danh sách lý thuyết...</div>;
   }
 
   if (error) {
-    // Không cần AdminLayout ở đây nữa, chỉ trả về nội dung lỗi
     return <div className="text-center text-red-600 p-6">Lỗi: {error}</div>;
   }
 
   return (
-    // THAY ĐỔI: Dùng Fragment <> </> thay vì bọc bằng AdminLayout
+    // THAY ĐỔI: Dùng Fragment <> </> thay vì AdminLayout
     <>
       <Head>
         <title>Quản lý Lý thuyết - Admin</title>
@@ -127,7 +124,7 @@ const AdminTheoriesPage = () => {
                     <td className="py-3 px-6 text-left">{theory.slug}</td>
                     <td className="py-3 px-6 text-left">{theory.category}</td>
                     <td className="py-3 px-6 text-center whitespace-nowrap">
-                      <Link href={`/admin/theories/edit/${theory._id}`}> {/* Đây là link sửa */}
+                      <Link href={`/admin/theories/edit/${theory._id}`}>
                         <a className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-1 px-3 rounded-md text-xs mr-2 transition-colors duration-200">
                           Sửa
                         </a>
@@ -146,7 +143,7 @@ const AdminTheoriesPage = () => {
           </div>
         )}
       </div>
-    </> // THAY ĐỔI: Dùng Fragment
+    </>
   );
 };
 
