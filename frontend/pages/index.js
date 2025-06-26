@@ -7,13 +7,13 @@ const HomePage = () => {
   return (
     <div className="min-h-screen bg-white flex flex-col items-center justify-center p-4">
       <Head>
-        <title>NỀN TẢNG ÔN THI HSG VẬT LÍ THPT</title>
+        <title>HTB - Nền tảng ôn thi HSG Vật Lí THPT</title>
         <meta name="description" content="Nền tảng ôn thi học sinh giỏi Vật lý" />
       </Head>
 
       <main className="w-full max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6 sm:p-8 text-center my-8 border border-gray-100"> {/* Responsive padding */}
         <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-blue-700 mb-4 sm:mb-6 leading-tight"> {/* Responsive font sizes */}
-          Nền tảng Ôn thi HSG Vật lý
+          NỀN TẢNG ÔN THI HSG VẬT LÍ THPT
         </h1>
         <p className="text-base sm:text-lg text-gray-700 mb-6 sm:mb-8 max-w-2xl mx-auto"> {/* Responsive font sizes */}
           Cung cấp tài liệu lý thuyết chuyên sâu, hệ thống bài tập đa dạng và đề thi chọn lọc
