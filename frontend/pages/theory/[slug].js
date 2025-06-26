@@ -2,13 +2,14 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
+import Link from 'next/link'; // Import Link
 import { useAuth } from '../../context/AuthContext';
-import MathContent from '../../components/MathContent'; // BẮT BUỘC: Import MathContent
+import MathContent from '../../components/MathContent';
 
 const TheoryDetailPage = () => {
   const router = useRouter();
   const { slug } = router.query;
-  const { token } = useAuth(); // Vẫn giữ để có thể dùng cho các logic khác sau này nếu cần
+  const { token } = useAuth();
 
   const [theory, setTheory] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -23,8 +24,6 @@ const TheoryDetailPage = () => {
       setLoading(true);
       setError(null);
       try {
-        // Gọi API backend để lấy dữ liệu lý thuyết theo slug
-        // Route /api/theory/slug/:slug đã được cấu hình public ở backend
         const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/theory/slug/${slug}`); 
         
         const data = await response.json();
@@ -43,7 +42,7 @@ const TheoryDetailPage = () => {
     };
 
     fetchTheory();
-  }, [slug]); // Effect chạy khi slug thay đổi
+  }, [slug]);
 
   if (loading) {
     return (
@@ -75,11 +74,22 @@ const TheoryDetailPage = () => {
         <title>{theory.title} - Lý thuyết</title>
       </Head>
       <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6 sm:p-8 border border-gray-100">
+        {/* Nút Quay về */}
+        <div className="mb-6"> {/* Thêm khoảng cách dưới nút */}
+          <Link href="/theory"> {/* Thay đổi đường dẫn đến trang danh sách lý thuyết chung */}
+            <a className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
+              {/* Sử dụng icon mũi tên từ Lucide React nếu đã cài đặt, hoặc đơn giản là text */}
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+              Quay về Danh sách Lý thuyết
+            </a>
+          </Link>
+        </div>
+
         <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-4 text-center">{theory.title}</h1>
         <p className="text-gray-600 text-lg mb-6 text-center">{theory.description}</p>
         
-        {/* BẮT BUỘC: SỬ DỤNG COMPONENT MathContent để render nội dung có LaTeX */}
-        {/* Truyền content từ database vào component này */}
         <MathContent content={theory.content} />
       </div>
     </div>
