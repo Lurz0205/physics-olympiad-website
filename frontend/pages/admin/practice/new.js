@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useAuth } from '../../../../context/AuthContext';
+import { useAuth } from '../../../context/AuthContext'; // THAY ĐỔI: Sửa đường dẫn import AuthContext
 
 const AddNewExercisePage = () => {
   const router = useRouter();
