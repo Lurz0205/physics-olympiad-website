@@ -88,32 +88,26 @@ const login = async (req, res) => {
   }
 };
 
-// Hàm lấy thông tin người dùng (cho xác thực token)
-const getUser = async (req, res) => {
+// @desc    Lấy thông tin người dùng hiện tại
+// @route   GET /api/auth/me
+// @access  Private
+const getMe = async (req, res) => { // THAY ĐỔI: Đổi lại tên hàm từ getUser thành getMe
   try {
+    // req.user được gắn bởi middleware protect, chứa thông tin user từ token
     const user = await User.findById(req.user.id).select('-password'); // Lấy user mà không có mật khẩu
     if (!user) {
       return res.status(404).json({ message: 'Không tìm thấy người dùng.' });
     }
-    res.json(user);
+    res.json({ id: user._id, name: user.name, email: user.email, role: user.role });
   } catch (error) {
     console.error('Lỗi khi lấy thông tin người dùng:', error);
     res.status(500).json({ message: 'Lỗi máy chủ nội bộ khi lấy thông tin người dùng.' });
   }
 };
 
-// Hàm kiểm tra quyền admin
-const authorizeAdmin = (req, res, next) => {
-  if (req.user && req.user.role === 'admin') {
-    next(); // Cho phép tiếp tục nếu là admin
-  } else {
-    res.status(403).json({ message: 'Không có quyền truy cập. Yêu cầu quyền admin.' });
-  }
-};
-
+// Export tất cả các hàm
 module.exports = {
   register,
   login,
-  getUser,
-  authorizeAdmin,
+  getMe, // THAY ĐỔI: Export getMe
 };
