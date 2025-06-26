@@ -6,7 +6,7 @@ import { useRouter } from 'next/router';
 import { useAuth } from '../context/AuthContext';
 
 const LoginPage = () => {
-  // Thay đổi 'email' thành 'identifier' để hỗ trợ cả email và tên người dùng
+  // Đổi tên biến từ 'email' thành 'identifier' để nó có thể là email hoặc tên người dùng
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
@@ -26,9 +26,9 @@ const LoginPage = () => {
     setLoading(true); // Bắt đầu trạng thái tải
     setError(null); // Xóa thông báo lỗi trước đó
 
-    // Kiểm tra các trường nhập liệu không được rỗng
-    if (!identifier || !password) {
-      setError('Vui lòng nhập đầy đủ email/tên người dùng và mật khẩu.');
+    // Kiểm tra client-side: Đảm bảo các trường không rỗng
+    if (!identifier.trim() || !password.trim()) { // Sử dụng .trim() để loại bỏ khoảng trắng thừa
+      setError('Vui lòng nhập đầy đủ Email/Tên người dùng và Mật khẩu.');
       setLoading(false);
       return;
     }
@@ -39,7 +39,7 @@ const LoginPage = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        // Gửi 'identifier' thay vì 'email'
+        // Gửi 'identifier' và 'password' đến backend
         body: JSON.stringify({ identifier, password }),
       });
 
@@ -50,18 +50,19 @@ const LoginPage = () => {
         login(data.user, data.token);
         router.push('/'); // Chuyển hướng về trang chủ
       } else {
-        // Xử lý lỗi từ backend
+        // Xử lý lỗi từ backend: Hiển thị thông báo lỗi cụ thể từ server
         setError(data.message || 'Đăng nhập thất bại.');
       }
     } catch (err) {
       console.error('Lỗi đăng nhập:', err);
-      setError('Đã xảy ra lỗi khi kết nối máy chủ.');
+      // Hiển thị lỗi kết nối mạng hoặc lỗi không xác định
+      setError('Đã xảy ra lỗi khi kết nối máy chủ. Vui lòng thử lại sau.');
     } finally {
       setLoading(false); // Kết thúc trạng thái tải
     }
   };
 
-  // Hiển thị trạng thái tải khi đang kiểm tra auth
+  // Hiển thị trạng thái tải khi đang kiểm tra auth ban đầu
   if (authLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-white">
@@ -88,18 +89,17 @@ const LoginPage = () => {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            {/* Thay đổi label và input cho 'identifier' */}
             <label htmlFor="identifier" className="block text-gray-700 text-sm font-medium mb-2">
               Email hoặc Tên người dùng:
             </label>
             <input
-              type="text" // Thay đổi type thành 'text' để chấp nhận cả tên người dùng
+              type="text" // Kiểu 'text' cho phép nhập cả email và tên người dùng
               id="identifier"
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-200"
               placeholder="Nhập email hoặc tên người dùng của bạn"
-              required
+              required // Thêm required HTML attribute
             />
           </div>
           <div>
@@ -113,13 +113,13 @@ const LoginPage = () => {
               onChange={(e) => setPassword(e.target.value)}
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-200"
               placeholder="Nhập mật khẩu của bạn"
-              required
+              required // Thêm required HTML attribute
             />
           </div>
           <button
             type="submit"
             className="w-full btn-primary"
-            disabled={loading}
+            disabled={loading} // Vô hiệu hóa nút khi đang tải
           >
             {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
           </button>
