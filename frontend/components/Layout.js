@@ -1,21 +1,19 @@
 // physics-olympiad-website/frontend/components/Layout.js
-import Navbar from './Navbar';
-import { AuthProvider } from '../context/AuthContext';
+import React from 'react';
+import Navbar from './Navbar'; // Import Navbar component
 
 const Layout = ({ children }) => {
   return (
-    <AuthProvider>
-      {/* Thêm class bg-red-200 vào đây để kiểm tra */}
-      <div className="min-h-screen flex flex-col bg-red-200">
-        <Navbar />
-        <main className="flex-grow container mx-auto p-4 flex flex-col items-center">
-          {children}
-        </main>
-        <footer className="bg-dark text-white p-4 text-center mt-8 rounded-t-lg shadow-inner">
-          <p>&copy; 2024 Website Ôn thi Học sinh Giỏi Vật lý. All rights reserved.</p>
-        </footer>
-      </div>
-    </AuthProvider>
+    <div className="min-h-screen flex flex-col bg-gray-50"> {/* Nền xám nhạt tinh tế cho toàn bộ nội dung */}
+      <Navbar /> {/* Thanh điều hướng */}
+      <main className="flex-grow container mx-auto p-4 sm:p-6 lg:p-8"> {/* Container cho nội dung chính */}
+        {children}
+      </main>
+      {/* Bạn có thể thêm Footer ở đây nếu có */}
+      {/* <footer className="bg-gray-800 text-white p-4 text-center mt-auto">
+        Bản quyền © 2024 Olympic Vật lý HSG
+      </footer> */}
+    </div>
   );
 };
 
