@@ -1,52 +1,49 @@
-// physics-olympiad-website/backend/models/User.js
+// backend/models/User.js
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcryptjs'); // Để hash mật khẩu
 
 const userSchema = mongoose.Schema(
   {
     name: {
       type: String,
-      required: [true, 'Vui lòng nhập tên người dùng.'],
-      unique: true,
+      required: [true, 'Vui lòng thêm tên'],
       trim: true,
     },
     email: {
       type: String,
-      required: [true, 'Vui lòng nhập email.'],
-      unique: true,
-      lowercase: true,
-      match: [/^[\w-]+(?:\.[\w-]+)*@(?:[\w-]+\.)+[a-zA-Z]{2,7}$/, 'Vui lòng sử dụng địa chỉ email hợp lệ.'],
+      required: [true, 'Vui lòng thêm email'],
+      unique: true, // Đảm bảo email là duy nhất
+      trim: true,
+      lowercase: true, // Lưu email dưới dạng chữ thường để tránh trùng lặp do case sensitivity
     },
     password: {
       type: String,
-      required: [true, 'Vui lòng nhập mật khẩu.'],
-      minlength: [6, 'Mật khẩu phải có ít nhất 6 ký tự.'],
+      required: [true, 'Vui lòng thêm mật khẩu'],
     },
-    // THAY ĐỔI MỚI: Thêm trường 'role'
     role: {
       type: String,
-      enum: ['user', 'admin'], // Chỉ cho phép 2 giá trị 'user' hoặc 'admin'
-      default: 'user', // Mặc định là 'user'
+      enum: ['user', 'admin'], // Vai trò người dùng
+      default: 'user',
     },
   },
   {
-    timestamps: true,
+    timestamps: true, // Tự động thêm createdAt và updatedAt
   }
 );
 
+// Mã hóa mật khẩu trước khi lưu (middleware Mongoose)
 userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) {
-    return next();
+  if (!this.isModified('password')) { // Chỉ mã hóa nếu mật khẩu được thay đổi (hoặc mới tạo)
+    next();
   }
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
   next();
 });
 
+// So sánh mật khẩu (phương thức tùy chỉnh)
 userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
-const User = mongoose.model('User', userSchema);
-
-module.exports = User;
+module.exports = mongoose.model('User', userSchema);
