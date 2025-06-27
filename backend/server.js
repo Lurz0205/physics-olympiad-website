@@ -1,66 +1,52 @@
 // physics-olympiad-website/backend/server.js
+const path = require('path');
 const express = require('express');
-const dotenv = require('dotenv').config();
 const colors = require('colors');
-const cors = require('cors');
-const connectDB = require('./config/db');
+const dotenv = require('dotenv').config();
 const { errorHandler } = require('./middleware/errorMiddleware');
+const connectDB = require('./config/db');
+const cors = require('cors'); // Import cors
 
-// Import routes
-const authRoutes = require('./routes/auth');
-const theoryRoutes = require('./routes/theory');
-const exerciseRoutes = require('./routes/exercise');
-const examRoutes = require('./routes/exam');
-const examResultRoutes = require('./routes/examResult'); // THAY ĐỔI MỚI: Import examResultRoutes
+const port = process.env.PORT || 5000;
 
 connectDB();
 
 const app = express();
-const port = process.env.PORT || 5000;
 
-// Cấu hình CORS
-let corsOptions;
-if (process.env.NODE_ENV === 'production') {
-  if (!process.env.FRONTEND_URL) {
-    console.error('Lỗi: FRONTEND_URL chưa được định nghĩa trong môi trường Production.');
-    process.exit(1);
-  }
-  corsOptions = {
-    origin: process.env.FRONTEND_URL,
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true,
-    optionsSuccessStatus: 200
-  };
-  console.log(`CORS Production Mode: Allowing requests from ${process.env.FRONTEND_URL}`);
-} else {
-  corsOptions = {
-    origin: '*',
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true,
-    optionsSuccessStatus: 200
-  };
-  console.log('CORS Development Mode: Allowing all origins (*)');
-}
-
-app.use(cors(corsOptions));
+app.use(cors()); // Sử dụng cors middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Use routes
-app.use('/api/auth', authRoutes);
-app.use('/api/theory', theoryRoutes);
-app.use('/api/exercises', exerciseRoutes);
-app.use('/api/exams', examRoutes);
-app.use('/api/exam-results', examResultRoutes); // THAY ĐỔI MỚI: Thêm ExamResult Routes
+// =================================================================
+// THAY ĐỔI MỚI: Thêm route cho đường dẫn gốc '/'
+// =================================================================
+app.get('/', (req, res) => {
+  res.status(200).json({ message: 'API của Luyện thi Vật lý đang hoạt động!' });
+});
+// =================================================================
 
+// Routes API của bạn
+app.use('/api/users', require('./routes/userRoutes'));
+app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/theory', require('./routes/theoryRoutes')); // Đảm bảo đúng routes
+app.use('/api/exercises', require('./routes/exerciseRoutes')); // Đảm bảo đúng routes
+app.use('/api/exams', require('./routes/examRoutes')); // Đảm bảo đúng routes
+app.use('/api/exam-results', require('./routes/examResultRoutes')); // Đảm bảo đúng routes
+
+// Serve frontend (nếu bạn có setup để serve từ backend)
+// Nếu Frontend được deploy riêng, phần này có thể không cần thiết hoặc khác đi
 if (process.env.NODE_ENV === 'production') {
-  // Production static file serving (if applicable)
+  app.use(express.static(path.join(__dirname, '../frontend/out')));
+
+  app.get('*', (req, res) =>
+    res.sendFile(
+      path.resolve(__dirname, '../', 'frontend', 'out', 'index.html')
+    )
+  );
 } else {
-  app.get('/', (req, res) => res.send('API is running...'));
+  app.get('/', (req, res) => res.send('Please set to production'));
 }
 
 app.use(errorHandler);
 
-app.listen(port, () => console.log(`Server running on port ${port}`.yellow.bold));
+app.listen(port, () => console.log(`Server started on port ${port}`));
