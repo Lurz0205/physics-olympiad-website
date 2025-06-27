@@ -132,29 +132,31 @@ const TestListPage = () => {
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {groupedTests[category].map(test => (
-                  <div key={test._id} className="bg-white rounded-lg shadow-md p-5 border border-gray-100 transform hover:scale-102 transition-transform duration-200 ease-in-out cursor-pointer">
+                  // THAY ĐỔI TẠI ĐÂY: Di chuyển Link bao ngoài và thêm class cho div và a
+                  <div key={test._id} className="bg-white rounded-lg shadow-md p-5 border border-gray-100 relative transform hover:scale-102 transition-transform duration-200 ease-in-out cursor-pointer">
                     <Link href={`/tests/${test.slug}`}>
-                      {/* THAY ĐỔI TẠI ĐÂY: Thêm className vào thẻ <a> */}
-                      <a className="block w-full h-full"> 
-                        <h3 className="text-lg font-semibold text-gray-800 mb-2 hover:text-blue-600 transition-colors duration-200 line-clamp-2">{test.title}</h3>
-                        <p className="text-sm text-gray-600 mb-3 line-clamp-3">{test.description}</p>
-                        <div className="flex flex-wrap justify-between items-center text-xs mt-3 gap-2">
-                          <span className="bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full">{test.category}</span>
-                          <span className="bg-blue-200 text-blue-800 px-2 py-0.5 rounded-full">
-                            {test.duration} phút
-                          </span>
-                          {test.isPublished ? (
-                            <span className="bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
-                              Đã xuất bản
-                            </span>
-                          ) : (
-                            <span className="bg-red-100 text-red-800 px-2 py-0.5 rounded-full">
-                              Chưa xuất bản
-                            </span>
-                          )}
-                        </div>
+                      <a className="absolute inset-0 z-10"> {/* Thẻ <a> phủ toàn bộ và có z-index cao */}
+                        <span className="sr-only">Xem chi tiết {test.title}</span> {/* Accessibility */}
                       </a>
                     </Link>
+                    {/* Nội dung của card, không thay đổi */}
+                    <h3 className="text-lg font-semibold text-gray-800 mb-2 line-clamp-2">{test.title}</h3>
+                    <p className="text-sm text-gray-600 mb-3 line-clamp-3">{test.description}</p>
+                    <div className="flex flex-wrap justify-between items-center text-xs mt-3 gap-2">
+                      <span className="bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full">{test.category}</span>
+                      <span className="bg-blue-200 text-blue-800 px-2 py-0.5 rounded-full">
+                        {test.duration} phút
+                      </span>
+                      {test.isPublished ? (
+                        <span className="bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
+                          Đã xuất bản
+                        </span>
+                      ) : (
+                        <span className="bg-red-100 text-red-800 px-2 py-0.5 rounded-full">
+                          Chưa xuất bản
+                        </span>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
