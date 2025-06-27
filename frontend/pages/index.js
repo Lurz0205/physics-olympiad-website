@@ -30,7 +30,7 @@ const HomePage = () => {
               Khám phá Lý thuyết
             </a>
           </Link>
-          <Link href="/practice">
+          <Link href="/exercise">
             <a className="btn-primary w-full sm:w-auto bg-red-600 hover:bg-red-700"> {/* Màu nút riêng */}
               Luyện tập Ngay
             </a>
