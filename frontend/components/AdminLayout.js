@@ -1,5 +1,5 @@
 // frontend/components/AdminLayout.js
-import React, { useState, useEffect } => 'react';
+import React, { useState, useEffect } from 'react'; // Đã sửa lỗi cú pháp ở đây
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useAuth } from '../context/AuthContext';
@@ -7,7 +7,6 @@ import { useAuth } from '../context/AuthContext';
 const AdminLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const router = useRouter();
-  // THAY ĐỔI QUAN TRỌNG: Destructure 'logout' từ useAuth()
   const { user, authLoading, logout } = useAuth(); 
 
   useEffect(() => {
@@ -112,7 +111,6 @@ const AdminLayout = ({ children }) => {
             {user && (
               <>
                 <span className="text-gray-800 mr-4">Xin chào, {user?.name || 'Admin'}!</span>
-                {/* Nút Đăng xuất */}
                 <button onClick={logout} 
                         className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none transition-colors duration-200">
                   Đăng xuất
