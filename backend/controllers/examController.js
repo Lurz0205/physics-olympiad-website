@@ -1,6 +1,6 @@
 // physics-olympiad-website/backend/controllers/examController.js
 const Exam = require('../models/Exam');
-const asyncHandler = require('express-async-handler'); // Helper để bắt lỗi async/await
+const asyncHandler = require('express-async-handler');
 
 // Helper function to generate slug
 const generateSlug = (text) => {
@@ -21,6 +21,10 @@ const getExams = asyncHandler(async (req, res) => {
   // Nếu là admin, có thể lấy tất cả, nếu không chỉ lấy những đề đã xuất bản
   const query = req.user && req.user.role === 'admin' ? {} : { isPublished: true };
   const exams = await Exam.find(query).sort({ createdAt: -1 }); // Sắp xếp theo ngày tạo mới nhất
+
+  // THAY ĐỔI MỚI: Thêm console.log để kiểm tra dữ liệu lấy được
+  console.log('Fetched exams for GET /api/exams:', exams);
+
   res.status(200).json(exams);
 });
 
@@ -86,7 +90,7 @@ const createExam = asyncHandler(async (req, res) => {
       res.status(400);
       throw new Error('Mỗi câu hỏi phải có nội dung, ít nhất 2 lựa chọn và đáp án đúng.');
     }
-    if (!q.options.includes(q.correctAnswer)) {
+    if (!q.options.map(opt => opt.toLowerCase().trim()).includes(q.correctAnswer.toLowerCase().trim())) { // THAY ĐỔI: So sánh đáp án đúng không phân biệt hoa thường và trim
       res.status(400);
       throw new Error(`Đáp án đúng "${q.correctAnswer}" không phải là một lựa chọn hợp lệ cho câu hỏi "${q.questionText.substring(0, 50)}..."`);
     }
@@ -96,7 +100,7 @@ const createExam = asyncHandler(async (req, res) => {
   const examExists = await Exam.findOne({ slug });
   if (examExists) {
     res.status(400);
-    throw new Error('Đã tồn tại một đề thi với slug này, vui lòng chọn tiêu đề khác.');
+    throw new new Error('Đã tồn tại một đề thi với slug này, vui lòng chọn tiêu đề khác.'); // THAY ĐỔI: Sửa lỗi cú pháp `new new Error` thành `new Error`
   }
 
   const exam = await Exam.create({
@@ -106,7 +110,7 @@ const createExam = asyncHandler(async (req, res) => {
     duration,
     category,
     questions,
-    user: req.user ? req.user.id : null, // Gán user ID nếu có
+    user: req.user ? req.user.id : null,
     isPublished: isPublished || false,
   });
 
@@ -146,7 +150,7 @@ const updateExam = asyncHandler(async (req, res) => {
       res.status(400);
       throw new Error('Mỗi câu hỏi phải có nội dung, ít nhất 2 lựa chọn và đáp án đúng.');
     }
-    if (!q.options.includes(q.correctAnswer)) {
+    if (!q.options.map(opt => opt.toLowerCase().trim()).includes(q.correctAnswer.toLowerCase().trim())) { // THAY ĐỔI: So sánh đáp án đúng không phân biệt hoa thường và trim
       res.status(400);
       throw new Error(`Đáp án đúng "${q.correctAnswer}" không phải là một lựa chọn hợp lệ cho câu hỏi "${q.questionText.substring(0, 50)}..."`);
     }
