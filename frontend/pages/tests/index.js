@@ -7,7 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 const TestListPage = () => {
   const { user, token, authLoading } = useAuth();
   const [tests, setTests] = useState([]);
-  const [loadingContent, setLoadingContent] = useState(false); // Đã thay đổi: ban đầu không loading
+  const [loadingContent, setLoadingContent] = useState(false);
   const [error, setError] = useState(null);
   const [groupedTests, setGroupedTests] = useState({});
 
@@ -25,7 +25,7 @@ const TestListPage = () => {
 
     // Khi user đã có, bắt đầu fetch dữ liệu
     const fetchTests = async () => {
-      setLoadingContent(true); // Bắt đầu loading khi fetch dữ liệu
+      setLoadingContent(true);
       setError(null);
       try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/exams`, {
@@ -57,7 +57,7 @@ const TestListPage = () => {
         console.error('Lỗi khi tải đề thi:', err);
         setError(err.message || 'Đã xảy ra lỗi khi tải đề thi.');
       } finally {
-        setLoadingContent(false); // Kết thúc loading
+        setLoadingContent(false);
       }
     };
 
@@ -134,7 +134,8 @@ const TestListPage = () => {
                 {groupedTests[category].map(test => (
                   <div key={test._id} className="bg-white rounded-lg shadow-md p-5 border border-gray-100 transform hover:scale-102 transition-transform duration-200 ease-in-out cursor-pointer">
                     <Link href={`/tests/${test.slug}`}>
-                      <a>
+                      {/* THAY ĐỔI TẠI ĐÂY: Thêm className vào thẻ <a> */}
+                      <a className="block w-full h-full"> 
                         <h3 className="text-lg font-semibold text-gray-800 mb-2 hover:text-blue-600 transition-colors duration-200 line-clamp-2">{test.title}</h3>
                         <p className="text-sm text-gray-600 mb-3 line-clamp-3">{test.description}</p>
                         <div className="flex flex-wrap justify-between items-center text-xs mt-3 gap-2">
