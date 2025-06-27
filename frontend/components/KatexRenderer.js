@@ -1,51 +1,53 @@
-// physics-olympiad-website/frontend/components/KatexRenderer.js
+// frontend/components/KatexRenderer.js
 import React, { useEffect, useRef } from 'react';
-// KHÔNG CẦN import 'katex/dist/katex.min.css'; ở đây vì đã import trong _app.js
+// Không cần import 'katex/dist/katex.min.css'; ở đây vì đã import trong _app.js
 
-// Import các thư viện Markdown-it và KaTeX.
 import MarkdownIt from 'markdown-it';
 import mdKatex from 'markdown-it-katex';
 
-// Khởi tạo Markdown-it với plugin KaTeX.
-// Đây là một instance toàn cục, chỉ khởi tạo một lần duy nhất khi ở môi trường client.
+// mdInstance cần được khởi tạo duy nhất một lần và chỉ ở phía client
 let mdInstance = null;
-if (typeof window !== 'undefined' && !mdInstance) { // Kiểm tra mdInstance để tránh khởi tạo lại
-  console.log('Initializing MarkdownIt with KaTeX plugin on client-side...');
-  mdInstance = new MarkdownIt({
-    html: true, // Cho phép HTML trong Markdown
-    linkify: true, // Tự động nhận diện link
-    typographer: true, // Bật các thay thế kiểu chữ
-  }).use(mdKatex, {
-    throwOnError: false, // Không ném lỗi mà chỉ hiển thị lỗi KaTeX
-    errorColor: '#cc0000' // Màu cho lỗi KaTeX
-  });
-  console.log('MarkdownIt with KaTeX plugin initialized:', mdInstance);
-}
 
 const KatexRenderer = ({ content }) => {
   const markdownRef = useRef(null);
 
+  // Khởi tạo mdInstance bên trong useEffect hoặc một hook riêng
+  // để đảm bảo nó chỉ chạy trên client và chỉ một lần
   useEffect(() => {
-    console.log('KatexRenderer useEffect running. content:', content);
-    console.log('Is mdInstance initialized?', !!mdInstance);
+    if (typeof window !== 'undefined' && !mdInstance) {
+      console.log('KatexRenderer: Initializing MarkdownIt with KaTeX plugin...');
+      mdInstance = new MarkdownIt({
+        html: true, // Cho phép HTML trong Markdown
+        linkify: true, // Tự động nhận diện link
+        typographer: true, // Bật các thay thế kiểu chữ
+        breaks: true // Quan trọng: Cho phép ngắt dòng mới trong Markdown
+      }).use(mdKatex, {
+        throwOnError: false, // Không ném lỗi mà chỉ hiển thị lỗi KaTeX
+        errorColor: '#cc0000', // Màu cho lỗi KaTeX
+        strict: false // Cho phép KaTeX hoạt động linh hoạt hơn với các cú pháp
+      });
+      console.log('KatexRenderer: MarkdownIt with KaTeX plugin initialized.');
+    }
+  }, []); // Chạy một lần khi component mount
 
-    // Đảm bảo markdownRef, mdInstance đã được khởi tạo và content tồn tại
+  useEffect(() => {
+    // console.log('KatexRenderer useEffect running for content. Content:', content);
+    // console.log('KatexRenderer: Is mdInstance ready for render?', !!mdInstance);
+
     if (markdownRef.current && mdInstance && content) {
       try {
-        console.log('Attempting to render content with MarkdownIt-KaTeX:', content);
+        // console.log('KatexRenderer: Attempting to render content:', content);
         markdownRef.current.innerHTML = mdInstance.render(content);
-        console.log('MarkdownIt-KaTeX rendering successful.');
+        // console.log('KatexRenderer: MarkdownIt-KaTeX rendering successful.');
       } catch (error) {
-        console.error("MarkdownIt-KaTeX rendering error caught in useEffect:", error);
-        markdownRef.current.innerHTML = `<span style="color:red;">Error rendering math content: ${error.message}</span>`;
+        console.error("KatexRenderer: MarkdownIt-KaTeX rendering error caught:", error);
+        markdownRef.current.innerHTML = `<span style="color:red;">Lỗi render công thức: ${error.message}</span>`;
       }
-    } else if (!mdInstance) {
-        console.warn('KatexRenderer: mdInstance is not initialized. Rendering plain text.');
-        if (markdownRef.current) {
-            markdownRef.current.innerHTML = content; // Fallback to plain text
-        }
+    } else if (markdownRef.current && !mdInstance) {
+        console.warn('KatexRenderer: mdInstance is not initialized, cannot render math. Displaying plain text.');
+        markdownRef.current.innerHTML = content; // Fallback to plain text if mdInstance is not ready
     } else {
-        console.log('KatexRenderer: Missing ref or content.');
+        // console.log('KatexRenderer: Missing ref, mdInstance, or content.');
     }
   }, [content]); // Re-render khi content thay đổi
 
