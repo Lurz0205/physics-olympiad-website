@@ -2,12 +2,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
-import { useRouter } from 'next/router';
-import { useAuth } from '../../../context/AuthContext';
+// useRouter, useAuth không cần thiết trực tiếp ở đây vì AdminLayout đã kiểm tra quyền
+import { useAuth } from '../../../context/AuthContext'; // Vẫn giữ để lấy token
 
 const AdminTestsPage = () => {
-  const router = useRouter();
-  const { token, user } = useAuth();
+  const { token } = useAuth(); // Chỉ cần token để gọi API
   const [exams, setExams] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -15,21 +14,26 @@ const AdminTestsPage = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState(null);
 
-  useEffect(() => {
-    if (user && user.role !== 'admin') {
-      router.push('/login');
-    }
-  }, [user, router]);
+  // Loại bỏ hoàn toàn logic kiểm tra user.role ở đây, AdminLayout đã xử lý
+  // useEffect(() => {
+  //   if (user && user.role !== 'admin') {
+  //     router.push('/login');
+  //   }
+  // }, [user, router]);
 
   const fetchExams = useCallback(async () => {
-    if (!token) return;
+    // AdminLayout đã kiểm tra token và quyền admin, nên chỉ cần kiểm tra token có tồn tại
+    if (!token) {
+      setLoading(false);
+      setError('Không có token xác thực. Vui lòng đăng nhập lại.');
+      return;
+    }
 
     setLoading(true);
     setError(null);
     setSuccessMessage(null);
 
     try {
-      // THAY ĐỔI: Đảm bảo gọi API /api/exams (admin endpoint)
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/exams`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -47,11 +51,11 @@ const AdminTestsPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [token]); // Dependency array: chỉ phụ thuộc vào token
 
   useEffect(() => {
     fetchExams();
-  }, [fetchExams, router.asPath]);
+  }, [fetchExams]); // Dependency array: chạy lại khi fetchExams thay đổi
 
   const handleDeleteClick = (examId) => {
     setDeletingId(examId);
@@ -79,7 +83,7 @@ const AdminTestsPage = () => {
       }
 
       setSuccessMessage('Xóa đề thi thành công!');
-      fetchExams();
+      fetchExams(); // Gọi lại để cập nhật danh sách
     } catch (err) {
       console.error('Lỗi khi xóa đề thi:', err);
       setError(err.message || 'Đã xảy ra lỗi khi xóa đề thi.');
@@ -94,9 +98,8 @@ const AdminTestsPage = () => {
     setDeletingId(null);
   };
 
-  if (!user || user.role !== 'admin') {
-    return null;
-  }
+  // Loại bỏ hoàn toàn logic kiểm tra user.role ở đây, AdminLayout đã xử lý
+  // if (!user || user.role !== 'admin') { return null; }
 
   return (
     <>
@@ -218,7 +221,7 @@ const AdminTestsPage = () => {
       {showConfirmModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full mx-auto">
-            <h3 className="text-xl font-bold text-gray-800 mb-4">Xác nhận Xóa</h3>
+            <h3 className="text-xl font-bold text-gray-800 mb-4">Xác nhận Xóa Đề thi</h3>
             <p className="text-gray-700 mb-6">Bạn có chắc chắn muốn xóa đề thi này? Hành động này không thể hoàn tác.</p>
             <div className="flex justify-end space-x-3">
               <button
