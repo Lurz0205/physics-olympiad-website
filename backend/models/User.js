@@ -7,9 +7,9 @@ const userSchema = mongoose.Schema(
     name: {
       type: String,
       required: [true, 'Vui lòng thêm tên người dùng'],
-      unique: true, // THAY ĐỔI MỚI: Đảm bảo tên người dùng là duy nhất
+      unique: true, // Đảm bảo tên người dùng là duy nhất
       trim: true,
-      minlength: [3, 'Tên người dùng phải dài ít nhất 3 ký tự'], // Thêm validate minlength cho username
+      minlength: [3, 'Tên người dùng phải dài ít nhất 3 ký tự'],
     },
     email: {
       type: String,
@@ -17,18 +17,27 @@ const userSchema = mongoose.Schema(
       unique: true, // Đảm bảo email là duy nhất
       trim: true,
       lowercase: true, // Lưu email dưới dạng chữ thường để tránh trùng lặp do case sensitivity
-      match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, 'Vui lòng nhập địa chỉ email hợp lệ'], // Thêm validate định dạng email
+      match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, 'Vui lòng nhập địa chỉ email hợp lệ'], // Validate định dạng email
     },
     password: {
       type: String,
       required: [true, 'Vui lòng thêm mật khẩu'],
-      trim: false, // Giữ trim là false ở đây vì regex sẽ kiểm tra dấu cách nội bộ
-      minlength: [8, 'Mật khẩu phải dài ít nhất 8 ký tự'], // THAY ĐỔI MỚI: Mật khẩu tối thiểu 8 ký tự
-      // THAY ĐỔI MỚI: Regex kiểm tra mật khẩu:
-      // - (?=.*[a-zA-Z]): Chứa ít nhất một chữ cái (hoa hoặc thường)
-      // - (?=.*[0-9]): Chứa ít nhất một số
-      // - (?!.*\s): KHÔNG chứa bất kỳ khoảng trắng nào
-      match: [/^(?=.*[a-zA-Z])(?=.*[0-9])(?!.*\s).{8,}$/, 'Mật khẩu phải dài ít nhất 8 ký tự, bao gồm chữ cái, số và không chứa dấu cách'], 
+      trim: true, // Giữ trim ở đây để loại bỏ khoảng trắng ở đầu/cuối trước khi hash/validate
+      minlength: [8, 'Mật khẩu phải dài ít nhất 8 ký tự'],
+      // THAY ĐỔI MỚI: Sử dụng custom validator để kiểm tra nội dung mật khẩu
+      validate: {
+        validator: function(v) {
+          // Mật khẩu không chứa dấu cách bên trong
+          if (v.includes(' ')) {
+            return false;
+          }
+          // Mật khẩu phải chứa ít nhất một chữ cái HOẶC một số
+          // Regex /^(?=.*[a-zA-Z])(?=.*[0-9])/.test(v) là KHÔNG ĐÚNG vì nó yêu cầu CẢ chữ và số
+          // Yêu cầu là "ít nhất chữ HOẶC số", tức là (chữ) HOẶC (số)
+          return /[a-zA-Z]/.test(v) || /[0-9]/.test(v); 
+        },
+        message: 'Mật khẩu phải chứa ít nhất một chữ cái hoặc một số và không chứa dấu cách.'
+      },
     },
     role: {
       type: String,
@@ -54,7 +63,7 @@ userSchema.pre('save', async function (next) {
 
 // So sánh mật khẩu (phương thức tùy chỉnh)
 userSchema.methods.matchPassword = async function (enteredPassword) {
-  // `enteredPassword` đã được trim ở controller nếu có dấu cách
+  // enteredPassword sẽ được trim ở controller trước khi gọi hàm này
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
