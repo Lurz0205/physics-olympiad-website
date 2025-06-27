@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
-import { useRouter } = 'next/router';
+import { useRouter } from 'next/router'; // Đã sửa lỗi cú pháp ở đây
 import { useAuth } from '../context/AuthContext';
 
 const RegisterPage = () => {
