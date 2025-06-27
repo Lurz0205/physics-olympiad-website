@@ -6,7 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useRouter } from 'next/router';
 
 const ExerciseListPage = () => {
-  const { user, token, loading: authLoading } = useAuth();
+  const { user, token, authLoading } = useAuth(); // THAY ĐỔI: Lấy authLoading
   const router = useRouter();
 
   const [exercises, setExercises] = useState([]);
@@ -15,8 +15,9 @@ const ExerciseListPage = () => {
   const [groupedExercises, setGroupedExercises] = useState({});
 
   useEffect(() => {
+    // CHỈ CHẠY FETCH KHI authLoading ĐÃ HOÀN TẤT
     if (!authLoading) {
-      if (!user) {
+      if (!user) { // Nếu không có user sau khi authLoading xong
         setError('Bạn cần đăng nhập để xem các bài tập.');
         setLoading(false);
         return;
@@ -42,7 +43,7 @@ const ExerciseListPage = () => {
 
           if (!response.ok) {
             if (response.status === 401) {
-              throw new Error('Bạn không có quyền truy cập. Vui lòng đăng nhập.');
+                throw new Error('Phiên đăng nhập đã hết hạn hoặc không hợp lệ. Vui lòng đăng nhập lại.');
             }
             throw new Error(data.message || 'Lỗi khi tải danh sách bài tập.');
           }
@@ -69,9 +70,9 @@ const ExerciseListPage = () => {
 
       fetchExercises();
     }
-  }, [user, token, authLoading]);
+  }, [user, token, authLoading]); // THAY ĐỔI: Thêm authLoading vào dependency array
 
-  if (authLoading || loading) {
+  if (authLoading || loading) { // Hiển thị loading cho cả authLoading và loading dữ liệu
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100">
         <div className="text-center">
@@ -85,15 +86,25 @@ const ExerciseListPage = () => {
     );
   }
 
+  // Nếu không có user sau khi authLoading xong
+  if (!user && !authLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
+        <p className="text-xl text-red-600 text-center font-semibold">Bạn cần đăng nhập để xem các bài tập.</p>
+        <Link href="/login">
+          <a className="mt-4 btn-primary">Đăng nhập ngay</a>
+        </Link>
+      </div>
+    );
+  }
+
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
         <p className="text-xl text-red-600 text-center font-semibold">{error}</p>
-        {!user && (
-          <Link href="/login">
-            <a className="mt-4 btn-primary">Đăng nhập ngay</a>
-          </Link>
-        )}
+        <Link href="/login">
+          <a className="mt-4 btn-primary">Đăng nhập lại</a>
+        </Link>
       </div>
     );
   }
@@ -150,7 +161,7 @@ const ExerciseListPage = () => {
                     <a>
                       <h3 className="text-lg font-semibold text-gray-800 mb-2 hover:text-blue-600 transition-colors duration-200 line-clamp-2">{exercise.title}</h3>
                       <p className="text-sm text-gray-600 mb-3 line-clamp-3">{exercise.description}</p>
-                      <div className="flex flex-wrap justify-between items-center text-xs mt-3 gap-2"> {/* THAY ĐỔI: Thêm gap-2 */}
+                      <div className="flex flex-wrap justify-between items-center text-xs mt-3 gap-2">
                         <span className={`py-1 px-3 rounded-full text-white font-semibold ${
                             exercise.difficulty === 'Dễ' ? 'bg-green-500' :
                             exercise.difficulty === 'Trung bình' ? 'bg-yellow-600' :
@@ -159,7 +170,6 @@ const ExerciseListPage = () => {
                           }`}>
                           {exercise.difficulty}
                         </span>
-                        {/* THAY ĐỔI MỚI: Hiển thị loại bài tập (Tự luận/Trắc nghiệm) */}
                         <span className={`py-1 px-3 rounded-full text-sm font-semibold ${
                           exercise.type === 'Tự luận' ? 'bg-indigo-500 text-white' : 'bg-purple-500 text-white'
                         }`}>
