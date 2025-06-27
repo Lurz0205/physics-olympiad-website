@@ -121,7 +121,8 @@ const validateQuestion = (question) => {
 // @route   POST /api/exams
 // @access  Private (Admin only)
 const createExam = asyncHandler(async (req, res) => {
-  const { title, description, duration, category, questions, isPublished } = req.body;
+  // THÊM scoringConfig VÀO ĐÂY
+  const { title, description, duration, category, questions, isPublished, scoringConfig } = req.body;
 
   const slug = generateSlug(title);
 
@@ -161,6 +162,7 @@ const createExam = asyncHandler(async (req, res) => {
     questions, // Mongoose sẽ tự động áp dụng schema con và validation
     user: req.user ? req.user.id : null,
     isPublished: isPublished || false,
+    scoringConfig: scoringConfig // LƯU TRƯỜNG scoringConfig VÀO ĐÂY
   });
 
   res.status(201).json(exam);
@@ -170,7 +172,8 @@ const createExam = asyncHandler(async (req, res) => {
 // @route   PUT /api/exams/:id
 // @access  Private (Admin only)
 const updateExam = asyncHandler(async (req, res) => {
-  const { title, slug, description, duration, category, questions, isPublished } = req.body;
+  // THÊM scoringConfig VÀO ĐÂY
+  const { title, slug, description, duration, category, questions, isPublished, scoringConfig } = req.body;
 
   const exam = await Exam.findById(req.params.id);
 
@@ -211,6 +214,7 @@ const updateExam = asyncHandler(async (req, res) => {
   exam.category = category || exam.category;
   exam.questions = questions; // Cập nhật mảng câu hỏi
   exam.isPublished = isPublished !== undefined ? isPublished : exam.isPublished;
+  exam.scoringConfig = scoringConfig; // LƯU TRƯỜNG scoringConfig VÀO ĐÂY
 
   const updatedExam = await exam.save(); // Sử dụng .save() để kích hoạt validation của schema con
 
@@ -227,14 +231,6 @@ const deleteExam = asyncHandler(async (req, res) => {
     res.status(404);
     throw new Error('Đề thi không tìm thấy');
   }
-
-  // Admin access is handled by middleware, so no need for req.user check here.
-  // The check for `req.user.role !== 'admin'` in previous versions was redundant
-  // because the route itself is protected by adminAuthMiddleware.
-  // if (!req.user || req.user.role !== 'admin') {
-  //   res.status(403);
-  //   throw new Error('Không có quyền xóa đề thi này.');
-  // }
 
   await exam.deleteOne();
   res.status(200).json({ message: 'Đề thi đã được xóa thành công.' });
