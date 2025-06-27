@@ -6,34 +6,45 @@ import { useRouter } from 'next/router';
 import { useAuth } from '../context/AuthContext';
 
 const LoginPage = () => {
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState(''); // THAY ĐỔI: Đổi từ 'email' thành 'identifier'
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false); // Thêm trạng thái loading cho button
+  const [loading, setLoading] = useState(false);
 
-  const { user, login } = useAuth(); // Lấy hàm login từ AuthContext
+  const { user, login } = useAuth();
   const router = useRouter();
 
   // Redirect if already logged in
   useEffect(() => {
     if (user) {
-      router.push('/'); // Redirect to home or dashboard
+      router.push('/');
     }
   }, [user, router]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(null); // Clear previous errors
-    setLoading(true); // Start loading
+    setError(null);
+    setLoading(true);
 
     try {
-      await login(email, password); // Gọi hàm login từ AuthContext
-      // Nếu login thành công, useEffect trên sẽ tự động chuyển hướng
+      await login(identifier, password); // THAY ĐỔI: Truyền 'identifier' thay vì 'email'
     } catch (err) {
       console.error('Login form submit error:', err);
-      setError(err.message || 'Đã xảy ra lỗi không xác định trong quá trình đăng nhập.');
+      // Cố gắng parse lỗi từ Backend nếu có
+      let errorMessage = 'Đã xảy ra lỗi không xác định trong quá trình đăng nhập.';
+      if (err.message && err.message.startsWith('{')) { // Nếu lỗi là JSON string
+        try {
+          const errorObj = JSON.parse(err.message);
+          errorMessage = errorObj.message || errorMessage;
+        } catch (parseError) {
+          // Fallback if not a valid JSON string
+        }
+      } else {
+        errorMessage = err.message || errorMessage;
+      }
+      setError(errorMessage);
     } finally {
-      setLoading(false); // End loading
+      setLoading(false);
     }
   };
 
@@ -57,17 +68,17 @@ const LoginPage = () => {
             )}
             <div className="rounded-md shadow-sm -space-y-px">
               <div>
-                <label htmlFor="email-address" className="sr-only">Email hoặc Tên đăng nhập</label>
+                <label htmlFor="identifier" className="sr-only">Email hoặc Tên đăng nhập</label>
                 <input
-                  id="email-address"
-                  name="email"
-                  type="text" // Có thể là text nếu hỗ trợ cả username
-                  autoComplete="email"
+                  id="identifier" // THAY ĐỔI: Đổi id thành 'identifier'
+                  name="identifier" // THAY ĐỔI: Đổi name thành 'identifier'
+                  type="text"
+                  autoComplete="username" // auto-complete cho cả email/username
                   required
                   className="appearance-none rounded-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                   placeholder="Email hoặc Tên đăng nhập"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={identifier} // THAY ĐỔI: Dùng state 'identifier'
+                  onChange={(e) => setIdentifier(e.target.value)} // THAY ĐỔI: Cập nhật state 'identifier'
                 />
               </div>
               <div>
@@ -90,7 +101,7 @@ const LoginPage = () => {
               <button
                 type="submit"
                 className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-300 ease-in-out"
-                disabled={loading} // Vô hiệu hóa nút khi đang loading
+                disabled={loading}
               >
                 {loading ? (
                   <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
