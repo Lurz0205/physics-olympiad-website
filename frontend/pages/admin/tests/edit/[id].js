@@ -22,6 +22,15 @@ const EditExamPage = () => {
   // State để quản lý loại câu hỏi đang được thêm vào (dùng cho form thêm câu hỏi mới)
   const [newQuestionType, setNewQuestionType] = useState('multiple-choice'); 
 
+  // ============ THÊM CÁC STATE MỚI CHO CẤU HÌNH ĐIỂM ============
+  const [multipleChoiceScore, setMultipleChoiceScore] = useState(1);
+  const [shortAnswerScore, setShortAnswerScore] = useState(1);
+  const [trueFalseScore1, setTrueFalseScore1] = useState(0.25);
+  const [trueFalseScore2, setTrueFalseScore2] = useState(0.5);
+  const [trueFalseScore3, setTrueFalseScore3] = useState(0.75);
+  const [trueFalseScore4, setTrueFalseScore4] = useState(1);
+  // ============================================================
+
   const [loading, setLoading] = useState(true); 
   const [submitting, setSubmitting] = useState(false); 
   const [error, setError] = useState(null);
@@ -57,6 +66,7 @@ const EditExamPage = () => {
         setDuration(data.duration);
         setCategory(data.category);
         setIsPublished(data.isPublished);
+        
         // Đảm bảo mỗi câu hỏi có một _id để làm key nếu có sẵn từ DB, hoặc dùng index
         // Chuyển đổi dữ liệu true/false.isCorrect từ string (nếu có) sang boolean khi tải
         setQuestions(data.questions.map(q => {
@@ -69,6 +79,19 @@ const EditExamPage = () => {
             }
             return questionData;
         })); 
+
+        // ============ LOAD CẤU HÌNH ĐIỂM TỪ DỮ LIỆU ĐỀ THI ============
+        if (data.scoringConfig) {
+          setMultipleChoiceScore(data.scoringConfig.multipleChoice !== undefined ? data.scoringConfig.multipleChoice : 1);
+          setShortAnswerScore(data.scoringConfig.shortAnswer !== undefined ? data.scoringConfig.shortAnswer : 1);
+          if (data.scoringConfig.trueFalse) {
+            setTrueFalseScore1(data.scoringConfig.trueFalse['1'] !== undefined ? data.scoringConfig.trueFalse['1'] : 0.25);
+            setTrueFalseScore2(data.scoringConfig.trueFalse['2'] !== undefined ? data.scoringConfig.trueFalse['2'] : 0.5);
+            setTrueFalseScore3(data.scoringConfig.trueFalse['3'] !== undefined ? data.scoringConfig.trueFalse['3'] : 0.75);
+            setTrueFalseScore4(data.scoringConfig.trueFalse['4'] !== undefined ? data.scoringConfig.trueFalse['4'] : 1);
+          }
+        }
+        // ============================================================
 
       } catch (err) {
         console.error('Lỗi khi tải đề thi:', err);
@@ -166,6 +189,16 @@ const EditExamPage = () => {
     setError(null);
     setSuccess('');
 
+    // ============ CLIENT-SIDE VALIDATION CHO CẤU HÌNH ĐIỂM ============
+    if (multipleChoiceScore < 0 || shortAnswerScore < 0 || 
+        trueFalseScore1 < 0 || trueFalseScore2 < 0 || trueFalseScore3 < 0 || trueFalseScore4 < 0) {
+      setError('Điểm số không được là số âm.');
+      setSubmitting(false);
+      return;
+    }
+    // Bạn có thể thêm validation cho các trường hợp điểm tăng dần (ví dụ: trueFalseScore1 <= trueFalseScore2) nếu muốn
+    // ============================================================
+
     if (!title.trim() || !slug.trim() || duration <= 0 || !category.trim()) {
       setError('Vui lòng điền đầy đủ các trường bắt buộc (Tiêu đề, Thời gian, Danh mục).');
       setSubmitting(false);
@@ -246,6 +279,18 @@ const EditExamPage = () => {
         category,
         isPublished,
         questions,
+        // ============ THÊM CẤU HÌNH ĐIỂM VÀO DỮ LIỆU GỬI ĐI ============
+        scoringConfig: {
+          multipleChoice: multipleChoiceScore,
+          shortAnswer: shortAnswerScore,
+          trueFalse: {
+            '1': trueFalseScore1,
+            '2': trueFalseScore2,
+            '3': trueFalseScore3,
+            '4': trueFalseScore4,
+          }
+        }
+        // ============================================================
       };
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/exams/${id}`, {
@@ -409,6 +454,104 @@ const EditExamPage = () => {
             />
             <label htmlFor="isPublished" className="ml-2 block text-gray-700 text-sm font-medium">Xuất bản đề thi (Hiển thị công khai)</label>
           </div>
+
+          {/* ========================================================= */}
+          {/* PHẦN CẤU HÌNH ĐIỂM */}
+          {/* ========================================================= */}
+          <div className="space-y-4 border p-4 rounded-lg bg-gray-50">
+            <h3 className="text-xl font-semibold text-gray-800 border-b pb-2 mb-4">Cấu hình Điểm số:</h3>
+            
+            {/* Điểm Trắc nghiệm */}
+            <div>
+              <label htmlFor="multipleChoiceScore" className="block text-gray-700 text-sm font-medium mb-2">Điểm mỗi câu Trắc nghiệm nhiều lựa chọn:</label>
+              <input
+                type="number"
+                id="multipleChoiceScore"
+                value={multipleChoiceScore}
+                onChange={(e) => setMultipleChoiceScore(parseFloat(e.target.value) || 0)}
+                min="0"
+                step="0.01"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                required
+              />
+              <p className="mt-1 text-xs text-gray-500">Đặt điểm cho mỗi câu trắc nghiệm. Ví dụ: 1 hoặc 0.5.</p>
+            </div>
+
+            {/* Điểm Trả lời ngắn */}
+            <div>
+              <label htmlFor="shortAnswerScore" className="block text-gray-700 text-sm font-medium mb-2">Điểm mỗi câu Trả lời ngắn:</label>
+              <input
+                type="number"
+                id="shortAnswerScore"
+                value={shortAnswerScore}
+                onChange={(e) => setShortAnswerScore(parseFloat(e.target.value) || 0)}
+                min="0"
+                step="0.01"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                required
+              />
+              <p className="mt-1 text-xs text-gray-500">Đặt điểm cho mỗi câu trả lời ngắn. Ví dụ: 1 hoặc 0.5.</p>
+            </div>
+
+            {/* Điểm Đúng/Sai theo số ý đúng */}
+            <div className="space-y-2">
+              <label className="block text-gray-700 text-sm font-medium mb-2">Điểm câu Đúng / Sai (theo số ý đúng trên 4 ý):</label>
+              <div>
+                <label htmlFor="trueFalseScore1" className="block text-gray-600 text-xs font-medium mb-1">Đúng 1 ý:</label>
+                <input
+                  type="number"
+                  id="trueFalseScore1"
+                  value={trueFalseScore1}
+                  onChange={(e) => setTrueFalseScore1(parseFloat(e.target.value) || 0)}
+                  min="0"
+                  step="0.01"
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="trueFalseScore2" className="block text-gray-600 text-xs font-medium mb-1">Đúng 2 ý:</label>
+                <input
+                  type="number"
+                  id="trueFalseScore2"
+                  value={trueFalseScore2}
+                  onChange={(e) => setTrueFalseScore2(parseFloat(e.target.value) || 0)}
+                  min="0"
+                  step="0.01"
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="trueFalseScore3" className="block text-gray-600 text-xs font-medium mb-1">Đúng 3 ý:</label>
+                <input
+                  type="number"
+                  id="trueFalseScore3"
+                  value={trueFalseScore3}
+                  onChange={(e) => setTrueFalseScore3(parseFloat(e.target.value) || 0)}
+                  min="0"
+                  step="0.01"
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="trueFalseScore4" className="block text-gray-600 text-xs font-medium mb-1">Đúng 4 ý:</label>
+                <input
+                  type="number"
+                  id="trueFalseScore4"
+                  value={trueFalseScore4}
+                  onChange={(e) => setTrueFalseScore4(parseFloat(e.target.value) || 0)}
+                  min="0"
+                  step="0.01"
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                  required
+                />
+              </div>
+              <p className="mt-1 text-xs text-gray-500">Đặt điểm cho câu Đúng/Sai dựa trên số lượng ý được trả lời đúng.</p>
+            </div>
+          </div>
+          {/* ========================================================= */}
 
           {/* ========================================================= */}
           {/* PHẦN QUẢN LÝ CÂU HỎI CỦA ĐỀ THI */}
