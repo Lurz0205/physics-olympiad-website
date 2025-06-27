@@ -2,20 +2,24 @@
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
-import { useAuth } from '../../../context/AuthContext';
+// useAuth không cần thiết trực tiếp ở đây vì AdminLayout đã kiểm tra quyền
+import { useAuth } from '../../../context/AuthContext'; // Vẫn giữ để lấy token
 
 const AdminPracticeListPage = () => {
-  const { token, user } = useAuth();
+  const { token } = useAuth(); // Chỉ cần token để gọi API
   const [exercises, setExercises] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [deleteStatus, setDeleteStatus] = useState(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false); // THAY ĐỔI: Thêm state cho modal
+  const [exerciseToDelete, setExerciseToDelete] = useState(null); // THAY ĐỔI: Thêm state lưu ID cần xóa
 
   useEffect(() => {
     const fetchExercises = async () => {
+      // AdminLayout đã kiểm tra token và quyền admin, nên chỉ cần kiểm tra token có tồn tại
       if (!token) {
         setLoading(false);
-        setError('Bạn không có quyền truy cập. Vui lòng đăng nhập với tài khoản Admin.');
+        setError('Không có token xác thực. Vui lòng đăng nhập lại.');
         return;
       }
 
@@ -44,17 +48,25 @@ const AdminPracticeListPage = () => {
     };
 
     fetchExercises();
-  }, [token, deleteStatus]);
+  }, [token, deleteStatus]); // Reruns when token or deleteStatus changes
 
-  const handleDelete = async (exerciseId) => {
-    const confirmation = window.confirm('Bạn có chắc chắn muốn xóa bài tập này?');
-    if (!confirmation) {
-      return;
-    }
+  // THAY ĐỔI MỚI: Hàm xử lý click xóa để mở modal
+  const handleDeleteClick = (exerciseId) => {
+    setExerciseToDelete(exerciseId);
+    setShowConfirmModal(true);
+  };
 
+  // THAY ĐỔI MỚI: Hàm xác nhận xóa
+  const confirmDelete = async () => {
+    if (!exerciseToDelete || !token) return; // Đảm bảo có ID để xóa và token
+
+    setShowConfirmModal(false); // Đóng modal
+    setLoading(true); // Hiển thị loading trong khi xóa
+    setError(null);
     setDeleteStatus(null);
+
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/exercises/${exerciseId}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/exercises/${exerciseToDelete}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -68,17 +80,25 @@ const AdminPracticeListPage = () => {
       }
 
       setDeleteStatus('Bài tập đã được xóa thành công!');
-      setExercises(prevExercises => prevExercises.filter(ex => ex._id !== exerciseId)); 
-
+      // Cập nhật state để xóa bài tập khỏi danh sách hiển thị
+      setExercises(prevExercises => prevExercises.filter(ex => ex._id !== exerciseToDelete));
+      setExerciseToDelete(null); // Reset ID
     } catch (err) {
       console.error('Error deleting exercise:', err);
       setDeleteStatus(`Lỗi xóa: ${err.message || 'Đã xảy ra lỗi không xác định.'}`);
+    } finally {
+      setLoading(false); // Kết thúc loading
     }
   };
 
-  if (!user || user.role !== 'admin') {
-    return null;
-  }
+  // THAY ĐỔI MỚI: Hàm hủy xóa
+  const cancelDelete = () => {
+    setShowConfirmModal(false);
+    setExerciseToDelete(null);
+  };
+
+  // Loại bỏ hoàn toàn logic kiểm tra user.role ở đây, AdminLayout đã xử lý
+  // if (!user || user.role !== 'admin') { return null; }
 
   return (
     <>
@@ -116,7 +136,6 @@ const AdminPracticeListPage = () => {
                 {exercises.map((exercise) => (
                   <tr key={exercise._id} className="border-b border-gray-200 hover:bg-gray-50">
                     <td className="py-3 px-6 text-left whitespace-nowrap">
-                      {/* THAY ĐỔI: Thêm Link đến trang chi tiết bài tập */}
                       <Link href={`/exercise/${exercise.slug}`}>
                         <a className="font-semibold text-blue-600 hover:underline">
                           {exercise.title}
@@ -149,7 +168,7 @@ const AdminPracticeListPage = () => {
                           </a>
                         </Link>
                         <button
-                          onClick={() => handleDelete(exercise._id)}
+                          onClick={() => handleDeleteClick(exercise._id)} // THAY ĐỔI: Gọi hàm mở modal
                           className="w-8 h-8 rounded-full bg-red-100 hover:bg-red-200 text-red-600 flex items-center justify-center transition-colors duration-200"
                           title="Xóa"
                         >
@@ -166,6 +185,30 @@ const AdminPracticeListPage = () => {
           </div>
         )}
       </div>
+
+      {/* THAY ĐỔI MỚI: Modal xác nhận xóa */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full mx-auto">
+            <h3 className="text-xl font-bold text-gray-800 mb-4">Xác nhận Xóa Bài tập</h3>
+            <p className="text-gray-700 mb-6">Bạn có chắc chắn muốn xóa bài tập này? Hành động này không thể hoàn tác.</p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={cancelDelete}
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition duration-200"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-200"
+              >
+                Xóa
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };
