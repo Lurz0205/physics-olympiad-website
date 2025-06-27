@@ -7,7 +7,6 @@ import { useAuth } from '../../context/AuthContext';
 import MathContent from '../../components/MathContent';
 
 // Tách ResultDisplay ra thành một component riêng biệt
-// Điều này giúp tránh các vấn đề về scope hoặc lỗi hooks-conditionally
 const ResultDisplay = ({ result, examData, formatTime }) => {
   if (!result || !examData) return null;
 
@@ -109,7 +108,7 @@ const ExamDetailPage = () => {
   const [examStarted, setExamStarted] = useState(false);
   const [examFinished, setExamFinished] = useState(false);
   const [examResult, setExamResult] = useState(null);
-  const [submitting, setSubmitting] = useState(false); // MỚI: State cho việc nộp bài
+  const [submitting, setSubmitting] = useState(false); 
 
   const timerRef = useRef(null);
 
@@ -118,24 +117,23 @@ const ExamDetailPage = () => {
     const minutes = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  }, []); // Không có dependencies vì chỉ là hàm format
+  }, []);
 
-  // Submit exam to backend (bên ngoài useEffect để dễ dùng)
+  // Submit exam to backend
   const handleSubmitExam = useCallback(async (isTimeUp = false) => {
-    // Nếu chưa có user hoặc exam, hoặc đã nộp rồi thì không làm gì
     if (!user || !token || !exam || examFinished || submitting) { 
       if (!user) setError('Bạn cần đăng nhập để nộp bài thi.');
       return;
     }
 
-    setSubmitting(true); // Bật trạng thái đang nộp bài
-    setExamFinished(true); // Đánh dấu bài thi đã kết thúc
+    setSubmitting(true);
+    setExamFinished(true);
     if (timerRef.current) {
-      clearInterval(timerRef.current); // Dừng đồng hồ
+      clearInterval(timerRef.current);
     }
     setError(null);
 
-    const timeTaken = exam.duration * 60 - timeRemaining; // Thời gian thực tế đã làm bài
+    const timeTaken = exam.duration * 60 - timeRemaining; 
 
     const submissionData = {
       examId: exam._id,
@@ -166,20 +164,19 @@ const ExamDetailPage = () => {
       console.error('Lỗi khi nộp bài thi:', err);
       setError(err.message || 'Đã xảy ra lỗi khi nộp bài thi.');
     } finally {
-      setSubmitting(false); // Tắt trạng thái đang nộp bài
+      setSubmitting(false);
     }
-  }, [user, token, exam, examFinished, userAnswers, timeRemaining, submitting]); // Thêm 'submitting' vào dependencies
+  }, [user, token, exam, examFinished, userAnswers, timeRemaining, submitting]);
 
   // Fetch exam details
   useEffect(() => {
     if (!slug || authLoading) {
-      setLoading(true); // Vẫn hiển thị loading trong khi chờ authLoading
+      setLoading(true);
       return;
     }
 
-    // Nếu authLoading đã xong và không có user, hiển thị lỗi và không fetch
     if (!user && !authLoading) {
-      setLoading(false); // Kết thúc loading cho trang
+      setLoading(false);
       setError('Bạn cần đăng nhập để làm bài thi này.');
       return;
     }
@@ -188,7 +185,6 @@ const ExamDetailPage = () => {
       setLoading(true);
       setError(null);
       try {
-        // Gửi token nếu có (đã đăng nhập)
         const fetchHeaders = user && token ? { 'Authorization': `Bearer ${token}` } : {};
         const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/exams/slug/${slug}`, {
           headers: fetchHeaders,
@@ -221,17 +217,15 @@ const ExamDetailPage = () => {
       }
     };
     fetchExam();
-  }, [slug, authLoading, user, token]); // Dependencies cho useEffect này
+  }, [slug, authLoading, user, token]);
 
-  // Start timer when exam starts (chạy sau khi examLoaded và examStarted là true)
+  // Start timer when exam starts
   useEffect(() => {
-    if (examStarted && !examFinished && timeRemaining > 0 && typeof window !== 'undefined') { // THÊM typeof window check
+    if (examStarted && !examFinished && timeRemaining > 0 && typeof window !== 'undefined') {
       timerRef.current = setInterval(() => {
         setTimeRemaining(prevTime => {
           if (prevTime <= 1) {
             clearInterval(timerRef.current);
-            // Gọi handleSubmitExam mà không phụ thuộc vào giá trị mới nhất của timeRemaining
-            // vì handleSubmitExam đã là useCallback
             handleSubmitExam(true); 
             return 0;
           }
@@ -245,7 +239,7 @@ const ExamDetailPage = () => {
         clearInterval(timerRef.current);
       }
     };
-  }, [examStarted, examFinished, handleSubmitExam]); // Dependencies: timeRemaining không cần ở đây
+  }, [examStarted, examFinished, handleSubmitExam]);
 
   // Xử lý khi user thay đổi đáp án
   const handleAnswerChange = useCallback((questionId, value) => {
@@ -255,7 +249,7 @@ const ExamDetailPage = () => {
         [questionId]: value,
       }));
     }
-  }, [examFinished]); // Dependency: examFinished
+  }, [examFinished]);
 
   // Kiểm tra trạng thái loading chung cho component
   if (authLoading || loading) {
@@ -273,7 +267,7 @@ const ExamDetailPage = () => {
   }
 
   // Nếu authLoading đã xong và không có user (sau khi fetch exam cũng đã xong hoặc lỗi)
-  if (!user && !authLoading) { // Đảm bảo lỗi này được hiển thị nếu người dùng không đăng nhập
+  if (!user && !authLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
         <p className="text-xl text-red-600 text-center font-semibold mb-4">Bạn cần đăng nhập để làm bài thi này.</p>
@@ -344,7 +338,7 @@ const ExamDetailPage = () => {
         </div>
 
         {examFinished && examResult ? (
-          <ResultDisplay result={examResult} examData={exam} formatTime={formatTime} /> {/* TRUYỀN formatTime */}
+          <ResultDisplay result={examResult} examData={exam} formatTime={formatTime} />
         ) : (
           <>
             <div className="bg-blue-50 border-l-4 border-blue-500 text-blue-700 p-4 rounded-lg mb-6 flex justify-between items-center">
