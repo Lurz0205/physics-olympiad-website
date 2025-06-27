@@ -17,6 +17,9 @@ const generateToken = (id) => {
 const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
 
+  // THÊM LOG: Dữ liệu nhận được từ request body khi đăng ký
+  console.log(`[authController - registerUser]: Received data - Name: '${name}', Email: '${email}', Password: '${password}'`);
+
   // Basic validation
   if (!name || !email || !password) {
     res.status(400);
@@ -38,6 +41,8 @@ const registerUser = asyncHandler(async (req, res) => {
   });
 
   if (user) {
+    // THÊM LOG: Người dùng đã được tạo thành công
+    console.log(`[authController - registerUser]: User created: ID: ${user.id}, Email: '${user.email}'`);
     res.status(201).json({
       _id: user.id,
       name: user.name,
@@ -57,11 +62,22 @@ const registerUser = asyncHandler(async (req, res) => {
 const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
+  // THÊM LOG: Dữ liệu nhận được từ request body khi đăng nhập
+  console.log(`[authController - loginUser]: Received data - Email: '${email}', Password: '${password}'`);
+
   // Check for user email
-  // Sử dụng .select('+password') nếu bạn dùng select: false trong model để ẩn password
-  const user = await User.findOne({ email }); 
+  const user = await User.findOne({ email }); // Sử dụng .select('+password') nếu bạn dùng select: false trong model để ẩn password
+
+  // THÊM LOG: Người dùng tìm được từ DB
+  if (user) {
+    console.log(`[authController - loginUser]: User found in DB for email '${email}'. User ID: ${user.id}`);
+  } else {
+    console.log(`[authController - loginUser]: No user found for email '${email}'.`);
+  }
 
   if (user && (await user.matchPassword(password))) {
+    // THÊM LOG: Đăng nhập thành công
+    console.log(`[authController - loginUser]: Login successful for user: ${user.email}`);
     res.json({
       _id: user.id,
       name: user.name,
@@ -70,6 +86,8 @@ const loginUser = asyncHandler(async (req, res) => {
       token: generateToken(user._id),
     });
   } else {
+    // THÊM LOG: Đăng nhập thất bại
+    console.log(`[authController - loginUser]: Login failed for email '${email}'. (Password mismatch or user not found)`);
     res.status(400); // 400 Bad Request cho lỗi đăng nhập
     throw new Error('Email hoặc mật khẩu không đúng.'); // Thông báo chung để bảo mật
   }
