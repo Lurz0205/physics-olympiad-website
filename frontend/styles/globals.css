@@ -6,42 +6,43 @@
 @tailwind utilities;
 
 /* THAY ĐỔI MỚI: Custom CSS để sửa lỗi render KaTeX */
-/* Buộc KaTeX hiển thị đúng các phân số và căn chỉnh */
+.katex, .katex-html, .katex-display {
+  display: inline-block;
+  white-space: nowrap;
+}
+
 .katex .frac-line {
   border-bottom-style: solid !important;
   border-bottom-width: var(--frac-line-thickness) !important;
-  min-height: 0 !important; /* Đảm bảo không có min-height gây lệch */
+  min-height: 0 !important;
 }
 
 .katex .frac-num,
 .katex .frac-den {
   display: block !important;
   text-align: center !important;
-  padding: 0 !important; /* Loại bỏ padding tiềm ẩn */
-}
-
-.katex .mfrac > span {
-  display: inline-block !important; /* Quan trọng để vlist căn giữa */
+  padding: 0 !important;
+  /* Đảm bảo không bị căn giữa theo flexbox hoặc grid */
+  align-self: unset !important;
 }
 
 .katex .vlist-t {
-  display: table !important; /* Đảm bảo bảng để căn chỉnh tốt hơn */
-  width: 100% !important;
+  display: inline-block !important; /* Thay đổi quan trọng */
 }
 
-.katex .vlist-t2 {
-  vertical-align: middle !important; /* Căn giữa dọc */
-}
-
-.katex .vlist-r,
-.katex .vlist-s {
+.katex .vlist-t > span {
+  display: block !important;
+  height: 0 !important;
   position: relative !important;
-  top: 0 !important;
-  height: 100% !important;
 }
 
-.katex .strut {
-    display: inline-block !important;
+.katex .vlist-t > span > span {
+  display: block !important;
+  position: absolute !important;
+}
+
+.katex .base {
+  vertical-align: baseline !important;
 }
 
 /* Các style chung cho nút bấm */
