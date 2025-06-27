@@ -2,8 +2,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
-// useRouter, useAuth không cần thiết trực tiếp ở đây vì AdminLayout đã kiểm tra quyền
-import { useAuth } from '../../../context/AuthContext'; // Vẫn giữ để lấy token
+// useRouter không cần thiết trực tiếp ở đây
+import { useAuth } from '../../../context/AuthContext'; 
 
 const AdminTestsPage = () => {
   const { token } = useAuth(); // Chỉ cần token để gọi API
@@ -14,7 +14,7 @@ const AdminTestsPage = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState(null);
 
-  // Loại bỏ hoàn toàn logic kiểm tra user.role ở đây, AdminLayout đã xử lý
+  // THAY ĐỔI: LOẠI BỎ logic kiểm tra user.role ở đây, AdminLayout đã xử lý
   // useEffect(() => {
   //   if (user && user.role !== 'admin') {
   //     router.push('/login');
@@ -22,12 +22,7 @@ const AdminTestsPage = () => {
   // }, [user, router]);
 
   const fetchExams = useCallback(async () => {
-    // AdminLayout đã kiểm tra token và quyền admin, nên chỉ cần kiểm tra token có tồn tại
-    if (!token) {
-      setLoading(false);
-      setError('Không có token xác thực. Vui lòng đăng nhập lại.');
-      return;
-    }
+    if (!token) return;
 
     setLoading(true);
     setError(null);
@@ -51,11 +46,11 @@ const AdminTestsPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [token]); // Dependency array: chỉ phụ thuộc vào token
+  }, [token]);
 
   useEffect(() => {
     fetchExams();
-  }, [fetchExams]); // Dependency array: chạy lại khi fetchExams thay đổi
+  }, [fetchExams]);
 
   const handleDeleteClick = (examId) => {
     setDeletingId(examId);
@@ -98,7 +93,7 @@ const AdminTestsPage = () => {
     setDeletingId(null);
   };
 
-  // Loại bỏ hoàn toàn logic kiểm tra user.role ở đây, AdminLayout đã xử lý
+  // THAY ĐỔI: LOẠI BỎ logic kiểm tra user.role ở đây
   // if (!user || user.role !== 'admin') { return null; }
 
   return (
@@ -217,7 +212,6 @@ const AdminTestsPage = () => {
         )}
       </div>
 
-      {/* Modal xác nhận xóa */}
       {showConfirmModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full mx-auto">
