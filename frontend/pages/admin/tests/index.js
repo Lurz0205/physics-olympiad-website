@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useAuth } from '../../../context/AuthContext'; // Sửa đường dẫn nếu cần
+import { useAuth } from '../../../../context/AuthContext'; // Sửa đường dẫn nếu cần
 
 const AdminTestsPage = () => {
   const router = useRouter();
@@ -13,6 +13,7 @@ const AdminTestsPage = () => {
   const [error, setError] = useState(null);
   const [deletingId, setDeletingId] = useState(null); // ID của đề thi đang được xóa
   const [showConfirmModal, setShowConfirmModal] = useState(false); // Trạng thái hiển thị modal xác nhận xóa
+  const [successMessage, setSuccessMessage] = useState(null); // Thông báo thành công mới
 
   // Chuyển hướng nếu không phải admin
   useEffect(() => {
@@ -23,14 +24,16 @@ const AdminTestsPage = () => {
 
   // Hàm tải danh sách đề thi
   const fetchExams = useCallback(async () => {
-    if (!token) return; // Đảm bảo có token trước khi gọi API
+    if (!token) return;
 
     setLoading(true);
     setError(null);
+    setSuccessMessage(null); // Xóa thông báo thành công cũ khi tải lại
+
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/exams`, {
         headers: {
-          'Authorization': `Bearer ${token}`, // Gửi token để xác thực admin
+          'Authorization': `Bearer ${token}`,
         },
       });
       const data = await response.json();
@@ -47,10 +50,11 @@ const AdminTestsPage = () => {
     }
   }, [token]);
 
-  // Gọi hàm tải danh sách đề thi khi component mount hoặc token thay đổi
+  // Gọi hàm tải danh sách đề thi khi component mount, token thay đổi, hoặc đường dẫn router thay đổi
+  // router.asPath sẽ thay đổi khi chuyển hướng từ /admin/tests/new về /admin/tests
   useEffect(() => {
     fetchExams();
-  }, [fetchExams]);
+  }, [fetchExams, router.asPath]); // THAY ĐỔI: Thêm router.asPath vào dependency
 
   // Xử lý xác nhận xóa đề thi (hiển thị modal)
   const handleDeleteClick = (examId) => {
@@ -62,15 +66,15 @@ const AdminTestsPage = () => {
   const confirmDelete = async () => {
     if (!deletingId || !token) return;
 
-    setShowConfirmModal(false); // Đóng modal
-    setLoading(true); // Hiển thị loading trong khi xóa
+    setShowConfirmModal(false);
+    setLoading(true);
     setError(null);
 
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/exams/${deletingId}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${token}`, // Gửi token admin
+          'Authorization': `Bearer ${token}`,
         },
       });
 
@@ -79,15 +83,15 @@ const AdminTestsPage = () => {
         throw new Error(data.message || 'Lỗi khi xóa đề thi.');
       }
 
-      setSuccess('Xóa đề thi thành công!');
+      setSuccessMessage('Đề thi đã được xóa thành công!'); // Đặt thông báo thành công
       // Cập nhật lại danh sách sau khi xóa
       fetchExams();
     } catch (err) {
       console.error('Lỗi khi xóa đề thi:', err);
       setError(err.message || 'Đã xảy ra lỗi khi xóa đề thi.');
-      setLoading(false); // Tắt loading nếu có lỗi
+      setLoading(false);
     } finally {
-      setDeletingId(null); // Reset ID đang xóa
+      setDeletingId(null);
     }
   };
 
@@ -121,6 +125,11 @@ const AdminTestsPage = () => {
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
             {error}
+          </div>
+        )}
+        {successMessage && ( // Hiển thị thông báo thành công
+          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4">
+            {successMessage}
           </div>
         )}
         {loading ? (
@@ -182,7 +191,7 @@ const AdminTestsPage = () => {
                       {exam.isPublished ? (
                         <span className="text-green-600 font-bold">✔</span>
                       ) : (
-                        <span className="text-red-600 font-bold">✖</span>
+                        <span className="text-red-600 font-bold">✖</span></span>
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
