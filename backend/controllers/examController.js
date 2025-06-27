@@ -14,23 +14,27 @@ const generateSlug = (text) => {
     .replace(/--+/g, '-');
 };
 
-// @desc    Get all exams
-// @route   GET /api/exams
-// @access  Public (for published exams) or Private (for all exams if admin)
-const getExams = asyncHandler(async (req, res) => {
-  // Nếu là admin, có thể lấy tất cả, nếu không chỉ lấy những đề đã xuất bản
-  const query = req.user && req.user.role === 'admin' ? {} : { isPublished: true };
-  const exams = await Exam.find(query).sort({ createdAt: -1 }); // Sắp xếp theo ngày tạo mới nhất
+// @desc    Get ALL exams (for Admin Panel)
+// @route   GET /api/exams (This route will be protected for admin access)
+// @access  Private (Admin only)
+const getAdminExams = asyncHandler(async (req, res) => {
+  const exams = await Exam.find({}).sort({ createdAt: -1 }); // Lấy tất cả đề thi
+  console.log('Fetched ALL exams for Admin GET /api/exams:', exams); // Gỡ lỗi
+  res.status(200).json(exams);
+});
 
-  // THAY ĐỔI MỚI: Thêm console.log để kiểm tra dữ liệu lấy được
-  console.log('Fetched exams for GET /api/exams:', exams);
-
+// @desc    Get published exams (for Public view)
+// @route   GET /api/exams/public (This route will be public)
+// @access  Public
+const getPublicExams = asyncHandler(async (req, res) => {
+  const exams = await Exam.find({ isPublished: true }).sort({ createdAt: -1 }); // Chỉ lấy đề đã xuất bản
+  console.log('Fetched PUBLISHED exams for Public GET /api/exams/public:', exams); // Gỡ lỗi
   res.status(200).json(exams);
 });
 
 // @desc    Get single exam by slug
 // @route   GET /api/exams/slug/:slug
-// @access  Public (if published)
+// @access  Public (if published) or Private (if admin)
 const getExamBySlug = asyncHandler(async (req, res) => {
   const exam = await Exam.findOne({ slug: req.params.slug });
 
@@ -70,10 +74,8 @@ const getExamById = asyncHandler(async (req, res) => {
 const createExam = asyncHandler(async (req, res) => {
   const { title, description, duration, category, questions, isPublished } = req.body;
 
-  // Tự động tạo slug từ title
   const slug = generateSlug(title);
 
-  // Basic validation
   if (!title || !duration || !category || !questions) {
     res.status(400);
     throw new Error('Vui lòng thêm tiêu đề, thời gian, danh mục và ít nhất một câu hỏi.');
@@ -84,23 +86,21 @@ const createExam = asyncHandler(async (req, res) => {
     throw new Error('Đề thi phải có ít nhất một câu hỏi.');
   }
 
-  // Kiểm tra từng câu hỏi
   for (const q of questions) {
     if (!q.questionText || !q.options || q.options.length < 2 || !q.correctAnswer) {
       res.status(400);
       throw new Error('Mỗi câu hỏi phải có nội dung, ít nhất 2 lựa chọn và đáp án đúng.');
     }
-    if (!q.options.map(opt => opt.toLowerCase().trim()).includes(q.correctAnswer.toLowerCase().trim())) { // THAY ĐỔI: So sánh đáp án đúng không phân biệt hoa thường và trim
+    if (!q.options.map(opt => opt.toLowerCase().trim()).includes(q.correctAnswer.toLowerCase().trim())) {
       res.status(400);
       throw new Error(`Đáp án đúng "${q.correctAnswer}" không phải là một lựa chọn hợp lệ cho câu hỏi "${q.questionText.substring(0, 50)}..."`);
     }
   }
 
-  // Check if exam with same slug already exists
   const examExists = await Exam.findOne({ slug });
   if (examExists) {
     res.status(400);
-    throw new new Error('Đã tồn tại một đề thi với slug này, vui lòng chọn tiêu đề khác.'); // THAY ĐỔI: Sửa lỗi cú pháp `new new Error` thành `new Error`
+    throw new Error('Đã tồn tại một đề thi với slug này, vui lòng chọn tiêu đề khác.');
   }
 
   const exam = await Exam.create({
@@ -130,7 +130,6 @@ const updateExam = asyncHandler(async (req, res) => {
     throw new Error('Đề thi không tìm thấy');
   }
 
-  // Ensure unique slug if slug is changed
   if (slug && slug !== exam.slug) {
     const slugExists = await Exam.findOne({ slug });
     if (slugExists && slugExists._id.toString() !== req.params.id) {
@@ -144,19 +143,17 @@ const updateExam = asyncHandler(async (req, res) => {
     throw new Error('Đề thi phải có ít nhất một câu hỏi.');
   }
 
-  // Kiểm tra từng câu hỏi
   for (const q of questions) {
     if (!q.questionText || !q.options || q.options.length < 2 || !q.correctAnswer) {
       res.status(400);
       throw new Error('Mỗi câu hỏi phải có nội dung, ít nhất 2 lựa chọn và đáp án đúng.');
     }
-    if (!q.options.map(opt => opt.toLowerCase().trim()).includes(q.correctAnswer.toLowerCase().trim())) { // THAY ĐỔI: So sánh đáp án đúng không phân biệt hoa thường và trim
+    if (!q.options.map(opt => opt.toLowerCase().trim()).includes(q.correctAnswer.toLowerCase().trim())) {
       res.status(400);
       throw new Error(`Đáp án đúng "${q.correctAnswer}" không phải là một lựa chọn hợp lệ cho câu hỏi "${q.questionText.substring(0, 50)}..."`);
     }
   }
 
-  // Only admin can update
   if (!req.user || req.user.role !== 'admin') {
     res.status(403);
     throw new Error('Không có quyền cập nhật đề thi này.');
@@ -182,7 +179,6 @@ const deleteExam = asyncHandler(async (req, res) => {
     throw new Error('Đề thi không tìm thấy');
   }
 
-  // Only admin can delete
   if (!req.user || req.user.role !== 'admin') {
     res.status(403);
     throw new Error('Không có quyền xóa đề thi này.');
@@ -193,7 +189,8 @@ const deleteExam = asyncHandler(async (req, res) => {
 });
 
 module.exports = {
-  getExams,
+  getAdminExams, // THAY ĐỔI: Export hàm mới
+  getPublicExams, // THAY ĐỔI: Export hàm mới
   getExamBySlug,
   getExamById,
   createExam,
