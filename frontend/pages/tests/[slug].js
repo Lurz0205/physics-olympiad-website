@@ -4,13 +4,14 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useAuth } from '../../context/AuthContext';
-import MathContent from '../../components/MathContent';
+import MathContent from '../../components/MathContent'; // Component để render Markdown/LaTeX
 
-// Tách ResultDisplay ra thành một component riêng biệt
+// Tách ResultDisplay ra thành một component riêng biệt để hiển thị kết quả
 const ResultDisplay = ({ result, examData, formatTime }) => {
   if (!result || !examData) return null;
 
-  const percentage = ((result.score / 10) * 100).toFixed(0);
+  // Tính phần trăm điểm dựa trên thang điểm 10 của backend
+  const percentage = ((result.score / 10) * 100).toFixed(0); 
   
   return (
     <div className="mt-8 p-6 bg-white rounded-lg shadow-xl border border-gray-200">
@@ -41,46 +42,135 @@ const ResultDisplay = ({ result, examData, formatTime }) => {
       <h3 className="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Xem lại các câu hỏi và đáp án:</h3>
       <div className="space-y-6">
         {examData.questions.map((q, qIndex) => {
+          // Tìm đáp án của người dùng cho câu hỏi này
           const userAnswerEntry = result.userAnswers.find(ua => ua.questionId === q._id);
-          const userAnswer = userAnswerEntry ? userAnswerEntry.userAnswer : '';
-          const isCorrect = userAnswerEntry ? userAnswerEntry.isCorrect : false;
+          const isCorrectQuestionOverall = userAnswerEntry ? userAnswerEntry.isCorrect : false; // Đúng/Sai tổng thể câu hỏi
+
+          // Điều chỉnh màu sắc nền dựa trên tổng thể câu hỏi đúng/sai
+          const questionCardClass = `p-5 rounded-lg border shadow-sm ${
+            isCorrectQuestionOverall ? 'bg-green-50 border-green-300' : 'bg-red-50 border-red-300'
+          }`;
 
           return (
-            <div key={q._id || `q-${qIndex}`} className={`p-5 rounded-lg border shadow-sm 
-              ${isCorrect ? 'bg-green-50 border-green-300' : 'bg-red-50 border-red-300'}`}>
+            <div key={q._id || `q-${qIndex}`} className={questionCardClass}>
               <h4 className="text-lg font-semibold text-gray-900 mb-3">Câu hỏi {qIndex + 1}: <MathContent content={q.questionText} /></h4>
-              <div className="space-y-2 mb-4">
-                {q.options.map((option, optIndex) => (
-                  <div
-                    key={optIndex}
-                    className={`flex items-center space-x-3 p-3 rounded-md 
-                      ${option === q.correctAnswer ? 'bg-green-100 font-bold text-green-800 border-green-400' : ''}
-                      ${option === userAnswer && option !== q.correctAnswer ? 'bg-red-100 font-bold text-red-800 border-red-400' : ''}
-                      ${option === userAnswer && option === q.correctAnswer ? 'bg-green-100 font-bold text-green-800 border-green-400' : ''}
-                      ${option !== userAnswer && option !== q.correctAnswer && option !== userAnswer ? 'bg-gray-50 text-gray-700' : ''}
-                      border`}
-                  >
-                    <input
-                      type="radio"
-                      checked={option === userAnswer}
-                      disabled
-                      className={`h-5 w-5 ${option === q.correctAnswer ? 'text-green-600' : 'text-blue-600'}`}
-                    />
-                    <span className="text-base">
-                      <MathContent content={option} />
+              
+              {/* PHẦN I: Trắc nghiệm nhiều lựa chọn */}
+              {q.type === 'multiple-choice' && (
+                <div className="space-y-2 mb-4">
+                  {q.options.map((option, optIndex) => {
+                    const userAnswer = userAnswerEntry ? userAnswerEntry.userAnswer : ''; // Đáp án của người dùng cho trắc nghiệm
+                    const isUserSelected = userAnswer === option;
+                    const isCorrectOption = q.multipleChoiceCorrectAnswer === option;
+
+                    // Class cho từng lựa chọn
+                    let optionClass = 'flex items-center space-x-3 p-3 rounded-md border text-gray-700 bg-gray-50';
+                    if (isCorrectOption) {
+                      optionClass = 'flex items-center space-x-3 p-3 rounded-md border font-bold bg-green-100 text-green-800 border-green-400';
+                    } else if (isUserSelected && !isCorrectOption) {
+                      optionClass = 'flex items-center space-x-3 p-3 rounded-md border font-bold bg-red-100 text-red-800 border-red-400';
+                    }
+
+                    return (
+                      <div key={optIndex} className={optionClass}>
+                        <input
+                          type="radio"
+                          checked={isUserSelected}
+                          disabled
+                          className={`h-5 w-5 ${isCorrectOption ? 'text-green-600' : 'text-blue-600'}`}
+                        />
+                        <span className="text-base">
+                          <MathContent content={option} />
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* PHẦN II: Trắc nghiệm Đúng/Sai */}
+              {q.type === 'true-false' && (
+                <div className="space-y-2 mb-4">
+                  <p className="text-gray-700 font-semibold mb-2">Chọn Đúng hoặc Sai cho mỗi ý:</p>
+                  {q.statements.map((stmt, stmtIndex) => {
+                    // Lấy đáp án của người dùng cho từng ý
+                    const userStatementAnswer = userAnswerEntry && userAnswerEntry.userAnswer 
+                                                ? JSON.parse(userAnswerEntry.userAnswer)[stmtIndex] 
+                                                : null; 
+                    const isCorrectStatement = stmt.isCorrect === userStatementAnswer;
+
+                    // Class cho từng ý Đúng/Sai
+                    let statementClass = 'flex items-center space-x-3 p-3 rounded-md border';
+                    if (isCorrectStatement) {
+                      statementClass += ' bg-green-100 border-green-300';
+                    } else {
+                      statementClass += ' bg-red-100 border-red-300';
+                    }
+
+                    return (
+                      <div key={stmtIndex} className={statementClass}>
+                        <span className="text-base text-gray-800 mr-2">
+                          Ý {String.fromCharCode(97 + stmtIndex)}. <MathContent content={stmt.statementText} />
+                        </span>
+                        <div className="flex-grow flex justify-end items-center space-x-4">
+                          <span className={`${stmt.isCorrect ? 'font-bold text-green-700' : 'text-gray-500'}`}>
+                            Đúng (ĐA)
+                          </span>
+                          <input type="radio" checked={stmt.isCorrect === true} disabled className="h-5 w-5 text-green-600" />
+                          
+                          <span className={`${!stmt.isCorrect ? 'font-bold text-red-700' : 'text-gray-500'}`}>
+                            Sai (ĐA)
+                          </span>
+                          <input type="radio" checked={stmt.isCorrect === false} disabled className="h-5 w-5 text-red-600" />
+                          
+                          <span className="ml-4 text-gray-700">|</span>
+
+                          <span className={`${userStatementAnswer === true ? (isCorrectStatement ? 'font-bold text-green-700' : 'font-bold text-red-700') : 'text-gray-500'}`}>
+                            Đúng (Bạn)
+                          </span>
+                          <input type="radio" checked={userStatementAnswer === true} disabled className="h-5 w-5 text-blue-600" />
+
+                          <span className={`${userStatementAnswer === false ? (isCorrectStatement ? 'font-bold text-green-700' : 'font-bold text-red-700') : 'text-gray-500'}`}>
+                            Sai (Bạn)
+                          </span>
+                          <input type="radio" checked={userStatementAnswer === false} disabled className="h-5 w-5 text-blue-600" />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* PHẦN III: Trắc nghiệm Trả lời ngắn */}
+              {q.type === 'short-answer' && (
+                <div className="mb-4">
+                  <p className="text-gray-700 font-semibold mb-2">Đáp án trả lời ngắn:</p>
+                  <div className="flex items-center space-x-3 p-3 rounded-md border bg-gray-50">
+                    <span className="text-gray-800">
+                      Đáp án của bạn: <span className={`${isCorrectQuestionOverall ? 'text-green-700 font-bold' : 'text-red-700 font-bold'}`}>
+                         {userAnswerEntry ? userAnswerEntry.userAnswer : ''}
+                      </span>
                     </span>
                   </div>
-                ))}
-              </div>
+                </div>
+              )}
+
+              {/* Phần hiển thị đáp án đúng và giải thích chung cho tất cả các loại */}
               <div className="mt-4 p-4 rounded-lg bg-gray-100 border border-gray-300 text-gray-800">
-                  <p className="font-semibold mb-2">Đáp án đúng: <span className="text-green-700"><MathContent content={q.correctAnswer} /></span></p>
-                  {userAnswer && <p className="font-semibold mb-2">Đáp án của bạn: <span className={isCorrect ? 'text-green-700' : 'text-red-700'}><MathContent content={userAnswer} /></span></p>}
-                  {q.explanation && (
-                    <div>
-                      <p className="font-semibold mt-3">Giải thích:</p>
-                      <MathContent content={q.explanation} />
-                    </div>
-                  )}
+                {q.type === 'multiple-choice' && (
+                    <p className="font-semibold mb-2">Đáp án đúng: <span className="text-green-700"><MathContent content={q.multipleChoiceCorrectAnswer} /></span></p>
+                )}
+                {q.type === 'short-answer' && (
+                    <p className="font-semibold mb-2">Đáp án đúng: <span className="text-green-700"><MathContent content={q.shortAnswerCorrectAnswer} /></span></p>
+                )}
+                {/* Đối với True/False, đáp án đúng đã được hiển thị chi tiết ở từng ý */}
+                
+                {q.explanation && (
+                  <div>
+                    <p className="font-semibold mt-3">Giải thích:</p>
+                    <MathContent content={q.explanation} />
+                  </div>
+                )}
               </div>
             </div>
           );
@@ -101,9 +191,9 @@ const ExamDetailPage = () => {
   const { user, token, authLoading } = useAuth();
 
   const [exam, setExam] = useState(null);
-  const [loadingContent, setLoadingContent] = useState(false); // Đã thay đổi: ban đầu không loading
+  const [loadingContent, setLoadingContent] = useState(false);
   const [error, setError] = useState(null);
-  const [userAnswers, setUserAnswers] = useState({});
+  const [userAnswers, setUserAnswers] = useState({}); // Lưu trữ đáp án người dùng theo questionId
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [examStarted, setExamStarted] = useState(false);
   const [examFinished, setExamFinished] = useState(false);
@@ -112,16 +202,16 @@ const ExamDetailPage = () => {
 
   const timerRef = useRef(null);
 
-  // Hàm định dạng thời gian
+  // Hàm định dạng thời gian (phút:giây)
   const formatTime = useCallback((seconds) => {
     const minutes = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   }, []);
 
-  // Submit exam to backend
+  // Hàm nộp bài thi
   const handleSubmitExam = useCallback(async (isTimeUp = false) => {
-    if (!user || !token || !exam || examFinished || submitting) { 
+    if (!user || !token || !exam || examFinished || submitting) {
       if (!user) setError('Bạn cần đăng nhập để nộp bài thi.');
       return;
     }
@@ -134,13 +224,28 @@ const ExamDetailPage = () => {
     setError(null);
 
     const timeTaken = exam.duration * 60 - timeRemaining; 
+    
+    // Chuẩn bị dữ liệu đáp án để gửi lên backend
+    const answersToSend = Object.keys(userAnswers).map(questionId => {
+        const question = exam.questions.find(q => q._id === questionId);
+        let userAnswerValue = userAnswers[questionId];
+
+        // Chuyển đổi dữ liệu userAnswers sang định dạng chuỗi nếu cần cho backend
+        // Backend ExamResult model có userAnswer là String, nên ta cần JSON.stringify cho array/object
+        if (question && question.type === 'true-false' && Array.isArray(userAnswerValue)) {
+            userAnswerValue = JSON.stringify(userAnswerValue);
+        }
+        // Short-answer và multiple-choice đã là string hoặc rỗng, không cần chuyển đổi
+        
+        return {
+            questionId: questionId,
+            userAnswer: userAnswerValue // Đây là giá trị đã được chuẩn hóa (string)
+        };
+    });
 
     const submissionData = {
       examId: exam._id,
-      userAnswers: Object.keys(userAnswers).map(questionId => ({
-        questionId: questionId,
-        userAnswer: userAnswers[questionId],
-      })),
+      userAnswers: answersToSend,
       timeTaken: timeTaken,
     };
 
@@ -180,7 +285,7 @@ const ExamDetailPage = () => {
     }
 
     const fetchExam = async () => {
-      setLoadingContent(true); // Bắt đầu loading khi fetch dữ liệu
+      setLoadingContent(true); 
       setError(null);
       try {
         const fetchHeaders = user && token ? { 'Authorization': `Bearer ${token}` } : {};
@@ -201,9 +306,18 @@ const ExamDetailPage = () => {
 
         setExam(data);
         setTimeRemaining(data.duration * 60);
+
+        // Khởi tạo userAnswers dựa trên loại câu hỏi
         const initialAnswers = {};
         data.questions.forEach(q => {
-          initialAnswers[q._id] = '';
+          if (q.type === 'multiple-choice') {
+            initialAnswers[q._id] = ''; // Chuỗi rỗng cho trắc nghiệm
+          } else if (q.type === 'true-false') {
+            // Khởi tạo mảng boolean cho 4 ý của câu hỏi Đúng/Sai
+            initialAnswers[q._id] = [false, false, false, false]; 
+          } else if (q.type === 'short-answer') {
+            initialAnswers[q._id] = ''; // Chuỗi rỗng cho trả lời ngắn
+          }
         });
         setUserAnswers(initialAnswers);
 
@@ -237,19 +351,27 @@ const ExamDetailPage = () => {
         clearInterval(timerRef.current);
       }
     };
-  }, [examStarted, examFinished, handleSubmitExam]);
+  }, [examStarted, examFinished, handleSubmitExam, timeRemaining]); // Thêm timeRemaining vào dependencies
 
   // Xử lý khi user thay đổi đáp án
-  const handleAnswerChange = useCallback((questionId, value) => {
+  const handleAnswerChange = useCallback((questionId, value, questionType, statementIndex = null) => {
     if (!examFinished) {
-      setUserAnswers(prevAnswers => ({
-        ...prevAnswers,
-        [questionId]: value,
-      }));
+      setUserAnswers(prevAnswers => {
+        const newAnswers = { ...prevAnswers };
+        if (questionType === 'multiple-choice' || questionType === 'short-answer') {
+          newAnswers[questionId] = value;
+        } else if (questionType === 'true-false') {
+          // Đối với Đúng/Sai, value là boolean (true/false) cho ý cụ thể
+          const currentStatementsAnswers = [...(newAnswers[questionId] || [false, false, false, false])];
+          currentStatementsAnswers[statementIndex] = value;
+          newAnswers[questionId] = currentStatementsAnswers;
+        }
+        return newAnswers;
+      });
     }
   }, [examFinished]);
 
-  // Nếu authLoading đã xong và không có user (sau khi fetch exam cũng đã xong hoặc lỗi)
+  // If authLoading is done and no user (after fetching exam is done or error)
   if (!user && !authLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
@@ -261,7 +383,7 @@ const ExamDetailPage = () => {
     );
   }
 
-  // Hiển thị lỗi fetch nếu có
+  // Display fetch error if any
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
@@ -351,28 +473,93 @@ const ExamDetailPage = () => {
                   <div className="space-y-6">
                     {exam.questions.map((q, qIndex) => (
                       <div key={q._id || `q-${qIndex}`} className="bg-gray-50 rounded-lg p-5 border border-gray-200 shadow-sm">
-                        <h3 className="text-lg font-semibold text-gray-800 mb-3">Câu hỏi {qIndex + 1}: <MathContent content={q.questionText} /></h3>
-                        <div className="space-y-2">
-                          {q.options.map((option, optIndex) => (
-                            <label
-                              key={optIndex}
-                              className={`flex items-center space-x-3 p-3 rounded-md cursor-pointer transition-colors duration-200 hover:bg-blue-50
-                                ${userAnswers[q._id || `q-${qIndex}`] === option ? 'bg-blue-100 border border-blue-300' : ''}`}
-                            >
-                              <input
-                                type="radio"
-                                name={`question-${q._id || `q-${qIndex}`}`}
-                                value={option}
-                                checked={userAnswers[q._id || `q-${qIndex}`] === option}
-                                onChange={() => handleAnswerChange(q._id || `q-${qIndex}`, option)}
-                                className="form-radio h-5 w-5 text-blue-600 cursor-pointer"
-                              />
-                              <span className="text-base text-gray-800">
-                                <MathContent content={option} />
-                              </span>
-                            </label>
-                          ))}
-                        </div>
+                        <h3 className="text-lg font-semibold text-gray-800 mb-3">
+                            Câu hỏi {qIndex + 1}: <MathContent content={q.questionText} />
+                        </h3>
+                        
+                        {/* Hiển thị phần nhập liệu theo loại câu hỏi */}
+                        {/* PHẦN I: Trắc nghiệm nhiều lựa chọn */}
+                        {q.type === 'multiple-choice' && q.options && q.options.length > 0 && (
+                          <div className="space-y-2">
+                            {q.options.map((option, optIndex) => (
+                              <label
+                                key={optIndex}
+                                className={`flex items-center space-x-3 p-3 rounded-md cursor-pointer transition-colors duration-200 hover:bg-blue-50
+                                  ${userAnswers[q._id] === option ? 'bg-blue-100 border border-blue-300' : ''}`}
+                              >
+                                <input
+                                  type="radio"
+                                  name={`question-${q._id}`} // Dùng q._id để nhóm radio buttons
+                                  value={option}
+                                  checked={userAnswers[q._id] === option}
+                                  onChange={() => handleAnswerChange(q._id, option, q.type)}
+                                  className="form-radio h-5 w-5 text-blue-600 cursor-pointer"
+                                />
+                                <span className="text-base text-gray-800">
+                                  <MathContent content={option} />
+                                </span>
+                              </label>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* PHẦN II: Trắc nghiệm Đúng/Sai */}
+                        {q.type === 'true-false' && q.statements && q.statements.length === 4 && (
+                            <div className="space-y-2">
+                                <p className="text-gray-700 font-semibold mb-2">Chọn Đúng hoặc Sai cho mỗi ý:</p>
+                                {q.statements.map((stmt, stmtIndex) => {
+                                    // Lấy đáp án hiện tại của người dùng cho ý này
+                                    const currentUserAnswerForStatement = userAnswers[q._id] ? userAnswers[q._id][stmtIndex] : null;
+                                    return (
+                                        <div key={stmtIndex} className="flex items-center space-x-3 p-3 rounded-md border border-gray-300 bg-white">
+                                            <span className="text-base text-gray-800 flex-grow">
+                                                Ý {String.fromCharCode(97 + stmtIndex)}. <MathContent content={stmt.statementText} />
+                                            </span>
+                                            <div className="flex items-center space-x-4">
+                                                <label className="flex items-center cursor-pointer">
+                                                    <input
+                                                        type="radio"
+                                                        name={`question-${q._id}-statement-${stmtIndex}`} // Đảm bảo unique name cho mỗi cặp radio của ý con
+                                                        checked={currentUserAnswerForStatement === true}
+                                                        onChange={() => handleAnswerChange(q._id, true, q.type, stmtIndex)}
+                                                        className="form-radio h-4 w-4 text-green-600"
+                                                    />
+                                                    <span className="ml-2 text-gray-800">Đúng</span>
+                                                </label>
+                                                <label className="flex items-center cursor-pointer">
+                                                    <input
+                                                        type="radio"
+                                                        name={`question-${q._id}-statement-${stmtIndex}`}
+                                                        checked={currentUserAnswerForStatement === false}
+                                                        onChange={() => handleAnswerChange(q._id, false, q.type, stmtIndex)}
+                                                        className="form-radio h-4 w-4 text-red-600"
+                                                    />
+                                                    <span className="ml-2 text-gray-800">Sai</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+
+                        {/* PHẦN III: Trắc nghiệm Trả lời ngắn */}
+                        {q.type === 'short-answer' && (
+                            <div className="mb-4">
+                                <label htmlFor={`short-answer-${q._id}`} className="block text-gray-700 font-semibold mb-2">Điền đáp án:</label>
+                                <input
+                                    id={`short-answer-${q._id}`}
+                                    type="text"
+                                    value={userAnswers[q._id] || ''}
+                                    onChange={(e) => handleAnswerChange(q._id, e.target.value, q.type)}
+                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-200 text-lg"
+                                    placeholder="Điền đáp án (tối đa 4 ký tự: 0-9, -, ,)"
+                                    maxLength="4"
+                                    pattern="^[0-9,-]*$" // Client-side validation regex
+                                />
+                                <p className="mt-1 text-xs text-gray-500">Chỉ chấp nhận số (0-9), dấu "-" và dấu ",". Tối đa 4 ký tự.</p>
+                            </div>
+                        )}
                       </div>
                     ))}
                   </div>
