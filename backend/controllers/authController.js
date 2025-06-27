@@ -1,6 +1,6 @@
 // backend/controllers/authController.js
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcryptjs'); // Vẫn cần cho việc so sánh hash
 const asyncHandler = require('express-async-handler');
 const User = require('../models/User');
 
@@ -17,42 +17,60 @@ const generateToken = (id) => {
 const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
 
-  // THÊM LOG: Dữ liệu nhận được từ request body khi đăng ký
-  console.log(`[authController - registerUser]: Received data - Name: '${name}', Email: '${email}', Password: '${password}'`);
+  // THAY ĐỔI MỚI: Trim password để loại bỏ khoảng trắng thừa (cũng sẽ được validate bởi model)
+  const trimmedPassword = password ? password.trim() : '';
 
-  // Basic validation
-  if (!name || !email || !password) {
+  // Basic validation (Vẫn giữ một số kiểm tra ban đầu)
+  if (!name || !email || !trimmedPassword) {
     res.status(400);
     throw new Error('Vui lòng thêm tất cả các trường.');
   }
 
-  // Check if user already exists
-  const userExists = await User.findOne({ email });
-  if (userExists) {
+  // THAY ĐỔI MỚI: Kiểm tra mật khẩu có dấu cách bên trong không
+  if (trimmedPassword.includes(' ')) {
     res.status(400);
-    throw new Error('Người dùng đã tồn tại.');
+    throw new Error('Mật khẩu không được chứa dấu cách.');
   }
 
-  // Create user
-  const user = await User.create({
-    name,
-    email,
-    password, // Mật khẩu sẽ được hash bởi middleware pre('save') trong User model
-  });
-
-  if (user) {
-    // THÊM LOG: Người dùng đã được tạo thành công
-    console.log(`[authController - registerUser]: User created: ID: ${user.id}, Email: '${user.email}'`);
-    res.status(201).json({
-      _id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      token: generateToken(user._id),
-    });
-  } else {
+  // Check if user with this email or name already exists
+  const userExists = await User.findOne({ $or: [{ email }, { name }] }); // THAY ĐỔI MỚI: Kiểm tra trùng cả email và name
+  if (userExists) {
     res.status(400);
-    throw new Error('Dữ liệu người dùng không hợp lệ.');
+    if (userExists.email === email) {
+      throw new Error('Email đã tồn tại.');
+    } else {
+      throw new Error('Tên người dùng đã tồn tại.');
+    }
+  }
+
+  try {
+    // Create user (password sẽ được hash và validate bởi middleware pre('save') và schema trong User model)
+    const user = await User.create({
+      name,
+      email,
+      password: trimmedPassword, // Dùng mật khẩu đã trim
+    });
+
+    if (user) {
+      res.status(201).json({
+        _id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        token: generateToken(user._id),
+      });
+    } else {
+      res.status(400);
+      throw new Error('Dữ liệu người dùng không hợp lệ.');
+    }
+  } catch (error) {
+    // Xử lý lỗi validation từ Mongoose schema
+    if (error.name === 'ValidationError') {
+      const messages = Object.values(error.errors).map(val => val.message);
+      res.status(400);
+      throw new Error(messages.join(', '));
+    }
+    throw error; // Ném lỗi khác nếu không phải validation error
   }
 });
 
@@ -60,24 +78,21 @@ const registerUser = asyncHandler(async (req, res) => {
 // @route   POST /api/auth/login
 // @access  Public
 const loginUser = asyncHandler(async (req, res) => {
-  const { email, password } = req.body;
+  const { identifier, password } = req.body; // THAY ĐỔI MỚI: Sử dụng 'identifier' để nhận email hoặc username
 
-  // THÊM LOG: Dữ liệu nhận được từ request body khi đăng nhập
-  console.log(`[authController - loginUser]: Received data - Email: '${email}', Password: '${password}'`);
+  // THAY ĐỔI MỚI: Trim password đầu vào
+  const trimmedPassword = password ? password.trim() : '';
 
-  // Check for user email
-  const user = await User.findOne({ email }); // Sử dụng .select('+password') nếu bạn dùng select: false trong model để ẩn password
+  // THAY ĐỔI MỚI: Tìm người dùng bằng email HOẶC username
+  // Mongoose sẽ tự động cast query nếu `identifier` có dạng email
+  const user = await User.findOne({
+    $or: [
+      { email: identifier },
+      { name: identifier }
+    ]
+  });
 
-  // THÊM LOG: Người dùng tìm được từ DB
-  if (user) {
-    console.log(`[authController - loginUser]: User found in DB for email '${email}'. User ID: ${user.id}`);
-  } else {
-    console.log(`[authController - loginUser]: No user found for email '${email}'.`);
-  }
-
-  if (user && (await user.matchPassword(password))) {
-    // THÊM LOG: Đăng nhập thành công
-    console.log(`[authController - loginUser]: Login successful for user: ${user.email}`);
+  if (user && (await user.matchPassword(trimmedPassword))) { // THAY ĐỔI MỚI: Dùng trimmedPassword
     res.json({
       _id: user.id,
       name: user.name,
@@ -86,10 +101,8 @@ const loginUser = asyncHandler(async (req, res) => {
       token: generateToken(user._id),
     });
   } else {
-    // THÊM LOG: Đăng nhập thất bại
-    console.log(`[authController - loginUser]: Login failed for email '${email}'. (Password mismatch or user not found)`);
-    res.status(400); // 400 Bad Request cho lỗi đăng nhập
-    throw new Error('Email hoặc mật khẩu không đúng.'); // Thông báo chung để bảo mật
+    res.status(400); 
+    throw new Error('Email/Tên người dùng hoặc mật khẩu không đúng.'); // Thông báo chung để bảo mật
   }
 });
 
@@ -97,7 +110,6 @@ const loginUser = asyncHandler(async (req, res) => {
 // @route   GET /api/auth/me
 // @access  Private
 const getMe = asyncHandler(async (req, res) => {
-  // req.user được thiết lập bởi middleware bảo vệ (protect)
   res.status(200).json(req.user);
 });
 
