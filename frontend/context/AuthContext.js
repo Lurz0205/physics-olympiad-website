@@ -1,4 +1,4 @@
-// physics-olympiad-website/frontend/context/AuthContext.js
+// frontend/context/AuthContext.js
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 
@@ -7,10 +7,9 @@ const AuthContext = createContext();
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
-  const [authLoading, setAuthLoading] = useState(true); // MỚI: Trạng thái loading của auth
+  const [authLoading, setAuthLoading] = useState(true);
   const router = useRouter();
 
-  // Hàm này sẽ được gọi khi đăng nhập và khi khởi động ứng dụng
   const loadUserFromToken = useCallback(async (authToken) => {
     if (authToken) {
       try {
@@ -24,13 +23,11 @@ export function AuthProvider({ children }) {
           const data = await response.json();
           setUser(data);
           setToken(authToken);
-          // CHỈ truy cập localStorage TRÊN CLIENT
-          if (typeof window !== 'undefined') {
+          if (typeof window !== 'undefined') { // Chỉ truy cập localStorage trên client
             localStorage.setItem('token', authToken);
           }
           console.log('User loaded from token:', data);
         } else {
-          // Token không hợp lệ hoặc hết hạn
           console.error('Token invalid or expired. Logging out.');
           logout(); // Tự động đăng xuất nếu token không hợp lệ
         }
@@ -41,28 +38,23 @@ export function AuthProvider({ children }) {
     } else {
       setUser(null);
       setToken(null);
-      // CHỈ truy cập localStorage TRÊN CLIENT
-      if (typeof window !== 'undefined') {
+      if (typeof window !== 'undefined') { // Chỉ truy cập localStorage trên client
         localStorage.removeItem('token');
       }
     }
-    setAuthLoading(false); // Hoàn thành tải, dù thành công hay thất bại
+    setAuthLoading(false);
   }, []);
 
-  // useEffect để chạy một lần khi component mount
   useEffect(() => {
-    // CHỈ truy cập localStorage TRÊN CLIENT
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined') { // Chỉ chạy trên client
       const storedToken = localStorage.getItem('token');
       if (storedToken) {
         loadUserFromToken(storedToken);
       } else {
-        setAuthLoading(false); // Không có token, kết thúc loading ngay lập tức trên client
+        setAuthLoading(false);
       }
     } else {
-      // TRÊN SERVER: Không có localStorage, giả định là chưa xác thực và kết thúc loading ngay
-      // Điều này ngăn chặn các component con bị treo trong trạng thái loading auth vô thời hạn
-      setAuthLoading(false); 
+      setAuthLoading(false); // Trên server, đặt loading thành false ngay lập tức
     }
   }, [loadUserFromToken]);
 
@@ -87,8 +79,6 @@ export function AuthProvider({ children }) {
       return data;
     } catch (err) {
       console.error('Login error:', err);
-      // KHÔNG CÓ setError TẠI ĐÂY NẾU KHÔNG KHAI BÁO STATE setError TRONG CONTEXT
-      // Bạn có thể thêm một state errorMessage nếu muốn xử lý lỗi trực tiếp trong context
       throw err; // Ném lỗi để component gọi có thể bắt
     } finally {
       setAuthLoading(false); // Kết thúc loading
@@ -98,8 +88,7 @@ export function AuthProvider({ children }) {
   const logout = () => {
     setUser(null);
     setToken(null);
-    // CHỈ truy cập localStorage TRÊN CLIENT
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined') { // Chỉ truy cập localStorage trên client
       localStorage.removeItem('token');
     }
     router.push('/login');
@@ -108,7 +97,7 @@ export function AuthProvider({ children }) {
   const value = {
     user,
     token,
-    authLoading, // MỚI: Export authLoading
+    authLoading,
     login,
     logout,
   };
