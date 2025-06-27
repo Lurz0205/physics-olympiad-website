@@ -10,7 +10,7 @@ const ExerciseListPage = () => {
   const router = useRouter();
 
   const [exercises, setExercises] = useState([]);
-  const [loadingContent, setLoadingContent] = useState(false); // Đã thay đổi: ban đầu không loading
+  const [loadingContent, setLoadingContent] = useState(false);
   const [error, setError] = useState(null);
   const [groupedExercises, setGroupedExercises] = useState({});
 
@@ -25,7 +25,7 @@ const ExerciseListPage = () => {
     }
 
     const fetchExercises = async () => {
-      setLoadingContent(true); // Bắt đầu loading khi fetch dữ liệu
+      setLoadingContent(true);
       setError(null);
       try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/exercises`, {
@@ -65,7 +65,7 @@ const ExerciseListPage = () => {
         console.error('Lỗi khi tải bài tập:', err);
         setError(err.message || 'Đã xảy ra lỗi khi tải bài tập.');
       } finally {
-        setLoadingContent(false); // Kết thúc loading
+        setLoadingContent(false);
       }
     };
 
@@ -142,7 +142,8 @@ const ExerciseListPage = () => {
                 {groupedExercises[category].map(exercise => (
                   <div key={exercise._id} className="bg-white rounded-lg shadow-md p-5 border border-gray-100 transform hover:scale-102 transition-transform duration-200 ease-in-out cursor-pointer">
                     <Link href={`/exercise/${exercise.slug}`}>
-                      <a>
+                      {/* THAY ĐỔI TẠI ĐÂY: Thêm className vào thẻ <a> */}
+                      <a className="block w-full h-full">
                         <h3 className="text-lg font-semibold text-gray-800 mb-2 hover:text-blue-600 transition-colors duration-200 line-clamp-2">{exercise.title}</h3>
                         <p className="text-sm text-gray-600 mb-3 line-clamp-3">{exercise.description}</p>
                         <div className="flex flex-wrap justify-between items-center text-xs mt-3 gap-2">
