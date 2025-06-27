@@ -513,7 +513,7 @@ const ExamDetailPage = () => {
                                     return (
                                         <div key={stmtIndex} className="flex items-center space-x-3 p-3 rounded-md border border-gray-300 bg-white">
                                             <span className="text-base text-gray-800 flex-grow">
-                                                Ý {String.fromCharCode(97 + stmtIndex)}. <MathContent content={stmt.statementText} />
+                                                 {String.fromCharCode(97 + stmtIndex)}. <MathContent content={stmt.statementText} />
                                             </span>
                                             <div className="flex items-center space-x-4">
                                                 <label className="flex items-center cursor-pointer">
