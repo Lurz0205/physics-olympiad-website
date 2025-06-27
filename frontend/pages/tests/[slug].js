@@ -6,10 +6,100 @@ import { useRouter } from 'next/router';
 import { useAuth } from '../../context/AuthContext';
 import MathContent from '../../components/MathContent';
 
+// Tách ResultDisplay ra thành một component riêng biệt
+// Điều này giúp tránh các vấn đề về scope hoặc lỗi hooks-conditionally
+const ResultDisplay = ({ result, examData, formatTime }) => {
+  if (!result || !examData) return null;
+
+  const percentage = ((result.score / 10) * 100).toFixed(0);
+  
+  return (
+    <div className="mt-8 p-6 bg-white rounded-lg shadow-xl border border-gray-200">
+      <h2 className="text-3xl font-bold text-center text-blue-800 mb-6">Kết quả Bài thi</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div className="bg-blue-50 p-4 rounded-lg flex items-center justify-between">
+          <span className="text-gray-700 font-semibold">Điểm số:</span>
+          <span className="text-blue-700 text-2xl font-bold">{result.score} / 10</span>
+        </div>
+        <div className="bg-green-50 p-4 rounded-lg flex items-center justify-between">
+          <span className="text-gray-700 font-semibold">Số câu đúng:</span>
+          <span className="text-green-700 text-2xl font-bold">{result.correctAnswersCount} / {result.totalQuestions}</span>
+        </div>
+        <div className="bg-red-50 p-4 rounded-lg flex items-center justify-between">
+          <span className="text-gray-700 font-semibold">Số câu sai:</span>
+          <span className="text-red-700 text-2xl font-bold">{result.incorrectAnswersCount} / {result.totalQuestions}</span>
+        </div>
+        <div className="bg-yellow-50 p-4 rounded-lg flex items-center justify-between">
+          <span className="text-gray-700 font-semibold">Thời gian làm bài:</span>
+          <span className="text-yellow-700 text-2xl font-bold">{formatTime(result.timeTaken)}</span>
+        </div>
+      </div>
+      
+      <p className="text-center text-lg text-gray-700 mb-8">
+        Bạn đã hoàn thành bài thi với **{result.score} điểm** ({percentage}%).
+      </p>
+
+      <h3 className="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Xem lại các câu hỏi và đáp án:</h3>
+      <div className="space-y-6">
+        {examData.questions.map((q, qIndex) => {
+          const userAnswerEntry = result.userAnswers.find(ua => ua.questionId === q._id);
+          const userAnswer = userAnswerEntry ? userAnswerEntry.userAnswer : '';
+          const isCorrect = userAnswerEntry ? userAnswerEntry.isCorrect : false;
+
+          return (
+            <div key={q._id || `q-${qIndex}`} className={`p-5 rounded-lg border shadow-sm 
+              ${isCorrect ? 'bg-green-50 border-green-300' : 'bg-red-50 border-red-300'}`}>
+              <h4 className="text-lg font-semibold text-gray-900 mb-3">Câu hỏi {qIndex + 1}: <MathContent content={q.questionText} /></h4>
+              <div className="space-y-2 mb-4">
+                {q.options.map((option, optIndex) => (
+                  <div
+                    key={optIndex}
+                    className={`flex items-center space-x-3 p-3 rounded-md 
+                      ${option === q.correctAnswer ? 'bg-green-100 font-bold text-green-800 border-green-400' : ''}
+                      ${option === userAnswer && option !== q.correctAnswer ? 'bg-red-100 font-bold text-red-800 border-red-400' : ''}
+                      ${option === userAnswer && option === q.correctAnswer ? 'bg-green-100 font-bold text-green-800 border-green-400' : ''}
+                      ${option !== userAnswer && option !== q.correctAnswer && option !== userAnswer ? 'bg-gray-50 text-gray-700' : ''}
+                      border`}
+                  >
+                    <input
+                      type="radio"
+                      checked={option === userAnswer}
+                      disabled
+                      className={`h-5 w-5 ${option === q.correctAnswer ? 'text-green-600' : 'text-blue-600'}`}
+                    />
+                    <span className="text-base">
+                      <MathContent content={option} />
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4 p-4 rounded-lg bg-gray-100 border border-gray-300 text-gray-800">
+                  <p className="font-semibold mb-2">Đáp án đúng: <span className="text-green-700"><MathContent content={q.correctAnswer} /></span></p>
+                  {userAnswer && <p className="font-semibold mb-2">Đáp án của bạn: <span className={isCorrect ? 'text-green-700' : 'text-red-700'}><MathContent content={userAnswer} /></span></p>}
+                  {q.explanation && (
+                    <div>
+                      <p className="font-semibold mt-3">Giải thích:</p>
+                      <MathContent content={q.explanation} />
+                    </div>
+                  )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <div className="text-center mt-8">
+          <Link href="/tests">
+              <a className="btn-primary">Quay lại danh sách Đề thi</a>
+          </Link>
+      </div>
+    </div>
+  );
+};
+
 const ExamDetailPage = () => {
   const router = useRouter();
   const { slug } = router.query;
-  const { user, token, authLoading } = useAuth(); // THAY ĐỔI: Lấy authLoading
+  const { user, token, authLoading } = useAuth();
 
   const [exam, setExam] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -19,107 +109,33 @@ const ExamDetailPage = () => {
   const [examStarted, setExamStarted] = useState(false);
   const [examFinished, setExamFinished] = useState(false);
   const [examResult, setExamResult] = useState(null);
+  const [submitting, setSubmitting] = useState(false); // MỚI: State cho việc nộp bài
 
   const timerRef = useRef(null);
 
-  // Fetch exam details
-  useEffect(() => {
-    if (!slug || authLoading) { // THAY ĐỔI: Chờ authLoading hoàn tất
-      setLoading(false);
-      return;
-    }
-
-    // Nếu đã đăng nhập, hoặc nếu đề thi public, thì fetch.
-    // Logic của Backend ở getExamBySlug đã xử lý việc kiểm tra isPublished
-    // nếu user không phải admin.
-    const fetchExam = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/exams/slug/${slug}`, {
-          headers: user && token ? { 'Authorization': `Bearer ${token}` } : {}, // Gửi token nếu có
-        });
-        const data = await response.json();
-
-        if (!response.ok) {
-          if (response.status === 403) { // Forbidden - có thể do đề thi chưa publish và user không phải admin
-            throw new Error('Đề thi này chưa được xuất bản hoặc bạn không có quyền truy cập.');
-          }
-          if (response.status === 401) { // Unauthorized - token invalid
-            throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
-          }
-          throw new Error(data.message || 'Lỗi khi tải đề thi.');
-        }
-
-        setExam(data);
-        setTimeRemaining(data.duration * 60);
-        const initialAnswers = {};
-        data.questions.forEach(q => {
-          initialAnswers[q._id] = '';
-        });
-        setUserAnswers(initialAnswers);
-
-      } catch (err) {
-        console.error('Error fetching exam:', err);
-        setError(err.message || 'Đã xảy ra lỗi khi tải đề thi.');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchExam();
-  }, [slug, authLoading, user, token]); // THAY ĐỔI: Thêm authLoading, user, token vào dependency
-
-  // Start timer when exam starts
-  useEffect(() => {
-    if (examStarted && !examFinished && timeRemaining > 0) {
-      timerRef.current = setInterval(() => {
-        setTimeRemaining(prevTime => {
-          if (prevTime <= 1) {
-            clearInterval(timerRef.current);
-            handleSubmitExam(true);
-            return 0;
-          }
-          return prevTime - 1;
-        });
-      }, 1000);
-    }
-
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-    };
-  }, [examStarted, examFinished, timeRemaining, handleSubmitExam]);
-
-  const formatTime = (seconds) => {
+  // Hàm định dạng thời gian
+  const formatTime = useCallback((seconds) => {
     const minutes = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
+  }, []); // Không có dependencies vì chỉ là hàm format
 
-  const handleAnswerChange = (questionId, value) => {
-    if (!examFinished) { // Không cho phép thay đổi đáp án sau khi đã nộp bài
-      setUserAnswers(prevAnswers => ({
-        ...prevAnswers,
-        [questionId]: value,
-      }));
-    }
-  };
-
+  // Submit exam to backend (bên ngoài useEffect để dễ dùng)
   const handleSubmitExam = useCallback(async (isTimeUp = false) => {
-    if (!user || !token || !exam || examFinished) {
-      setError('Bạn cần đăng nhập để nộp bài thi.'); // THAY ĐỔI: Thông báo lỗi nếu chưa đăng nhập
+    // Nếu chưa có user hoặc exam, hoặc đã nộp rồi thì không làm gì
+    if (!user || !token || !exam || examFinished || submitting) { 
+      if (!user) setError('Bạn cần đăng nhập để nộp bài thi.');
       return;
     }
 
-    setExamFinished(true);
+    setSubmitting(true); // Bật trạng thái đang nộp bài
+    setExamFinished(true); // Đánh dấu bài thi đã kết thúc
     if (timerRef.current) {
-      clearInterval(timerRef.current);
+      clearInterval(timerRef.current); // Dừng đồng hồ
     }
-    setLoading(true);
     setError(null);
 
-    const timeTaken = exam.duration * 60 - timeRemaining;
+    const timeTaken = exam.duration * 60 - timeRemaining; // Thời gian thực tế đã làm bài
 
     const submissionData = {
       examId: exam._id,
@@ -150,11 +166,98 @@ const ExamDetailPage = () => {
       console.error('Lỗi khi nộp bài thi:', err);
       setError(err.message || 'Đã xảy ra lỗi khi nộp bài thi.');
     } finally {
-      setLoading(false);
+      setSubmitting(false); // Tắt trạng thái đang nộp bài
     }
-  }, [user, token, exam, examFinished, userAnswers, timeRemaining]);
+  }, [user, token, exam, examFinished, userAnswers, timeRemaining, submitting]); // Thêm 'submitting' vào dependencies
 
-  // Hiển thị loading khi authLoading HOẶC loading dữ liệu
+  // Fetch exam details
+  useEffect(() => {
+    if (!slug || authLoading) {
+      setLoading(true); // Vẫn hiển thị loading trong khi chờ authLoading
+      return;
+    }
+
+    // Nếu authLoading đã xong và không có user, hiển thị lỗi và không fetch
+    if (!user && !authLoading) {
+      setLoading(false); // Kết thúc loading cho trang
+      setError('Bạn cần đăng nhập để làm bài thi này.');
+      return;
+    }
+
+    const fetchExam = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        // Gửi token nếu có (đã đăng nhập)
+        const fetchHeaders = user && token ? { 'Authorization': `Bearer ${token}` } : {};
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/exams/slug/${slug}`, {
+          headers: fetchHeaders,
+        });
+        const data = await response.json();
+
+        if (!response.ok) {
+          if (response.status === 403) {
+            throw new Error('Đề thi này chưa được xuất bản hoặc bạn không có quyền truy cập.');
+          }
+          if (response.status === 401) {
+            throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+          }
+          throw new Error(data.message || 'Lỗi khi tải đề thi.');
+        }
+
+        setExam(data);
+        setTimeRemaining(data.duration * 60);
+        const initialAnswers = {};
+        data.questions.forEach(q => {
+          initialAnswers[q._id] = '';
+        });
+        setUserAnswers(initialAnswers);
+
+      } catch (err) {
+        console.error('Error fetching exam:', err);
+        setError(err.message || 'Đã xảy ra lỗi khi tải đề thi.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchExam();
+  }, [slug, authLoading, user, token]); // Dependencies cho useEffect này
+
+  // Start timer when exam starts (chạy sau khi examLoaded và examStarted là true)
+  useEffect(() => {
+    if (examStarted && !examFinished && timeRemaining > 0 && typeof window !== 'undefined') { // THÊM typeof window check
+      timerRef.current = setInterval(() => {
+        setTimeRemaining(prevTime => {
+          if (prevTime <= 1) {
+            clearInterval(timerRef.current);
+            // Gọi handleSubmitExam mà không phụ thuộc vào giá trị mới nhất của timeRemaining
+            // vì handleSubmitExam đã là useCallback
+            handleSubmitExam(true); 
+            return 0;
+          }
+          return prevTime - 1;
+        });
+      }, 1000);
+    }
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, [examStarted, examFinished, handleSubmitExam]); // Dependencies: timeRemaining không cần ở đây
+
+  // Xử lý khi user thay đổi đáp án
+  const handleAnswerChange = useCallback((questionId, value) => {
+    if (!examFinished) {
+      setUserAnswers(prevAnswers => ({
+        ...prevAnswers,
+        [questionId]: value,
+      }));
+    }
+  }, [examFinished]); // Dependency: examFinished
+
+  // Kiểm tra trạng thái loading chung cho component
   if (authLoading || loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100">
@@ -169,8 +272,8 @@ const ExamDetailPage = () => {
     );
   }
 
-  // Nếu không có user VÀ authLoading đã xong
-  if (!user && !authLoading) {
+  // Nếu authLoading đã xong và không có user (sau khi fetch exam cũng đã xong hoặc lỗi)
+  if (!user && !authLoading) { // Đảm bảo lỗi này được hiển thị nếu người dùng không đăng nhập
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
         <p className="text-xl text-red-600 text-center font-semibold mb-4">Bạn cần đăng nhập để làm bài thi này.</p>
@@ -200,95 +303,6 @@ const ExamDetailPage = () => {
       </div>
     );
   }
-
-  const ResultDisplay = ({ result, examData }) => {
-    if (!result || !examData) return null;
-
-    const percentage = ((result.score / 10) * 100).toFixed(0);
-    
-    return (
-      <div className="mt-8 p-6 bg-white rounded-lg shadow-xl border border-gray-200">
-        <h2 className="text-3xl font-bold text-center text-blue-800 mb-6">Kết quả Bài thi</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <div className="bg-blue-50 p-4 rounded-lg flex items-center justify-between">
-            <span className="text-gray-700 font-semibold">Điểm số:</span>
-            <span className="text-blue-700 text-2xl font-bold">{result.score} / 10</span>
-          </div>
-          <div className="bg-green-50 p-4 rounded-lg flex items-center justify-between">
-            <span className="text-gray-700 font-semibold">Số câu đúng:</span>
-            <span className="text-green-700 text-2xl font-bold">{result.correctAnswersCount} / {result.totalQuestions}</span>
-          </div>
-          <div className="bg-red-50 p-4 rounded-lg flex items-center justify-between">
-            <span className="text-gray-700 font-semibold">Số câu sai:</span>
-            <span className="text-red-700 text-2xl font-bold">{result.incorrectAnswersCount} / {result.totalQuestions}</span>
-          </div>
-          <div className="bg-yellow-50 p-4 rounded-lg flex items-center justify-between">
-            <span className="text-gray-700 font-semibold">Thời gian làm bài:</span>
-            <span className="text-yellow-700 text-2xl font-bold">{formatTime(result.timeTaken)}</span>
-          </div>
-        </div>
-        
-        <p className="text-center text-lg text-gray-700 mb-8">
-          Bạn đã hoàn thành bài thi với **{result.score} điểm** ({percentage}%).
-        </p>
-
-        <h3 className="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Xem lại các câu hỏi và đáp án:</h3>
-        <div className="space-y-6">
-          {examData.questions.map((q, qIndex) => {
-            const userAnswerEntry = result.userAnswers.find(ua => ua.questionId === q._id);
-            const userAnswer = userAnswerEntry ? userAnswerEntry.userAnswer : '';
-            const isCorrect = userAnswerEntry ? userAnswerEntry.isCorrect : false;
-
-            return (
-              <div key={q._id || `q-${qIndex}`} className={`p-5 rounded-lg border shadow-sm 
-                ${isCorrect ? 'bg-green-50 border-green-300' : 'bg-red-50 border-red-300'}`}>
-                <h4 className="text-lg font-semibold text-gray-900 mb-3">Câu hỏi {qIndex + 1}: <MathContent content={q.questionText} /></h4>
-                <div className="space-y-2 mb-4">
-                  {q.options.map((option, optIndex) => (
-                    <div
-                      key={optIndex}
-                      className={`flex items-center space-x-3 p-3 rounded-md 
-                        ${option === q.correctAnswer ? 'bg-green-100 font-bold text-green-800 border-green-400' : ''}
-                        ${option === userAnswer && option !== q.correctAnswer ? 'bg-red-100 font-bold text-red-800 border-red-400' : ''}
-                        ${option === userAnswer && option === q.correctAnswer ? 'bg-green-100 font-bold text-green-800 border-green-400' : ''}
-                        ${option !== userAnswer && option !== q.correctAnswer && option !== userAnswer ? 'bg-gray-50 text-gray-700' : ''}
-                        border`}
-                    >
-                      <input
-                        type="radio"
-                        checked={option === userAnswer}
-                        disabled
-                        className={`h-5 w-5 ${option === q.correctAnswer ? 'text-green-600' : 'text-blue-600'}`}
-                      />
-                      <span className="text-base">
-                        <MathContent content={option} />
-                      </span>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-4 p-4 rounded-lg bg-gray-100 border border-gray-300 text-gray-800">
-                    <p className="font-semibold mb-2">Đáp án đúng: <span className="text-green-700"><MathContent content={q.correctAnswer} /></span></p>
-                    {userAnswer && <p className="font-semibold mb-2">Đáp án của bạn: <span className={isCorrect ? 'text-green-700' : 'text-red-700'}><MathContent content={userAnswer} /></span></p>}
-                    {q.explanation && (
-                      <div>
-                        <p className="font-semibold mt-3">Giải thích:</p>
-                        <MathContent content={q.explanation} />
-                      </div>
-                    )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-        <div className="text-center mt-8">
-            <Link href="/tests">
-                <a className="btn-primary">Quay lại danh sách Đề thi</a>
-            </Link>
-        </div>
-      </div>
-    );
-  };
-
 
   return (
     <div className="min-h-screen bg-gray-100 p-4 sm:p-6 lg:p-8 font-inter">
@@ -330,7 +344,7 @@ const ExamDetailPage = () => {
         </div>
 
         {examFinished && examResult ? (
-          <ResultDisplay result={examResult} examData={exam} />
+          <ResultDisplay result={examResult} examData={exam} formatTime={formatTime} /> {/* TRUYỀN formatTime */}
         ) : (
           <>
             <div className="bg-blue-50 border-l-4 border-blue-500 text-blue-700 p-4 rounded-lg mb-6 flex justify-between items-center">
