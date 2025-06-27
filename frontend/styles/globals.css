@@ -5,37 +5,64 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Custom CSS cho KaTeX (nếu cần điều chỉnh hiển thị LaTeX) */
-.katex-display > .katex {
-  /* Các thuộc tính KaTeX mặc định thường ổn, nhưng có thể tùy chỉnh margin nếu cần */
-  /* margin-top: 1em; */
-  /* margin-bottom: 0.5em; */
+/* THAY ĐỔI MỚI: Custom CSS để sửa lỗi render KaTeX */
+/* Buộc KaTeX hiển thị đúng các phân số và căn chỉnh */
+.katex .frac-line {
+  border-bottom-style: solid !important;
+  border-bottom-width: var(--frac-line-thickness) !important;
+  min-height: 0 !important; /* Đảm bảo không có min-height gây lệch */
 }
 
-/* Các style chung cho nút bấm (đã thêm kích thước cố định để giảm CLS) */
+.katex .frac-num,
+.katex .frac-den {
+  display: block !important;
+  text-align: center !important;
+  padding: 0 !important; /* Loại bỏ padding tiềm ẩn */
+}
+
+.katex .mfrac > span {
+  display: inline-block !important; /* Quan trọng để vlist căn giữa */
+}
+
+.katex .vlist-t {
+  display: table !important; /* Đảm bảo bảng để căn chỉnh tốt hơn */
+  width: 100% !important;
+}
+
+.katex .vlist-t2 {
+  vertical-align: middle !important; /* Căn giữa dọc */
+}
+
+.katex .vlist-r,
+.katex .vlist-s {
+  position: relative !important;
+  top: 0 !important;
+  height: 100% !important;
+}
+
+.katex .strut {
+    display: inline-block !important;
+}
+
+/* Các style chung cho nút bấm */
 .btn-primary {
-  /* Áp dụng các style hiện có */
   @apply px-6 py-3 bg-blue-600 text-white font-semibold rounded-full shadow-md hover:bg-blue-700 transition-all duration-300 transform hover:scale-105;
-  /* THAY ĐỔI MỚI: Thêm min-width và height cố định */
-  /* Điều này giúp dành sẵn không gian chính xác cho nút, tránh nhảy layout */
-  min-width: 150px; /* Đảm bảo chiều rộng tối thiểu cho nút */
-  height: 48px; /* Đảm bảo chiều cao cố định */
-  display: inline-flex; /* Đảm bảo flexbox cho căn giữa nội dung */
-  align-items: center; /* Căn giữa dọc nội dung */
-  justify-content: center; /* Căn giữa ngang nội dung */
-  text-align: center; /* Căn giữa văn bản trong nút */
-  box-sizing: border-box; /* Đảm bảo padding và border được tính vào kích thước */
+  min-width: 150px;
+  height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  box-sizing: border-box;
 }
 
 .btn-secondary {
-  /* Áp dụng các style hiện có */
   @apply px-6 py-3 bg-gray-300 text-gray-800 font-semibold rounded-full shadow-md hover:bg-gray-400 transition-colors duration-300 transform hover:scale-105;
-  /* THAY ĐỔI MỚI: Thêm min-width và height cố định */
-  min-width: 150px; /* Đảm bảo chiều rộng tối thiểu cho nút */
-  height: 48px; /* Đảm bảo chiều cao cố định */
-  display: inline-flex; /* Đảm bảo flexbox cho căn giữa nội dung */
-  align-items: center; /* Căn giữa dọc nội dung */
-  justify-content: center; /* Căn giữa ngang nội dung */
-  text-align: center; /* Căn giữa văn bản trong nút */
-  box-sizing: border-box; /* Đảm bảo padding và border được tính vào kích thước */
+  min-width: 150px;
+  height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  box-sizing: border-box;
 }
