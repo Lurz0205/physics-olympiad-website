@@ -15,6 +15,7 @@ const MathContent = ({ content }) => {
   return (
     // Sử dụng 'inline-block' để container bọc chặt nội dung hơn
     // và để Markdown xử lý hiển thị block/inline math đúng cách.
+    // LƯU Ý: Với remarkGfm, chỉ cần nhấn Enter để xuống dòng trong textarea là đủ.
     <div className="math-content-container inline-block">
       <ReactMarkdown
         // ĐÃ THÊM remarkGfm VÀO remarkPlugins:
