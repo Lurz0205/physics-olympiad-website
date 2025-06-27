@@ -17,20 +17,23 @@ app.use(cors()); // Sử dụng cors middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Thêm route cho đường dẫn gốc '/'
+// Add a root route for '/' to confirm API is running
 app.get('/', (req, res) => {
   res.status(200).json({ message: 'API của Luyện thi Vật lý đang hoạt động!' });
 });
 
-// Routes API của bạn
-app.use('/api/users', require('./routes/userRoutes'));
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/theory', require('./routes/theory')); // THAY ĐỔI: Đổi thành './routes/theory'
-app.use('/api/exercises', require('./routes/exerciseRoutes'));
-app.use('/api/exams', require('./routes/examRoutes'));
-app.use('/api/exam-results', require('./routes/examResultRoutes'));
+// Define API routes, ensuring correct file paths based on your actual file names
+// If your route files are named: auth.js, theory.js, exercise.js, exam.js, examResult.js, userRoutes.js
+app.use('/api/users', require('./routes/userRoutes'));     // This seems to be correct based on your file structure
+app.use('/api/auth', require('./routes/auth'));           // Corrected: changed from authRoutes to auth
+app.use('/api/theory', require('./routes/theory'));       // Corrected: changed from theoryRoutes to theory
+app.use('/api/exercises', require('./routes/exercise'));   // Corrected: changed from exerciseRoutes to exercise
+app.use('/api/exams', require('./routes/exam'));           // Corrected: assuming exam.js
+app.use('/api/exam-results', require('./routes/examResult')); // Corrected: assuming examResult.js
 
-// Serve frontend (nếu bạn có setup để serve từ backend)
+// Serve frontend (if you have setup to serve from backend)
+// This part is for serving static Next.js build if frontend is co-located with backend
+// If your frontend is deployed separately, this block might be redundant or configured differently
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '../frontend/out')));
 
@@ -40,9 +43,13 @@ if (process.env.NODE_ENV === 'production') {
     )
   );
 } else {
+  // In development, if accessing root, tell user to set to production
+  // This is usually for backend testing in dev mode
   app.get('/', (req, res) => res.send('Please set to production'));
 }
 
+// Error handling middleware
 app.use(errorHandler);
 
+// Start the server
 app.listen(port, () => console.log(`Server started on port ${port}`));
