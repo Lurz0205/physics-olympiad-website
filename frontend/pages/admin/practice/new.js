@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useAuth } from '../../../context/AuthContext'; // THAY ĐỔI: Sửa đường dẫn import AuthContext
+import { useAuth } from '../../../context/AuthContext'; 
 
 const AddNewExercisePage = () => {
   const router = useRouter();
@@ -225,7 +225,6 @@ const AddNewExercisePage = () => {
               value={type}
               onChange={(e) => {
                 setType(e.target.value);
-                // Reset questions/solution khi thay đổi loại
                 if (e.target.value === 'Tự luận') {
                   setQuestions([]);
                 } else {
