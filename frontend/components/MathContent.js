@@ -3,6 +3,7 @@ import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math'; // Plugin để nhận diện cú pháp toán học trong Markdown
 import rehypeKatex from 'rehype-katex'; // Plugin để render toán học thành HTML với KaTeX
+import remarkGfm from 'remark-gfm'; // <-- ĐÃ THÊM DÒNG NÀY: Plugin để hỗ trợ GitHub Flavored Markdown (bao gồm xuống dòng cứng)
 
 // QUAN TRỌNG: Đảm bảo CSS của KaTeX được import toàn cục.
 // VUI LÒNG KIỂM TRA VÀ THÊM DÒNG SAU VÀO frontend/pages/_app.js của bạn:
@@ -16,7 +17,8 @@ const MathContent = ({ content }) => {
     // và để Markdown xử lý hiển thị block/inline math đúng cách.
     <div className="math-content-container inline-block">
       <ReactMarkdown
-        remarkPlugins={[remarkMath]}
+        // ĐÃ THÊM remarkGfm VÀO remarkPlugins:
+        remarkPlugins={[remarkMath, remarkGfm]} 
         rehypePlugins={[rehypeKatex]}
         children={content}
       />
