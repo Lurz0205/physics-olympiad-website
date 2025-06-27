@@ -24,7 +24,7 @@ const AdminTestsPage = () => {
 
   // Hàm tải danh sách đề thi
   const fetchExams = useCallback(async () => {
-    if (!token) return;
+    if (!token) return; // Đảm bảo có token trước khi gọi API
 
     setLoading(true);
     setError(null);
@@ -33,7 +33,7 @@ const AdminTestsPage = () => {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/exams`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${token}`, // Gửi token để xác thực admin
         },
       });
       const data = await response.json();
@@ -191,7 +191,7 @@ const AdminTestsPage = () => {
                       {exam.isPublished ? (
                         <span className="text-green-600 font-bold">✔</span>
                       ) : (
-                        <span className="text-red-600 font-bold">✖</span></span>
+                        <span className="text-red-600 font-bold">✖</span> // LỖI CÚ PHÁP Ở ĐÂY: KHÔNG CÓ `</span>` THỪA
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
