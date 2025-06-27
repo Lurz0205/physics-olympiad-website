@@ -1,36 +1,98 @@
 // physics-olympiad-website/backend/models/Exam.js
 const mongoose = require('mongoose');
 
-// Định nghĩa Schema cho một câu hỏi trắc nghiệm
+// Định nghĩa Schema cho các ý trong câu hỏi Đúng/Sai
+const statementSchema = mongoose.Schema({
+  statementText: { // Nội dung của ý (ví dụ: "Dòng điện là chuyển động có hướng của các hạt mang điện.")
+    type: String,
+    required: [true, 'Vui lòng thêm nội dung cho ý.'],
+    trim: true,
+  },
+  isCorrect: { // Đáp án: true cho Đúng, false cho Sai
+    type: Boolean,
+    required: [true, 'Vui lòng chọn đáp án Đúng/Sai cho ý.'],
+  },
+}, { _id: false }); // Không cần _id riêng cho mỗi ý nếu chúng luôn đi kèm câu hỏi cha
+
+// Định nghĩa Schema chung cho mọi loại câu hỏi
 const questionSchema = mongoose.Schema({
+  // Loại câu hỏi (bắt buộc)
+  type: {
+    type: String,
+    enum: ['multiple-choice', 'true-false', 'short-answer'],
+    required: [true, 'Vui lòng chọn loại câu hỏi.'],
+  },
+  // Nội dung chính của câu hỏi (chung cho tất cả các loại)
   questionText: { // Nội dung câu hỏi (hỗ trợ Markdown/LaTeX)
     type: String,
-    required: [true, 'Vui lòng thêm nội dung câu hỏi'],
+    required: [true, 'Vui lòng thêm nội dung câu hỏi.'],
+    trim: true,
   },
+  // =========================================================
+  // Các trường đặc trưng cho loại 'multiple-choice'
   options: { // Mảng các lựa chọn (hỗ trợ Markdown/LaTeX)
     type: [String],
-    required: [true, 'Vui lòng thêm các lựa chọn'],
+    required: function() { return this.type === 'multiple-choice'; }, // Bắt buộc nếu là trắc nghiệm
     validate: {
       validator: function(v) {
-        return v && v.length >= 2; // Ít nhất 2 lựa chọn
+        if (this.type === 'multiple-choice') {
+          // Ít nhất 2 lựa chọn không rỗng
+          return v && v.filter(opt => opt.trim() !== '').length >= 2;
+        }
+        return true; // Không áp dụng validation này cho các loại khác
       },
-      message: 'Một câu hỏi phải có ít nhất 2 lựa chọn'
+      message: 'Câu hỏi trắc nghiệm phải có ít nhất 2 lựa chọn đã điền.'
     }
   },
-  correctAnswer: { // Đáp án đúng (phải là một trong các options)
+  multipleChoiceCorrectAnswer: { // Đáp án đúng cho trắc nghiệm (phải là một trong các options)
     type: String,
-    required: [true, 'Vui lòng chọn đáp án đúng'],
+    required: function() { return this.type === 'multiple-choice'; }, // Bắt buộc nếu là trắc nghiệm
     validate: {
       validator: function(v) {
-        // Đáp án đúng phải nằm trong danh sách các lựa chọn
-        // Lưu ý: so sánh không phân biệt hoa/thường và trim khoảng trắng
-        // Để linh hoạt hơn, có thể dùng toLowerCase().trim() cho cả v và this.options[i]
-        return this.options.map(opt => opt.toLowerCase().trim()).includes(v.toLowerCase().trim());
+        if (this.type === 'multiple-choice' && this.options) {
+          // Đáp án đúng phải nằm trong danh sách các lựa chọn đã điền (không phân biệt hoa/thường, trim)
+          return this.options.map(opt => opt.toLowerCase().trim()).includes(v.toLowerCase().trim());
+        }
+        return true; // Không áp dụng validation này cho các loại khác
       },
-      message: 'Đáp án đúng phải là một trong các lựa chọn đã cho'
+      message: 'Đáp án đúng phải là một trong các lựa chọn đã cho.'
     }
   },
-  explanation: { // Giải thích đáp án (tùy chọn, hỗ trợ Markdown/LaTeX)
+  // =========================================================
+  // Các trường đặc trưng cho loại 'true-false'
+  statements: { // Mảng 4 ý của câu hỏi Đúng/Sai
+    type: [statementSchema],
+    required: function() { return this.type === 'true-false'; }, // Bắt buộc nếu là Đúng/Sai
+    validate: {
+      validator: function(v) {
+        if (this.type === 'true-false') {
+          // Phải có đúng 4 ý và mỗi ý phải có statementText
+          return v && v.length === 4 && v.every(s => s.statementText && s.statementText.trim() !== '');
+        }
+        return true; // Không áp dụng validation này cho các loại khác
+      },
+      message: 'Câu hỏi Đúng/Sai phải có đúng 4 ý và mỗi ý phải có nội dung.'
+    }
+  },
+  // =========================================================
+  // Các trường đặc trưng cho loại 'short-answer'
+  shortAnswerCorrectAnswer: { // Đáp án đúng cho trả lời ngắn
+    type: String,
+    required: function() { return this.type === 'short-answer'; }, // Bắt buộc nếu là trả lời ngắn
+    trim: true,
+    validate: {
+      validator: function(v) {
+        if (this.type === 'short-answer') {
+          // Tối đa 4 ký tự, chỉ chứa số (0-9), dấu "-" và dấu ","
+          return v && v.length <= 4 && /^[0-9,-]*$/.test(v);
+        }
+        return true; // Không áp dụng validation này cho các loại khác
+      },
+      message: 'Đáp án trả lời ngắn phải có tối đa 4 ký tự và chỉ chứa số (0-9), dấu "-" và dấu ",".'
+    }
+  },
+  // =========================================================
+  explanation: { // Giải thích đáp án (tùy chọn, hỗ trợ Markdown/LaTeX) - Chung cho tất cả
     type: String,
     default: '',
   },
@@ -68,7 +130,7 @@ const examSchema = mongoose.Schema(
       enum: ['TỔNG HỢP', 'CƠ HỌC', 'NHIỆT HỌC', 'ĐIỆN HỌC', 'QUANG HỌC', 'VẬT LÝ HẠT NHÂN', 'THUYẾT TƯƠNG ĐỐI', 'VẬT LÝ HIỆN ĐẠI', 'Chưa phân loại'],
       default: 'Chưa phân loại',
     },
-    questions: { // Mảng các câu hỏi trắc nghiệm được nhúng vào đề thi
+    questions: { // Mảng các câu hỏi được nhúng vào đề thi (có thể là nhiều loại)
       type: [questionSchema], // Sử dụng questionSchema đã định nghĩa
       default: [],
     },
