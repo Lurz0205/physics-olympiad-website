@@ -20,7 +20,7 @@ const KatexRenderer = ({ content }) => {
         html: true, // Cho phép HTML trong Markdown
         linkify: true, // Tự động nhận diện link
         typographer: true, // Bật các thay thế kiểu chữ
-        breaks: true // Quan trọng: Cho phép ngắt dòng mới trong Markdown
+        breaks: false // THAY ĐỔI QUAN TRỌNG: Đặt breaks thành false để không tự động thêm <br>
       }).use(mdKatex, {
         throwOnError: false, // Không ném lỗi mà chỉ hiển thị lỗi KaTeX
         errorColor: '#cc0000', // Màu cho lỗi KaTeX
@@ -34,9 +34,8 @@ const KatexRenderer = ({ content }) => {
     if (markdownRef.current && mdInstance && content) {
       try {
         const renderedHtml = mdInstance.render(content);
-        console.log('KatexRenderer: HTML output by MarkdownIt-KaTeX:', renderedHtml); // THÊM DÒNG LOG NÀY
+        console.log('KatexRenderer: HTML output by MarkdownIt-KaTeX:', renderedHtml); 
         markdownRef.current.innerHTML = renderedHtml;
-        // console.log('KatexRenderer: MarkdownIt-KaTeX rendering successful.');
       } catch (error) {
         console.error("KatexRenderer: MarkdownIt-KaTeX rendering error caught:", error);
         markdownRef.current.innerHTML = `<span style="color:red;">Lỗi render công thức: ${error.message}</span>`;
