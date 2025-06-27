@@ -1,4 +1,4 @@
-// physics-olympiad-website/frontend/pages/tests/[slug].js
+// frontend/pages/tests/[slug].js
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -101,7 +101,7 @@ const ExamDetailPage = () => {
   const { user, token, authLoading } = useAuth();
 
   const [exam, setExam] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loadingContent, setLoadingContent] = useState(false); // Đã thay đổi: ban đầu không loading
   const [error, setError] = useState(null);
   const [userAnswers, setUserAnswers] = useState({});
   const [timeRemaining, setTimeRemaining] = useState(0);
@@ -171,18 +171,16 @@ const ExamDetailPage = () => {
   // Fetch exam details
   useEffect(() => {
     if (!slug || authLoading) {
-      setLoading(true);
       return;
     }
 
     if (!user && !authLoading) {
-      setLoading(false);
       setError('Bạn cần đăng nhập để làm bài thi này.');
       return;
     }
 
     const fetchExam = async () => {
-      setLoading(true);
+      setLoadingContent(true); // Bắt đầu loading khi fetch dữ liệu
       setError(null);
       try {
         const fetchHeaders = user && token ? { 'Authorization': `Bearer ${token}` } : {};
@@ -213,7 +211,7 @@ const ExamDetailPage = () => {
         console.error('Error fetching exam:', err);
         setError(err.message || 'Đã xảy ra lỗi khi tải đề thi.');
       } finally {
-        setLoading(false);
+        setLoadingContent(false);
       }
     };
     fetchExam();
@@ -251,21 +249,6 @@ const ExamDetailPage = () => {
     }
   }, [examFinished]);
 
-  // Kiểm tra trạng thái loading chung cho component
-  if (authLoading || loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100">
-        <div className="text-center">
-          <svg className="animate-spin h-10 w-10 text-blue-500 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-          <p className="text-xl text-gray-700">Đang tải đề thi...</p>
-        </div>
-      </div>
-    );
-  }
-
   // Nếu authLoading đã xong và không có user (sau khi fetch exam cũng đã xong hoặc lỗi)
   if (!user && !authLoading) {
     return (
@@ -278,6 +261,7 @@ const ExamDetailPage = () => {
     );
   }
 
+  // Hiển thị lỗi fetch nếu có
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
@@ -287,22 +271,11 @@ const ExamDetailPage = () => {
     );
   }
 
-  if (!exam) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
-        <p className="text-xl text-gray-700 text-center">Không tìm thấy đề thi này.</p>
-        <Link href="/tests">
-            <a className="mt-4 btn-primary">Quay về danh sách đề thi</a>
-        </Link>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gray-100 p-4 sm:p-6 lg:p-8 font-inter">
       <Head>
-        <title>{exam.title} - Đề thi Online</title>
-        <meta name="description" content={exam.description || exam.title} />
+        <title>{exam ? exam.title : 'Đề thi'} - Đề thi Online</title>
+        <meta name="description" content={exam ? exam.description : 'Trang làm bài thi Vật lý online'} />
       </Head>
 
       <main className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6 sm:p-8 border border-gray-200">
@@ -311,36 +284,51 @@ const ExamDetailPage = () => {
             <a className="hover:underline text-blue-600">Đề thi Online</a>
           </Link>
           <span className="mx-2">/</span>
-          <span>{exam.title}</span>
+          <span>{exam ? exam.title : '...'}</span>
         </nav>
 
-        <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-4">{exam.title}</h1>
-        <p className="text-gray-600 mb-4">{exam.description}</p>
-        <div className="flex flex-wrap items-center gap-3 mb-6">
-          <span className="bg-blue-100 text-blue-800 py-1 px-3 rounded-full text-sm font-semibold">
-            {exam.category}
-          </span>
-          <span className="bg-gray-200 text-gray-700 py-1 px-3 rounded-full text-sm font-semibold">
-            Số câu hỏi: {exam.questions.length}
-          </span>
-          <span className="bg-yellow-200 text-yellow-800 py-1 px-3 rounded-full text-sm font-semibold">
-            Thời lượng: {exam.duration} phút
-          </span>
-          {exam.isPublished ? (
-            <span className="bg-green-100 text-green-800 py-1 px-3 rounded-full text-sm font-semibold">
-              Đã xuất bản
-            </span>
-          ) : (
-            <span className="bg-red-100 text-red-800 py-1 px-3 rounded-full text-sm font-semibold">
-              Chưa xuất bản
-            </span>
-          )}
-        </div>
-
-        {examFinished && examResult ? (
+        {loadingContent ? (
+          <div className="text-center py-10">
+            <svg className="animate-spin h-10 w-10 text-blue-500 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p className="text-lg text-gray-700">Đang tải đề thi...</p>
+          </div>
+        ) : !exam ? (
+          <div className="flex flex-col items-center justify-center p-8 text-gray-700">
+            <p className="text-xl text-center">Không tìm thấy đề thi này.</p>
+            <Link href="/tests">
+                <a className="mt-4 btn-primary">Quay về danh sách đề thi</a>
+            </Link>
+          </div>
+        ) : examFinished && examResult ? (
           <ResultDisplay result={examResult} examData={exam} formatTime={formatTime} />
         ) : (
           <>
+            <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-4">{exam.title}</h1>
+            <p className="text-gray-600 mb-4">{exam.description}</p>
+            <div className="flex flex-wrap items-center gap-3 mb-6">
+              <span className="bg-blue-100 text-blue-800 py-1 px-3 rounded-full text-sm font-semibold">
+                {exam.category}
+              </span>
+              <span className="bg-gray-200 text-gray-700 py-1 px-3 rounded-full text-sm font-semibold">
+                Số câu hỏi: {exam.questions.length}
+              </span>
+              <span className="bg-yellow-200 text-yellow-800 py-1 px-3 rounded-full text-sm font-semibold">
+                Thời lượng: {exam.duration} phút
+              </span>
+              {exam.isPublished ? (
+                <span className="bg-green-100 text-green-800 py-1 px-3 rounded-full text-sm font-semibold">
+                  Đã xuất bản
+                </span>
+              ) : (
+                <span className="bg-red-100 text-red-800 py-1 px-3 rounded-full text-sm font-semibold">
+                  Chưa xuất bản
+                </span>
+              )}
+            </div>
+            
             <div className="bg-blue-50 border-l-4 border-blue-500 text-blue-700 p-4 rounded-lg mb-6 flex justify-between items-center">
               <p className="font-semibold text-lg">Thời gian còn lại:</p>
               <p className="text-3xl font-bold">{formatTime(timeRemaining)}</p>
