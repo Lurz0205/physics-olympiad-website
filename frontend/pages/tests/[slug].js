@@ -91,7 +91,7 @@ const ResultDisplay = ({ result, examData, formatTime }) => {
               {/* PHẦN II: Trắc nghiệm Đúng/Sai */}
               {q.type === 'true-false' && (
                 <div className="space-y-2 mb-4">
-                  <p className="text-gray-700 font-semibold mb-2">Chọn Đúng hoặc Sai cho mỗi ý:</p>
+                  <p className="text-gray-700 font-semibold mb-2">Đáp án của bạn cho mỗi ý:</p>
                   {q.statements.map((stmt, stmtIndex) => {
                     // Lấy đáp án của người dùng cho từng ý (kiểm tra parse an toàn)
                     let userStatementAnswers = null;
@@ -100,48 +100,48 @@ const ResultDisplay = ({ result, examData, formatTime }) => {
                                                ? JSON.parse(userAnswerEntry.userAnswer) 
                                                : [];
                     } catch (e) {
-                        console.error("Failed to parse true-false user answer:", e);
+                        console.error("Failed to parse true-false user answer JSON:", e);
                         userStatementAnswers = [];
                     }
                     const userStatementAnswer = userStatementAnswers[stmtIndex]; 
                     
+                    // Xác định xem người dùng trả lời đúng hay sai cho ý này
                     const isCorrectStatement = stmt.isCorrect === userStatementAnswer;
 
                     // Class cho từng ý Đúng/Sai
-                    let statementClass = 'flex items-center space-x-3 p-3 rounded-md border';
+                    let statementClass = 'flex items-center space-x-3 p-3 rounded-md border text-gray-800';
                     if (isCorrectStatement) {
-                      statementClass += ' bg-green-100 border-green-300';
+                      statementClass += ' bg-green-100 border-green-300'; // Đáp án đúng
                     } else {
-                      statementClass += ' bg-red-100 border-red-300';
+                      statementClass += ' bg-red-100 border-red-300'; // Đáp án sai
                     }
 
                     return (
                       <div key={stmtIndex} className={statementClass}>
-                        <span className="text-base text-gray-800 flex-grow">
-                          Ý {String.fromCharCode(97 + stmtIndex)}. <MathContent content={stmt.statementText} />
+                        <span className="text-base flex-grow">
+                          {String.fromCharCode(97 + stmtIndex)}) <MathContent content={stmt.statementText} />
                         </span>
-                        <div className="flex-grow flex justify-end items-center space-x-4">
-                          <span className={`${stmt.isCorrect ? 'font-bold text-green-700' : 'text-gray-500'}`}>
-                            Đúng (ĐA)
+                        <div className="flex items-center space-x-4">
+                          {/* Hiển thị đáp án của người dùng */}
+                          <span className={`${userStatementAnswer === true ? 'font-bold' : 'text-gray-500'}`}>
+                            Đúng
                           </span>
-                          <input type="radio" checked={stmt.isCorrect === true} disabled className="h-5 w-5 text-green-600" />
+                          <input 
+                            type="radio" 
+                            checked={userStatementAnswer === true} 
+                            disabled 
+                            className={`h-5 w-5 ${isCorrectStatement ? 'text-green-600' : 'text-red-600'}`}
+                          />
                           
-                          <span className={`${!stmt.isCorrect ? 'font-bold text-red-700' : 'text-gray-500'}`}>
-                            Sai (ĐA)
+                          <span className={`${userStatementAnswer === false ? 'font-bold' : 'text-gray-500'}`}>
+                            Sai
                           </span>
-                          <input type="radio" checked={stmt.isCorrect === false} disabled className="h-5 w-5 text-red-600" />
-                          
-                          <span className="ml-4 text-gray-700">|</span>
-
-                          <span className={`${userStatementAnswer === true ? (isCorrectStatement ? 'font-bold text-green-700' : 'font-bold text-red-700') : 'text-gray-500'}`}>
-                            Đúng (Bạn)
-                          </span>
-                          <input type="radio" checked={userStatementAnswer === true} disabled className="h-5 w-5 text-blue-600" />
-
-                          <span className={`${userStatementAnswer === false ? (isCorrectStatement ? 'font-bold text-green-700' : 'font-bold text-red-700') : 'text-gray-500'}`}>
-                            Sai (Bạn)
-                          </span>
-                          <input type="radio" checked={userStatementAnswer === false} disabled className="h-5 w-5 text-blue-600" />
+                          <input 
+                            type="radio" 
+                            checked={userStatementAnswer === false} 
+                            disabled 
+                            className={`h-5 w-5 ${isCorrectStatement ? 'text-green-600' : 'text-red-600'}`}
+                          />
                         </div>
                       </div>
                     );
@@ -171,7 +171,17 @@ const ResultDisplay = ({ result, examData, formatTime }) => {
                 {q.type === 'short-answer' && (
                     <p className="font-semibold mb-2">Đáp án đúng: <span className="text-green-700"><MathContent content={q.shortAnswerCorrectAnswer} /></span></p>
                 )}
-                {/* Đối với True/False, đáp án đúng đã được hiển thị chi tiết ở từng ý */}
+                {/* Đối với True/False, hiển thị tổng quan đáp án đúng */}
+                {q.type === 'true-false' && (
+                    <div className="mb-2">
+                        <p className="font-semibold">Đáp án đúng cho mỗi ý:</p>
+                        {q.statements.map((stmt, stmtIndex) => (
+                            <p key={`correct-stmt-${stmtIndex}`} className="text-sm">
+                                {String.fromCharCode(97 + stmtIndex)}) <MathContent content={stmt.statementText} />: <span className="text-green-700">{stmt.isCorrect ? 'Đúng' : 'Sai'}</span>
+                            </p>
+                        ))}
+                    </div>
+                )}
                 
                 {q.explanation && (
                   <div>
@@ -521,7 +531,7 @@ const ExamDetailPage = () => {
                                     return (
                                         <div key={stmtIndex} className="flex items-center space-x-3 p-3 rounded-md border border-gray-300 bg-white">
                                             <span className="text-base text-gray-800 flex-grow">
-                                                Ý {String.fromCharCode(97 + stmtIndex)}. <MathContent content={stmt.statementText} />
+                                                {String.fromCharCode(97 + stmtIndex)}) <MathContent content={stmt.statementText} />
                                             </span>
                                             <div className="flex items-center space-x-4">
                                                 <label className="flex items-center cursor-pointer">
