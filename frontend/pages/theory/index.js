@@ -131,22 +131,24 @@ const TheoryListPage = () => {
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {groupedTheories[category].map(theory => (
-                  <div key={theory._id} className="bg-white rounded-lg shadow-md p-5 border border-gray-100 transform hover:scale-102 transition-transform duration-200 ease-in-out cursor-pointer">
+                  // THAY ĐỔI TẠI ĐÂY: Di chuyển Link bao ngoài và thêm class cho div và a
+                  <div key={theory._id} className="bg-white rounded-lg shadow-md p-5 border border-gray-100 relative transform hover:scale-102 transition-transform duration-200 ease-in-out cursor-pointer">
                     <Link href={`/theory/${theory.slug}`}>
-                      {/* THAY ĐỔI TẠI ĐÂY: Thêm className vào thẻ <a> */}
-                      <a className="block w-full h-full">
-                        <h3 className="text-lg font-semibold text-gray-800 mb-2 hover:text-blue-600 transition-colors duration-200 line-clamp-2">{theory.title}</h3>
-                        <p className="text-sm text-gray-600 mb-3 line-clamp-3">{theory.description}</p>
-                        <div className="flex flex-wrap gap-2 text-xs mt-3">
-                          <span className="bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full">{theory.category}</span>
-                          {theory.tags && theory.tags.map((tag, index) => (
-                            <span key={index} className="bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full">
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
+                      <a className="absolute inset-0 z-10"> {/* Thẻ <a> phủ toàn bộ và có z-index cao */}
+                        <span className="sr-only">Xem chi tiết {theory.title}</span> {/* Accessibility */}
                       </a>
                     </Link>
+                    {/* Nội dung của card, không thay đổi */}
+                    <h3 className="text-lg font-semibold text-gray-800 mb-2 line-clamp-2">{theory.title}</h3>
+                    <p className="text-sm text-gray-600 mb-3 line-clamp-3">{theory.description}</p>
+                    <div className="flex flex-wrap gap-2 text-xs mt-3">
+                      <span className="bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full">{theory.category}</span>
+                      {theory.tags && theory.tags.map((tag, index) => (
+                        <span key={index} className="bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 ))}
               </div>
