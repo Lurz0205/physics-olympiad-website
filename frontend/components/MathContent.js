@@ -11,7 +11,7 @@ if (typeof window !== 'undefined' && !mdInstance) {
     html: true,
     linkify: true,
     typographer: true,
-    breaks: true // Bật breaks lại cho Markdown thuần túy
+    breaks: true // Giữ breaks là true để Markdown thuần túy có thể ngắt dòng đúng
   });
 }
 
@@ -50,7 +50,7 @@ const MathContent = ({ content }) => {
     <div className="math-content-container"> {/* Thêm container cho styling nếu cần */}
       {parts.map((part, index) => {
         if (part.startsWith('$$') && part.endsWith('$$')) {
-          // Display math
+          // Display math (block)
           const latex = part.substring(2, part.length - 2).trim();
           return <SimpleKatexRenderer key={index} latex={latex} displayMode={true} />;
         } else if (part.startsWith('$') && part.endsWith('$')) {
@@ -59,9 +59,12 @@ const MathContent = ({ content }) => {
           return <SimpleKatexRenderer key={index} latex={latex} displayMode={false} />;
         } else {
           // Regular Markdown text
-          // Dùng dangerouslySetInnerHTML để render Markdown, kiểm tra mdInstance
+          // Dùng mdInstance.render() cho các phần Markdown để xử lý cả block level syntax
           return mdInstance ? (
-            <span key={index} dangerouslySetInnerHTML={{ __html: mdInstance.renderInline(part) }} />
+            // Bọc mỗi phần trong một div tạm thời để render block-level Markdown
+            // Sau đó sử dụng dangerouslySetInnerHTML.
+            // Điều này đảm bảo tiêu đề, danh sách, v.v. được render đúng.
+            <div key={index} dangerouslySetInnerHTML={{ __html: mdInstance.render(part) }} />
           ) : (
             <span key={index}>{part}</span> // Fallback nếu mdInstance chưa sẵn sàng
           );
