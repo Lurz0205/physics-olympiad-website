@@ -19,6 +19,7 @@ const userSchema = mongoose.Schema(
     password: {
       type: String,
       required: [true, 'Vui lòng thêm mật khẩu'],
+      trim: true, // THAY ĐỔI MỚI QUAN TRỌNG: Tự động loại bỏ khoảng trắng ở đầu/cuối
     },
     role: {
       type: String,
