@@ -93,10 +93,18 @@ const ResultDisplay = ({ result, examData, formatTime }) => {
                 <div className="space-y-2 mb-4">
                   <p className="text-gray-700 font-semibold mb-2">Chọn Đúng hoặc Sai cho mỗi ý:</p>
                   {q.statements.map((stmt, stmtIndex) => {
-                    // Lấy đáp án của người dùng cho từng ý
-                    const userStatementAnswer = userAnswerEntry && userAnswerEntry.userAnswer 
-                                                ? JSON.parse(userAnswerEntry.userAnswer)[stmtIndex] 
-                                                : null; 
+                    // Lấy đáp án của người dùng cho từng ý (kiểm tra parse an toàn)
+                    let userStatementAnswers = null;
+                    try {
+                        userStatementAnswers = userAnswerEntry && userAnswerEntry.userAnswer 
+                                               ? JSON.parse(userAnswerEntry.userAnswer) 
+                                               : [];
+                    } catch (e) {
+                        console.error("Failed to parse true-false user answer:", e);
+                        userStatementAnswers = [];
+                    }
+                    const userStatementAnswer = userStatementAnswers[stmtIndex]; 
+                    
                     const isCorrectStatement = stmt.isCorrect === userStatementAnswer;
 
                     // Class cho từng ý Đúng/Sai
@@ -109,7 +117,7 @@ const ResultDisplay = ({ result, examData, formatTime }) => {
 
                     return (
                       <div key={stmtIndex} className={statementClass}>
-                        <span className="text-base text-gray-800 mr-2">
+                        <span className="text-base text-gray-800 flex-grow">
                           Ý {String.fromCharCode(97 + stmtIndex)}. <MathContent content={stmt.statementText} />
                         </span>
                         <div className="flex-grow flex justify-end items-center space-x-4">
@@ -513,7 +521,7 @@ const ExamDetailPage = () => {
                                     return (
                                         <div key={stmtIndex} className="flex items-center space-x-3 p-3 rounded-md border border-gray-300 bg-white">
                                             <span className="text-base text-gray-800 flex-grow">
-                                                 {String.fromCharCode(97 + stmtIndex)}. <MathContent content={stmt.statementText} />
+                                                Ý {String.fromCharCode(97 + stmtIndex)}. <MathContent content={stmt.statementText} />
                                             </span>
                                             <div className="flex items-center space-x-4">
                                                 <label className="flex items-center cursor-pointer">
