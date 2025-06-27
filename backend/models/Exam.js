@@ -1,151 +1,168 @@
 // physics-olympiad-website/backend/models/Exam.js
 const mongoose = require('mongoose');
 
-// Định nghĩa Schema cho các ý trong câu hỏi Đúng/Sai
+// Define Schema for statements in True/False questions
 const statementSchema = mongoose.Schema({
-  statementText: { // Nội dung của ý (ví dụ: "Dòng điện là chuyển động có hướng của các hạt mang điện.")
+  statementText: { // Content of the statement (e.g., "Electric current is the directed motion of charged particles.")
     type: String,
     required: [true, 'Vui lòng thêm nội dung cho ý.'],
     trim: true,
   },
-  isCorrect: { // Đáp án: true cho Đúng, false cho Sai
+  isCorrect: { // Answer: true for True, false for False
     type: Boolean,
     required: [true, 'Vui lòng chọn đáp án Đúng/Sai cho ý.'],
   },
-}, { _id: false }); // Không cần _id riêng cho mỗi ý nếu chúng luôn đi kèm câu hỏi cha
+}, { _id: false }); // No separate _id needed for each statement if they are always part of a parent question
 
-// Định nghĩa Schema chung cho mọi loại câu hỏi
+// Define common Schema for all question types
 const questionSchema = mongoose.Schema({
-  // Loại câu hỏi (bắt buộc)
+  // Question type (required)
   type: {
     type: String,
     enum: ['multiple-choice', 'true-false', 'short-answer'],
     required: [true, 'Vui lòng chọn loại câu hỏi.'],
   },
-  // Nội dung chính của câu hỏi (chung cho tất cả các loại)
-  questionText: { // Nội dung câu hỏi (hỗ trợ Markdown/LaTeX)
+  // Main content of the question (common for all types)
+  questionText: { // Question content (supports Markdown/LaTeX)
     type: String,
     required: [true, 'Vui lòng thêm nội dung câu hỏi.'],
     trim: true,
   },
   // =========================================================
-  // Các trường đặc trưng cho loại 'multiple-choice'
-  options: { // Mảng các lựa chọn (hỗ trợ Markdown/LaTeX)
+  // Fields specific to 'multiple-choice' type
+  options: { // Array of options (supports Markdown/LaTeX)
     type: [String],
-    required: function() { return this.type === 'multiple-choice'; }, // Bắt buộc nếu là trắc nghiệm
+    required: function() { return this.type === 'multiple-choice'; }, // Required if it's multiple-choice
     validate: {
       validator: function(v) {
         if (this.type === 'multiple-choice') {
-          // Ít nhất 2 lựa chọn không rỗng
+          // At least 2 non-empty options
           return v && v.filter(opt => opt.trim() !== '').length >= 2;
         }
-        return true; // Không áp dụng validation này cho các loại khác
+        return true; // This validation does not apply to other types
       },
       message: 'Câu hỏi trắc nghiệm phải có ít nhất 2 lựa chọn đã điền.'
     }
   },
-  multipleChoiceCorrectAnswer: { // Đáp án đúng cho trắc nghiệm (phải là một trong các options)
+  multipleChoiceCorrectAnswer: { // Correct answer for multiple-choice (must be one of the options)
     type: String,
-    required: function() { return this.type === 'multiple-choice'; }, // Bắt buộc nếu là trắc nghiệm
+    required: function() { return this.type === 'multiple-choice'; }, // Required if it's multiple-choice
     validate: {
       validator: function(v) {
         if (this.type === 'multiple-choice' && this.options) {
-          // Đáp án đúng phải nằm trong danh sách các lựa chọn đã điền (không phân biệt hoa/thường, trim)
+          // Correct answer must be among the filled options (case-insensitive, trimmed)
           return this.options.map(opt => opt.toLowerCase().trim()).includes(v.toLowerCase().trim());
         }
-        return true; // Không áp dụng validation này cho các loại khác
+        return true; // This validation does not apply to other types
       },
       message: 'Đáp án đúng phải là một trong các lựa chọn đã cho.'
     }
   },
   // =========================================================
-  // Các trường đặc trưng cho loại 'true-false'
-  statements: { // Mảng 4 ý của câu hỏi Đúng/Sai
+  // Fields specific to 'true-false' type
+  statements: { // Array of 4 statements for True/False questions
     type: [statementSchema],
-    required: function() { return this.type === 'true-false'; }, // Bắt buộc nếu là Đúng/Sai
+    required: function() { return this.type === 'true-false'; }, // Required if it's True/False
     validate: {
       validator: function(v) {
         if (this.type === 'true-false') {
-          // Phải có đúng 4 ý và mỗi ý phải có statementText
+          // Must have exactly 4 statements and each statement must have text
           return v && v.length === 4 && v.every(s => s.statementText && s.statementText.trim() !== '');
         }
-        return true; // Không áp dụng validation này cho các loại khác
+        return true; // This validation does not apply to other types
       },
       message: 'Câu hỏi Đúng/Sai phải có đúng 4 ý và mỗi ý phải có nội dung.'
     }
   },
   // =========================================================
-  // Các trường đặc trưng cho loại 'short-answer'
-  shortAnswerCorrectAnswer: { // Đáp án đúng cho trả lời ngắn
+  // Fields specific to 'short-answer' type
+  shortAnswerCorrectAnswer: { // Correct answer for short answer
     type: String,
-    required: function() { return this.type === 'short-answer'; }, // Bắt buộc nếu là trả lời ngắn
+    required: function() { return this.type === 'short-answer'; }, // Required if it's short answer
     trim: true,
     validate: {
       validator: function(v) {
         if (this.type === 'short-answer') {
-          // Tối đa 4 ký tự, chỉ chứa số (0-9), dấu "-" và dấu ","
+          // Max 4 characters, only digits (0-9), dash "-", and comma ","
           return v && v.length <= 4 && /^[0-9,-]*$/.test(v);
         }
-        return true; // Không áp dụng validation này cho các loại khác
+        return true; // This validation does not apply to other types
       },
       message: 'Đáp án trả lời ngắn phải có tối đa 4 ký tự và chỉ chứa số (0-9), dấu "-" và dấu ",".'
     }
   },
   // =========================================================
-  explanation: { // Giải thích đáp án (tùy chọn, hỗ trợ Markdown/LaTeX) - Chung cho tất cả
+  explanation: { // Explanation for the answer (optional, supports Markdown/LaTeX) - Common to all
     type: String,
     default: '',
   },
 });
 
-// Định nghĩa Schema cho một đề thi
+// Define Schema for an exam
 const examSchema = mongoose.Schema(
   {
-    title: { // Tiêu đề đề thi (ví dụ: Đề thi thử Vật lý Quốc gia 2024)
+    title: { // Exam title (e.g., National Physics Mock Exam 2024)
       type: String,
       required: [true, 'Vui lòng thêm tiêu đề đề thi'],
       trim: true,
     },
-    slug: { // Slug duy nhất cho URL thân thiện
+    slug: { // Unique slug for friendly URL
       type: String,
       required: [true, 'Vui lòng thêm slug cho đề thi'],
-      unique: true, // Đảm bảo slug là duy nhất
+      unique: true, // Ensure slug is unique
       trim: true,
       lowercase: true,
     },
-    description: { // Mô tả ngắn gọn về đề thi
+    description: { // Short description of the exam
       type: String,
       required: false,
       trim: true,
       default: '',
     },
-    duration: { // Thời gian làm bài tính bằng phút
+    duration: { // Exam duration in minutes
       type: Number,
       required: [true, 'Vui lòng thêm thời gian làm bài (phút)'],
       min: [1, 'Thời gian làm bài phải lớn hơn 0 phút'],
     },
-    category: { // Danh mục đề thi (ví dụ: Tổng hợp, Chuyên đề Cơ học)
+    category: { // Exam category (e.g., General, Mechanics, etc.)
       type: String,
       required: [true, 'Vui lòng chọn danh mục cho đề thi'],
       enum: ['TỔNG HỢP', 'CƠ HỌC', 'NHIỆT HỌC', 'ĐIỆN HỌC', 'QUANG HỌC', 'VẬT LÝ HẠT NHÂN', 'THUYẾT TƯƠNG ĐỐI', 'VẬT LÝ HIỆN ĐẠI', 'Chưa phân loại'],
       default: 'Chưa phân loại',
     },
-    questions: { // Mảng các câu hỏi được nhúng vào đề thi (có thể là nhiều loại)
-      type: [questionSchema], // Sử dụng questionSchema đã định nghĩa
+    questions: { // Array of questions embedded in the exam (can be multiple types)
+      type: [questionSchema], // Use the defined questionSchema
       default: [],
     },
-    user: { // Người tạo đề thi (liên kết với User Model)
+    user: { // User who created the exam (links to User Model)
       type: mongoose.Schema.Types.ObjectId,
-      required: false, // Để linh hoạt hơn, có thể set false nếu bạn muốn admin nào cũng tạo được mà không cần gán vào user cụ thể
+      required: false, // For more flexibility, can set to false if any admin can create without linking to a specific user
       ref: 'User',
     },
-    isPublished: { // Trạng thái xuất bản
+    isPublished: { // Publication status
       type: Boolean,
       default: false,
     },
+    // ============ ADD NEW SCORING CONFIGURATION HERE ============
+    scoringConfig: {
+      type: Object, // Use Object to store flexible scoring configuration
+      default: {
+        multipleChoice: 1, // Default points for each multiple-choice question
+        shortAnswer: 1,    // Default points for each short-answer question
+        trueFalse: {       // Scoring configuration by number of correct statements for True/False (total 4 statements)
+          '1': 0.25,       // Points if 1 statement is correct
+          '2': 0.5,        // Points if 2 statements are correct
+          '3': 0.75,       // Points if 3 statements are correct
+          '4': 1           // Points if 4 statements are correct (Maximum points for a True/False question)
+        }
+      },
+      // If you want this configuration to be required, you can add required: true
+      // However, with a default, it's not strictly necessary when creating new exams
+    }
+    // =========================================================
   },
   {
-    timestamps: true, // Tự động thêm createdAt và updatedAt
+    timestamps: true, // Automatically add createdAt and updatedAt
   }
 );
 
