@@ -73,18 +73,7 @@ const RegisterPage = () => {
       }
 
       // Đăng ký thành công, tự động đăng nhập nếu backend trả về user/token
-      if (data.token) { // Backend của bạn trả về token, không cần data.user riêng
-        // Gọi hàm login từ AuthContext với dữ liệu nhận được từ backend
-        // (Bạn cần điều chỉnh AuthContext để nhận data.email và data.name nếu bạn cần lưu vào user context)
-        // Hiện tại AuthContext.login có thể mong đợi email, password thô.
-        // Tốt nhất là AuthContext.login chỉ cần token và tự fetch /me
-        // Hoặc bạn truyền thẳng token và các thông tin user cần thiết vào AuthContext.login
-        
-        // Giả sử login trong AuthContext nhận { token, _id, name, email, role }
-        // Hoặc đơn giản là nó sẽ lưu token và sau đó dùng token để fetch user info
-        
-        // Điều chỉnh lại logic login trong AuthContext nếu cần
-        // Hiện tại, tôi sẽ chuyển hướng đến trang đăng nhập với thông báo thành công
+      if (data.token) { 
         router.push('/login?message=Đăng ký thành công! Vui lòng đăng nhập.');
 
       } else {
@@ -122,7 +111,7 @@ const RegisterPage = () => {
             Đăng ký tài khoản mới
           </h2>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}> {/* BẮT ĐẦU FORM */}
           {error && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-4" role="alert">
               {error}
@@ -137,7 +126,7 @@ const RegisterPage = () => {
               autoComplete="name"
               required
               className="appearance-none block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm mb-4"
-              placeholder="Tên người dùng (ít nhất 3 ký tự)" // Cập nhật placeholder
+              placeholder="Tên người dùng (ít nhất 3 ký tự)"
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
@@ -165,7 +154,7 @@ const RegisterPage = () => {
               autoComplete="new-password"
               required
               className="appearance-none block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm mb-4"
-              placeholder="Mật khẩu (ít nhất 8 ký tự, gồm chữ, số, không khoảng trắng)" // Cập nhật placeholder
+              placeholder="Mật khẩu (ít nhất 8 ký tự, gồm chữ, số, không khoảng trắng)"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
@@ -194,14 +183,16 @@ const RegisterPage = () => {
               {loading ? 'Đang đăng ký...' : 'Đăng ký'}
             </button>
           </div>
-          <div className="text-center text-sm text-gray-600 mt-4">
-            Đã có tài khoản?{' '}
-            <Link href="/login">
-              <a className="font-medium text-blue-600 hover:text-blue-500">
-                Đăng nhập tại đây
-              </a>
-            </Link>
-          </div>
+        </form> {/* KẾT THÚC FORM */}
+
+        {/* Phần này nằm ngoài form */}
+        <div className="text-center text-sm text-gray-600 mt-4">
+          Đã có tài khoản?{' '}
+          <Link href="/login">
+            <a className="font-medium text-blue-600 hover:text-blue-500">
+              Đăng nhập tại đây
+            </a>
+          </Link>
         </div>
       </div>
     </div>
