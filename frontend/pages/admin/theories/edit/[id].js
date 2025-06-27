@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useAuth } from '../../../../context/AuthContext';
-// THAY ĐỔI: XÓA DÒNG NÀY: import AdminLayout from '../../../../components/AdminLayout';
 import Link from 'next/link';
 
 const EditTheoryPage = () => {
@@ -13,15 +12,23 @@ const EditTheoryPage = () => {
 
   const [title, setTitle] = useState('');
   const [slug, setSlug] = useState('');
+  const [originalSlug, setOriginalSlug] = useState(''); // Để so sánh khi tự động tạo slug
   const [description, setDescription] = useState('');
   const [content, setContent] = useState('');
   const [category, setCategory] = useState('CƠ HỌC');
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
+  const [loading, setLoading] = useState(true); // Loading khi tải dữ liệu lý thuyết
+  const [submitting, setSubmitting] = useState(false); // Loading khi submit form
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState('');
 
   const categories = ['CƠ HỌC', 'NHIỆT HỌC', 'ĐIỆN HỌC', 'QUANG HỌC', 'VẬT LÝ HẠT NHÂN', 'THUYẾT TƯƠNG ĐỐI', 'VẬT LÝ HIỆN ĐẠI', 'Chưa phân loại'];
+
+  // LOẠI BỎ: Logic kiểm tra user.role trùng lặp (AdminLayout đã xử lý)
+  // useEffect(() => {
+  //   if (user && user.role !== 'admin') {
+  //     router.push('/login'); // Hoặc trang lỗi
+  //   }
+  // }, [user, router]);
 
   useEffect(() => {
     const fetchTheory = async () => {
@@ -43,6 +50,7 @@ const EditTheoryPage = () => {
         }
         setTitle(data.title);
         setSlug(data.slug);
+        setOriginalSlug(data.slug); // Lưu slug ban đầu
         setDescription(data.description);
         setContent(data.content);
         setCategory(data.category);
@@ -85,6 +93,11 @@ const EditTheoryPage = () => {
       }
 
       setSuccess('Cập nhật bài lý thuyết thành công!');
+      // Tùy chọn: chuyển hướng về danh sách lý thuyết sau một thời gian
+      setTimeout(() => {
+        router.push('/admin/theories');
+      }, 2000);
+
     } catch (err) {
       console.error('Error updating theory:', err);
       setError(err.message || 'Đã xảy ra lỗi không xác định.');
@@ -96,7 +109,11 @@ const EditTheoryPage = () => {
   const handleTitleChange = (e) => {
     const newTitle = e.target.value;
     setTitle(newTitle);
-    setSlug(generateSlug(newTitle));
+    // Chỉ tự động cập nhật slug nếu slug hiện tại chưa được chỉnh sửa thủ công
+    // hoặc nếu nó trùng với slug ban đầu được tạo từ tiêu đề
+    if (slug === originalSlug || !slug) { // Nếu slug rỗng hoặc vẫn là slug gốc của tiêu đề
+      setSlug(generateSlug(newTitle));
+    }
   };
 
   const generateSlug = (text) => {
@@ -110,31 +127,34 @@ const EditTheoryPage = () => {
       .replace(/--+/g, '-');
   };
 
-  // THAY ĐỔI: Dùng React Fragment <> </> thay vì AdminLayout
+  // Cải thiện hiển thị loading khi tải dữ liệu ban đầu
   if (loading) {
     return (
-      <> {/* AdminLayout sẽ được bọc từ _app.js */}
-        <div className="text-center p-6">Đang tải dữ liệu lý thuyết...</div>
-      </>
+      <div className="flex items-center justify-center min-h-[50vh] bg-white rounded-lg shadow-md p-6">
+        <div className="text-center">
+          <svg className="animate-spin h-10 w-10 text-blue-500 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <p className="text-xl text-gray-700">Đang tải dữ liệu lý thuyết...</p>
+        </div>
+      </div>
     );
   }
 
-  // THAY ĐỔI: Dùng React Fragment <> </> thay vì AdminLayout
-  if (error && !success) {
+  // Cải thiện hiển thị lỗi tải dữ liệu
+  if (error && !submitting) { 
     return (
-      <> {/* AdminLayout sẽ được bọc từ _app.js */}
-        <div className="text-center text-red-600 p-6">Lỗi: {error}</div>
-        <div className="flex justify-center mt-4">
-            <Link href="/admin/theories">
-                <a className="btn-secondary">Quay lại Danh sách</a>
-            </Link>
-        </div>
-      </>
+      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+        Lỗi: {error}
+        <Link href="/admin/theories">
+            <a className="ml-4 text-blue-800 hover:underline">Quay lại danh sách</a>
+        </Link>
+      </div>
     );
   }
 
   return (
-    // Nội dung chính cũng nằm trong React Fragment
     <>
       <Head>
         <title>Chỉnh sửa Lý thuyết - Admin</title>
@@ -147,7 +167,7 @@ const EditTheoryPage = () => {
             </Link>
         </div>
 
-        {error && (
+        {error && submitting && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
             {error}
           </div>
@@ -176,11 +196,11 @@ const EditTheoryPage = () => {
               type="text"
               id="slug"
               value={slug}
-              onChange={(e) => setSlug(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-200 bg-gray-50"
-              readOnly
+              onChange={(e) => setSlug(e.target.value)} // Bỏ readOnly để cho phép sửa thủ công
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-200"
               required
             />
+            <p className="mt-1 text-xs text-gray-500">Slug sẽ tự động tạo từ tiêu đề hoặc có thể chỉnh sửa thủ công.</p>
           </div>
           <div>
             <label htmlFor="description" className="block text-gray-700 text-sm font-medium mb-2">Mô tả:</label>
