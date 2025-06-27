@@ -170,24 +170,16 @@ const ResultDisplay = ({ result, examData, formatTime }) => {
                 </div>
               )}
 
-              {/* Phần hiển thị đáp án đúng và giải thích chung cho tất cả các loại */}
+              {/* Phần hiển thị giải thích chung cho tất cả các loại */}
               <div className="mt-4 p-4 rounded-lg bg-gray-100 border border-gray-300 text-gray-800">
-                {q.type === 'multiple-choice' && (
-                    <p className="font-semibold mb-2">Đáp án đúng: <span className="text-green-700"><MathContent content={q.multipleChoiceCorrectAnswer} /></span></p>
-                )}
-                {q.type === 'short-answer' && (
-                    <p className="font-semibold mb-2">Đáp án đúng: <span className="text-green-700"><MathContent content={q.shortAnswerCorrectAnswer} /></span></p>
-                )}
-                {/* Đối với True/False, hiển thị tổng quan đáp án đúng */}
-                {q.type === 'true-false' && (
-                    <div className="mb-2">
-                        <p className="font-semibold">Đáp án đúng cho mỗi ý:</p>
-                        {q.statements.map((stmt, stmtIndex) => (
-                            <p key={`correct-stmt-${stmtIndex}`} className="text-sm">
-                                {String.fromCharCode(97 + stmtIndex)}) <MathContent content={stmt.statementText} />: <span className="text-green-700">{stmt.isCorrect ? 'Đúng' : 'Sai'}</span>
-                            </p>
-                        ))}
-                    </div>
+                {/* Chỉ hiển thị đáp án đúng nếu đó là trắc nghiệm nhiều lựa chọn hoặc trả lời ngắn */}
+                {(q.type === 'multiple-choice' || q.type === 'short-answer') && (
+                    <p className="font-semibold mb-2">
+                        Đáp án đúng: 
+                        <span className="text-green-700 ml-1">
+                            <MathContent content={q.type === 'multiple-choice' ? q.multipleChoiceCorrectAnswer : q.shortAnswerCorrectAnswer} />
+                        </span>
+                    </p>
                 )}
                 
                 {q.explanation && (
@@ -217,7 +209,7 @@ const ExamDetailPage = () => {
 
   const [exam, setExam] = useState(null);
   const [loadingContent, setLoadingContent] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(null); // Thông báo lỗi validation
   const [userAnswers, setUserAnswers] = useState({}); // Lưu trữ đáp án người dùng theo questionId
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [examStarted, setExamStarted] = useState(false);
@@ -242,37 +234,44 @@ const ExamDetailPage = () => {
     }
 
     // --- BẮT ĐẦU VALIDATION PHÍA CLIENT ---
+    let allQuestionsAnswered = true;
     for (const q of exam.questions) {
       const userAnswer = userAnswers[q._id];
       if (q.type === 'multiple-choice') {
         if (!userAnswer || userAnswer === '') {
           setError(`Vui lòng chọn đáp án cho Câu hỏi ${exam.questions.indexOf(q) + 1}.`);
-          setSubmitting(false); // Reset submitting state
-          return; // Dừng hàm submit
+          allQuestionsAnswered = false;
+          break; // Dừng vòng lặp ngay khi tìm thấy câu chưa trả lời
         }
       } else if (q.type === 'true-false') {
         // Kiểm tra xem tất cả các ý trong câu Đúng/Sai đã được trả lời chưa (không có null)
         if (!userAnswer || !Array.isArray(userAnswer) || userAnswer.some(ans => ans === null || ans === undefined)) {
           setError(`Vui lòng trả lời đầy đủ các ý trong Câu hỏi ${exam.questions.indexOf(q) + 1}.`);
-          setSubmitting(false); // Reset submitting state
-          return; // Dừng hàm submit
+          allQuestionsAnswered = false;
+          break;
         }
       } else if (q.type === 'short-answer') {
         if (!userAnswer || userAnswer.trim() === '') {
           setError(`Vui lòng điền đáp án cho Câu hỏi ${exam.questions.indexOf(q) + 1}.`);
-          setSubmitting(false); // Reset submitting state
-          return; // Dừng hàm submit
+          allQuestionsAnswered = false;
+          break;
         }
       }
+    }
+
+    if (!allQuestionsAnswered) {
+        setSubmitting(false); // Đảm bảo nút không bị disabled
+        // Lỗi đã được set trong vòng lặp, không cần set lại ở đây
+        return; // Ngăn không cho hàm tiếp tục nộp bài
     }
     // --- KẾT THÚC VALIDATION PHÍA CLIENT ---
 
     setSubmitting(true);
-    setExamFinished(true);
+    setExamFinished(true); // Chỉ set khi bài thi hợp lệ và chuẩn bị nộp
     if (timerRef.current) {
       clearInterval(timerRef.current);
     }
-    setError(null); // Xóa lỗi sau khi validation thành công
+    setError(null); // Xóa lỗi sau khi validation thành công và chuẩn bị nộp
 
     const timeTaken = exam.duration * 60 - timeRemaining; 
     
@@ -318,6 +317,8 @@ const ExamDetailPage = () => {
       setExamResult(resultData);
     } catch (err) {
       console.error('Lỗi khi nộp bài thi:', err);
+      // Giữ examFinished = false và hiển thị lỗi để người dùng có thể thử lại
+      setExamFinished(false); 
       setError(err.message || 'Đã xảy ra lỗi khi nộp bài thi.');
     } finally {
       setSubmitting(false);
@@ -419,6 +420,7 @@ const ExamDetailPage = () => {
         }
         return newAnswers;
       });
+      setError(null); // Xóa lỗi validation khi người dùng thay đổi đáp án
     }
   }, [examFinished]);
 
@@ -434,8 +436,8 @@ const ExamDetailPage = () => {
     );
   }
 
-  // Display fetch error if any
-  if (error) {
+  // Display fetch error if any (this error is from initial data fetch, not validation)
+  if (error && !examStarted) { // Chỉ hiển thị lỗi toàn trang nếu chưa bắt đầu thi
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
         <p className="text-xl text-red-600 text-center font-semibold">Đã xảy ra lỗi: {error}</p>
@@ -519,7 +521,8 @@ const ExamDetailPage = () => {
               </div>
             ) : (
               <>
-                {error && ( // Hiển thị lỗi validation khi nộp bài
+                {/* HIỂN THỊ LỖI VALIDATION TẠI ĐÂY */}
+                {error && ( // Chỉ hiển thị lỗi nếu có
                   <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
                     {error}
                   </div>
@@ -578,7 +581,7 @@ const ExamDetailPage = () => {
                                                         name={`question-${q._id}-statement-${stmtIndex}`} // Đảm bảo unique name cho mỗi cặp radio của ý con
                                                         checked={currentUserAnswerForStatement === true}
                                                         onChange={() => handleAnswerChange(q._id, true, q.type, stmtIndex)}
-                                                        className="form-radio h-4 w-4 text-blue-600" // Đã loại bỏ màu cố định text-green-600
+                                                        className="form-radio h-4 w-4 text-blue-600"
                                                     />
                                                     <span className={`ml-2 ${currentUserAnswerForStatement === true ? 'font-bold text-blue-800' : 'text-gray-800'}`}>Đúng</span>
                                                 </label>
@@ -588,7 +591,7 @@ const ExamDetailPage = () => {
                                                         name={`question-${q._id}-statement-${stmtIndex}`}
                                                         checked={currentUserAnswerForStatement === false}
                                                         onChange={() => handleAnswerChange(q._id, false, q.type, stmtIndex)}
-                                                        className="form-radio h-4 w-4 text-blue-600" // Đã loại bỏ màu cố định text-red-600
+                                                        className="form-radio h-4 w-4 text-blue-600"
                                                     />
                                                     <span className={`ml-2 ${currentUserAnswerForStatement === false ? 'font-bold text-blue-800' : 'text-gray-800'}`}>Sai</span>
                                                 </label>
