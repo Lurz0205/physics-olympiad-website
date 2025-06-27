@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useAuth } from '../../../context/AuthContext';
-// XÓA DÒNG NÀY: import AdminLayout from '../../../components/AdminLayout';
 import Link from 'next/link';
 
 const NewTheoryPage = () => {
@@ -15,7 +14,7 @@ const NewTheoryPage = () => {
   const [description, setDescription] = useState('');
   const [content, setContent] = useState('');
   const [category, setCategory] = useState('CƠ HỌC');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false); // Đổi tên thành 'submitting' cho rõ ràng hơn
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState('');
 
@@ -23,7 +22,7 @@ const NewTheoryPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    setLoading(true); // Sử dụng 'loading' cho submit, hoặc đổi thành 'submitting'
     setError(null);
     setSuccess('');
 
@@ -50,7 +49,17 @@ const NewTheoryPage = () => {
       }
 
       setSuccess('Tạo bài lý thuyết mới thành công!');
-      router.push('/admin/theories');
+      // Reset form sau khi submit thành công
+      setTitle('');
+      setSlug('');
+      setDescription('');
+      setContent('');
+      setCategory('CƠ HỌC');
+
+      setTimeout(() => {
+        router.push('/admin/theories');
+      }, 2000);
+      
     } catch (err) {
       console.error('Error creating theory:', err);
       setError(err.message || 'Đã xảy ra lỗi không xác định.');
@@ -77,7 +86,6 @@ const NewTheoryPage = () => {
   };
 
   return (
-    // THAY ĐỔI: Dùng Fragment <> </> thay vì AdminLayout
     <>
       <Head>
         <title>Thêm Lý thuyết Mới - Admin</title>
@@ -120,7 +128,7 @@ const NewTheoryPage = () => {
               id="slug"
               value={slug}
               onChange={(e) => setSlug(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-200 bg-gray-50"
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-200 bg-gray-50 cursor-not-allowed"
               readOnly
               required
             />
@@ -170,7 +178,7 @@ const NewTheoryPage = () => {
           </button>
         </form>
       </div>
-    </> // THAY ĐỔI: Dùng Fragment
+    </>
   );
 };
 
