@@ -11,9 +11,14 @@ import MathContent from '../../components/MathContent'; // Component để rende
 
 // Tách ResultDisplay ra thành một component riêng biệt để hiển thị kết quả
 const ResultDisplay = ({ result, examData, formatTime }) => {
-  if (!result || !examData) return null;
+  // result: dữ liệu kết quả bài thi từ backend
+  // examData: dữ liệu đề thi đầy đủ từ backend
+  if (!result || !examData) {
+    console.error("ResultDisplay: result or examData is missing.", { result, examData });
+    return null;
+  }
 
-  // Tính phần trăm điểm dựa trên tổng điểm tối đa, nếu maxPossibleScore không tồn tại hoặc bằng 0 thì mặc định 0%
+  // Tính phần trăm điểm dựa trên tổng điểm tối đa
   const percentage = result.maxPossibleScore > 0 ? ((result.score / result.maxPossibleScore) * 100).toFixed(0) : 0;
   
   return (
@@ -22,9 +27,8 @@ const ResultDisplay = ({ result, examData, formatTime }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <div className="bg-blue-50 p-4 rounded-lg flex items-center justify-between">
           <span className="text-gray-700 font-semibold">Điểm số:</span>
-          {/* HIỂN THỊ ĐIỂM SỐ TRÊN TỔNG ĐIỂM TỐI ĐA */}
           <span className="text-blue-700 text-2xl font-bold">
-            {result.score} / {result.maxPossibleScore !== undefined ? result.maxPossibleScore.toFixed(2) : 'N/A'}
+            {result.score.toFixed(2)} / {result.maxPossibleScore.toFixed(2)}
           </span>
         </div>
         <div className="bg-green-50 p-4 rounded-lg flex items-center justify-between">
@@ -37,20 +41,22 @@ const ResultDisplay = ({ result, examData, formatTime }) => {
         </div>
         <div className="bg-yellow-50 p-4 rounded-lg flex items-center justify-between">
           <span className="text-gray-700 font-semibold">Thời gian làm bài:</span>
+          {/* Backend lưu là timeTaken, frontend gọi là timeTaken */}
           <span className="text-yellow-700 text-2xl font-bold">{formatTime(result.timeTaken)}</span>
         </div>
       </div>
       
       <p className="text-center text-lg text-gray-700 mb-8">
-        Bạn đã hoàn thành bài thi với **{result.score} điểm** ({percentage}%).
+        Bạn đã hoàn thành bài thi với **{result.score.toFixed(2)} điểm** ({percentage}%).
       </p>
 
       <h3 className="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Xem lại các câu hỏi và đáp án:</h3>
       <div className="space-y-6">
         {examData.questions.map((q, qIndex) => {
-          // Tìm đáp án của người dùng cho câu hỏi này
-          const userAnswerEntry = result.userAnswers.find(ua => ua.questionId === q._id);
-          const isCorrectQuestionOverall = userAnswerEntry ? userAnswerEntry.isCorrect : false; // Đúng/Sai tổng thể câu hỏi
+          // Tìm đáp án của người dùng cho câu hỏi này trong mảng userAnswers
+          const userAnswerEntry = result.userAnswers.find(ua => ua.questionId === q._id.toString());
+          
+          const isQuestionCorrectOverall = userAnswerEntry ? userAnswerEntry.isCorrect : false; // Đúng/Sai tổng thể câu hỏi
           const scoreAchievedForQuestion = userAnswerEntry ? userAnswerEntry.scoreAchieved : 0; // Điểm đạt được cho câu hỏi này
 
           // Lấy điểm tối đa cho câu hỏi này từ scoringConfig của examData
@@ -71,9 +77,9 @@ const ResultDisplay = ({ result, examData, formatTime }) => {
             }
           }
 
-          // Điều chỉnh màu sắc nền dựa trên tổng thể câu hỏi đúng/sai
+          // Điều chỉnh màu sắc nền dựa trên đúng/sai tổng thể của câu hỏi (đạt điểm tối đa hay không)
           const questionCardClass = `p-5 rounded-lg border shadow-sm ${
-            isCorrectQuestionOverall ? 'bg-green-50 border-green-300' : 'bg-red-50 border-red-300'
+            isQuestionCorrectOverall ? 'bg-green-50 border-green-300' : 'bg-red-50 border-red-300'
           }`;
 
           return (
@@ -126,14 +132,14 @@ const ResultDisplay = ({ result, examData, formatTime }) => {
                   <p className="text-gray-700 font-semibold mb-2">Đáp án của bạn cho mỗi ý:</p>
                   {q.statements.map((stmt, stmtIndex) => {
                     // Lấy đáp án của người dùng cho từng ý (kiểm tra parse an toàn)
-                    let userStatementAnswers;
+                    let userStatementsArray;
                     try {
-                        userStatementAnswers = userAnswerEntry && userAnswerEntry.userAnswer 
+                        userStatementsArray = userAnswerEntry && userAnswerEntry.userAnswer 
                                                ? JSON.parse(userAnswerEntry.userAnswer) 
                                                : [];
                     } catch (e) {
                         console.error("Failed to parse true-false user answer JSON:", e);
-                        userStatementAnswers = [];
+                        userStatementsArray = [];
                     }
                     const userStatementAnswer = userStatementsArray[stmtIndex]; 
                     
@@ -191,7 +197,7 @@ const ResultDisplay = ({ result, examData, formatTime }) => {
                   <p className="text-gray-700 font-semibold mb-2">Đáp án trả lời ngắn:</p>
                   <div className="flex items-center space-x-3 p-3 rounded-md border bg-gray-50">
                     <span className="text-gray-800">
-                      Đáp án của bạn: <span className={`${isCorrectQuestionOverall ? 'text-green-700 font-bold' : 'text-red-700 font-bold'}`}>
+                      Đáp án của bạn: <span className={`${isQuestionCorrectOverall ? 'text-green-700 font-bold' : 'text-red-700 font-bold'}`}>
                          {userAnswerEntry ? userAnswerEntry.userAnswer : ''}
                       </span>
                     </span>
@@ -236,13 +242,13 @@ const ExamDetailPage = () => {
   const { slug } = router.query;
   const { user, token, authLoading } = useAuth();
 
-  const [exam, setExam] = useState(null);
+  const [exam, setExam] = useState(null); // Đổi tên examData thành exam cho rõ ràng, nhất quán với backend
   const [loadingContent, setLoadingContent] = useState(false);
   const [error, setError] = useState(null); // Thông báo lỗi validation
   const [userAnswers, setUserAnswers] = useState({}); // Lưu trữ đáp án người dùng theo questionId
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [examStarted, setExamStarted] = useState(false);
-  const [examFinished, setExamFinished] = useState(false);
+  const [examFinished, setExamFinished] = useState(false); // Đổi tên isExamSubmitted thành examFinished
   const [examResult, setExamResult] = useState(null);
   const [submitting, setSubmitting] = useState(false); 
 
@@ -257,7 +263,8 @@ const ExamDetailPage = () => {
 
   // Hàm nộp bài thi
   const handleSubmitExam = useCallback(async (isTimeUp = false) => {
-    if (!user || !token || !exam || examFinished || submitting) {
+    // Sử dụng examFinished thay vì isExamSubmitted
+    if (!user || !token || !exam || examFinished || submitting) { 
       if (!user) setError('Bạn cần đăng nhập để nộp bài thi.');
       return;
     }
@@ -325,11 +332,11 @@ const ExamDetailPage = () => {
     const submissionData = {
       examId: exam._id,
       userAnswers: answersToSend,
-      timeTaken: timeTaken,
+      timeTaken: timeTaken, // Gửi timeTaken thay vì timeSpent để khớp với backend
     };
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/exam-results`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/exam-results`, { // Endpoint đúng
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -385,7 +392,7 @@ const ExamDetailPage = () => {
           throw new Error(data.message || 'Lỗi khi tải đề thi.');
         }
 
-        setExam(data);
+        setExam(data); // Đặt dữ liệu đề thi vào state 'exam'
         setTimeRemaining(data.duration * 60);
 
         // Khởi tạo userAnswers dựa trên loại câu hỏi
@@ -507,6 +514,7 @@ const ExamDetailPage = () => {
             </Link>
           </div>
         ) : examFinished && examResult ? (
+          // Truyền exam (data đề thi) và examResult (kết quả đã nộp)
           <ResultDisplay result={examResult} examData={exam} formatTime={formatTime} />
         ) : (
           <>
