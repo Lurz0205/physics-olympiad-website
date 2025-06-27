@@ -6,8 +6,10 @@ const userSchema = mongoose.Schema(
   {
     name: {
       type: String,
-      required: [true, 'Vui lòng thêm tên'],
+      required: [true, 'Vui lòng thêm tên người dùng'],
+      unique: true, // THAY ĐỔI MỚI: Đảm bảo tên người dùng là duy nhất
       trim: true,
+      minlength: [3, 'Tên người dùng phải dài ít nhất 3 ký tự'], // Thêm validate minlength cho username
     },
     email: {
       type: String,
@@ -15,11 +17,18 @@ const userSchema = mongoose.Schema(
       unique: true, // Đảm bảo email là duy nhất
       trim: true,
       lowercase: true, // Lưu email dưới dạng chữ thường để tránh trùng lặp do case sensitivity
+      match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, 'Vui lòng nhập địa chỉ email hợp lệ'], // Thêm validate định dạng email
     },
     password: {
       type: String,
       required: [true, 'Vui lòng thêm mật khẩu'],
-      trim: true, // THAY ĐỔI QUAN TRỌNG: Đảm bảo có trim: true để loại bỏ khoảng trắng ở đầu/cuối
+      trim: false, // Giữ trim là false ở đây vì regex sẽ kiểm tra dấu cách nội bộ
+      minlength: [8, 'Mật khẩu phải dài ít nhất 8 ký tự'], // THAY ĐỔI MỚI: Mật khẩu tối thiểu 8 ký tự
+      // THAY ĐỔI MỚI: Regex kiểm tra mật khẩu:
+      // - (?=.*[a-zA-Z]): Chứa ít nhất một chữ cái (hoa hoặc thường)
+      // - (?=.*[0-9]): Chứa ít nhất một số
+      // - (?!.*\s): KHÔNG chứa bất kỳ khoảng trắng nào
+      match: [/^(?=.*[a-zA-Z])(?=.*[0-9])(?!.*\s).{8,}$/, 'Mật khẩu phải dài ít nhất 8 ký tự, bao gồm chữ cái, số và không chứa dấu cách'], 
     },
     role: {
       type: String,
@@ -34,37 +43,19 @@ const userSchema = mongoose.Schema(
 
 // Mã hóa mật khẩu trước khi lưu (middleware Mongoose)
 userSchema.pre('save', async function (next) {
-  // THÊM LOG: Kiểm tra nếu mật khẩu không bị thay đổi
   if (!this.isModified('password')) { 
-    console.log('[User.js - pre save]: Password not modified, skipping hash.');
     return next();
   }
   
-  // THÊM LOG: Mật khẩu trước khi hash
-  console.log(`[User.js - pre save]: Original password (BEFORE HASHING): '${this.password}'`);
-
   const salt = await bcrypt.genSalt(10);
-  // THÊM LOG: Salt được tạo
-  console.log(`[User.js - pre save]: Generated salt: '${salt}'`);
-
   this.password = await bcrypt.hash(this.password, salt);
-  // THÊM LOG: Mật khẩu đã được hash
-  console.log(`[User.js - pre save]: Hashed password (AFTER HASHING): '${this.password}'`);
-  
   next();
 });
 
 // So sánh mật khẩu (phương thức tùy chỉnh)
 userSchema.methods.matchPassword = async function (enteredPassword) {
-  // THÊM LOG: Mật khẩu người dùng nhập vào
-  console.log(`[User.js - matchPassword]: Entered password: '${enteredPassword}'`);
-  // THÊM LOG: Mật khẩu đã hash trong DB
-  console.log(`[User.js - matchPassword]: Hashed password from DB: '${this.password}'`);
-  
-  const isMatch = await bcrypt.compare(enteredPassword, this.password);
-  // THÊM LOG: Kết quả so sánh
-  console.log(`[User.js - matchPassword]: bcrypt.compare result: ${isMatch}`);
-  return isMatch;
+  // `enteredPassword` đã được trim ở controller nếu có dấu cách
+  return await bcrypt.compare(enteredPassword, this.password);
 };
 
 module.exports = mongoose.model('User', userSchema);
