@@ -4,6 +4,7 @@ import React, { useEffect, useRef } from 'react';
 
 import MarkdownIt from 'markdown-it';
 import mdKatex from 'markdown-it-katex';
+import katex from 'katex'; // THAY ĐỔI MỚI: Import katex trực tiếp
 
 // mdInstance cần được khởi tạo duy nhất một lần và chỉ ở phía client
 let mdInstance = null;
@@ -29,22 +30,27 @@ const KatexRenderer = ({ content }) => {
       });
 
       // =====================================================================
-      // THAY ĐỔI MỚI QUAN TRỌNG: Ghi đè trình render cho math_display
+      // THAY ĐỔI MỚI VÀ QUAN TRỌNG: Ghi đè trình render cho math_display
       // Điều này đảm bảo $$...$$ luôn được bọc trong <div class="katex-display">...</div>
-      // thay vì <p><span class="katex-display">...</span></p>
       // =====================================================================
-      const defaultRender = mdInstance.renderer.rules.math_display.bind(mdInstance.renderer.rules);
-      mdInstance.renderer.rules.math_display = (tokens, idx, options, env, self) => {
-        const rendered = defaultRender(tokens, idx, options, env, self);
-        // Kiểm tra xem output có phải là một thẻ <p> chứa span.katex-display không
-        // Nếu có, loại bỏ thẻ <p> và chỉ giữ lại phần nội dung KaTeX.
-        // Đây là một cách tiếp cận đơn giản; phức tạp hơn có thể dùng DOMParser
-        // hoặc regex mạnh mẽ hơn nếu cấu trúc HTML thay đổi.
-        if (rendered.startsWith('<p>') && rendered.endsWith('</p>\n')) {
-          const innerHtml = rendered.substring(3, rendered.length - 5); // Cắt bỏ <p> và </p>\n
-          return `<div class="katex-display">${innerHtml}</div>\n`; // Bọc lại bằng <div>
+      mdInstance.renderer.rules.math_display = (tokens, idx) => {
+        const token = tokens[idx];
+        try {
+          // Trực tiếp render LaTeX bằng KaTeX với displayMode: true
+          const html = katex.renderToString(token.content, {
+            displayMode: true, // Đây là block math
+            throwOnError: false,
+            errorColor: '#cc0000',
+            strict: false
+          });
+          // Bọc HTML KaTeX trong một div với class katex-display
+          // mdKatex sẽ tự thêm class này nếu nó được cấu hình đúng.
+          // Nhưng ở đây ta đảm bảo nó được bọc là <div>
+          return `<div class="katex-display">${html}</div>\n`;
+        } catch (error) {
+          console.error("KaTeX rendering error during math_display override:", error);
+          return `<div class="katex-display" style="color:red;">Lỗi công thức: ${token.content}</div>\n`;
         }
-        return rendered; // Trả về như mặc định nếu không phải cấu trúc mong muốn
       };
       // =====================================================================
 
