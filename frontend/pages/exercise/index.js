@@ -140,41 +140,39 @@ const ExerciseListPage = () => {
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {groupedExercises[category].map(exercise => (
-                  // THAY ĐỔI TẠI ĐÂY: Di chuyển Link bao ngoài và thêm class cho div và a
-                  <div key={exercise._id} className="bg-white rounded-lg shadow-md p-5 border border-gray-100 relative transform hover:scale-102 transition-transform duration-200 ease-in-out cursor-pointer">
-                    <Link href={`/exercise/${exercise.slug}`}>
-                      <a className="absolute inset-0 z-10"> {/* Thẻ <a> phủ toàn bộ và có z-index cao */}
-                        <span className="sr-only">Xem chi tiết {exercise.title}</span> {/* Accessibility */}
-                      </a>
-                    </Link>
-                    {/* Nội dung của card, không thay đổi */}
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2 line-clamp-2">{exercise.title}</h3>
-                    <p className="text-sm text-gray-600 mb-3 line-clamp-3">{exercise.description}</p>
-                    <div className="flex flex-wrap justify-between items-center text-xs mt-3 gap-2">
-                      <span className={`py-1 px-3 rounded-full text-white font-semibold ${
-                          exercise.difficulty === 'Dễ' ? 'bg-green-500' :
-                          exercise.difficulty === 'Trung bình' ? 'bg-yellow-600' :
-                          exercise.difficulty === 'Khó' ? 'bg-orange-600' :
-                          'bg-red-600'
+                  // THAY ĐỔI TẠI ĐÂY: Bọc toàn bộ div card bằng Link
+                  <Link key={exercise._id} href={`/exercise/${exercise.slug}`} passHref>
+                    <div className="bg-white rounded-lg shadow-md p-5 border border-gray-100 transform hover:scale-102 transition-transform duration-200 ease-in-out cursor-pointer h-full flex flex-col justify-between">
+                      <div> {/* Dùng div này để nhóm nội dung text */}
+                        <h3 className="text-lg font-semibold text-gray-800 mb-2 line-clamp-2">{exercise.title}</h3>
+                        <p className="text-sm text-gray-600 mb-3 line-clamp-3">{exercise.description}</p>
+                      </div>
+                      <div className="flex flex-wrap justify-between items-center text-xs mt-3 gap-2">
+                        <span className={`py-1 px-3 rounded-full text-white font-semibold ${
+                            exercise.difficulty === 'Dễ' ? 'bg-green-500' :
+                            exercise.difficulty === 'Trung bình' ? 'bg-yellow-600' :
+                            exercise.difficulty === 'Khó' ? 'bg-orange-600' :
+                            'bg-red-600'
+                          }`}>
+                          {exercise.difficulty}
+                        </span>
+                        <span className={`py-1 px-3 rounded-full text-sm font-semibold ${
+                          exercise.type === 'Tự luận' ? 'bg-indigo-500 text-white' : 'bg-purple-500 text-white'
                         }`}>
-                        {exercise.difficulty}
-                      </span>
-                      <span className={`py-1 px-3 rounded-full text-sm font-semibold ${
-                        exercise.type === 'Tự luận' ? 'bg-indigo-500 text-white' : 'bg-purple-500 text-white'
-                      }`}>
-                        {exercise.type}
-                      </span>
-                      {exercise.tags && exercise.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-2 sm:mt-0">
-                          {exercise.tags.map((tag, index) => (
-                            <span key={index} className="bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full text-xs">
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      )}
+                          {exercise.type}
+                        </span>
+                        {exercise.tags && exercise.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-2 sm:mt-0">
+                            {exercise.tags.map((tag, index) => (
+                              <span key={index} className="bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full text-xs">
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             </section>
