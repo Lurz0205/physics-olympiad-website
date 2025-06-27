@@ -2,8 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
+// import { useAuth } from '../../context/AuthContext'; // KHÔNG CẦN THIẾT NỮA TRÊN TRANG CÔNG KHAI NÀY
 
 const ExamsPage = () => {
+  // const { user } = useAuth(); // KHÔNG CẦN THIẾT NỮA
   const [exams, setExams] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -13,16 +15,16 @@ const ExamsPage = () => {
       setLoading(true);
       setError(null);
       try {
-        // THAY ĐỔI: Sử dụng /api/exams thay vì /api/tests
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/exams`);
+        // THAY ĐỔI: Gọi API /api/exams/public
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/exams/public`);
         const data = await response.json();
 
         if (!response.ok) {
           throw new Error(data.message || 'Lỗi khi tải danh sách đề thi.');
         }
 
-        // Chỉ hiển thị các đề thi đã xuất bản trên trang công khai
-        setExams(data.filter(exam => exam.isPublished)); 
+        // Backend API /api/exams/public đã tự lọc isPublished: true, nên không cần lọc lại ở đây
+        setExams(data); 
 
       } catch (err) {
         console.error('Error fetching public exams:', err);
@@ -33,7 +35,7 @@ const ExamsPage = () => {
     };
 
     fetchExams();
-  }, []); // Dependency array rỗng để chỉ chạy một lần khi component mount
+  }, []);
 
   return (
     <>
