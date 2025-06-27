@@ -5,6 +5,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useAuth } from '../../context/AuthContext';
 import MathContent from '../../components/MathContent'; // Component để render Markdown/LaTeX
+// Đảm bảo CSS của KaTeX được import toàn cục ở _app.js.
+// Nếu bạn muốn import ở đây, hãy bỏ comment dòng sau (nhưng _app.js được khuyến nghị hơn cho CSS toàn cục)
+// import 'katex/dist/katex.min.css'; 
 
 // Tách ResultDisplay ra thành một component riêng biệt để hiển thị kết quả
 const ResultDisplay = ({ result, examData, formatTime }) => {
@@ -248,7 +251,7 @@ const ExamDetailPage = () => {
           return; // Dừng hàm submit
         }
       } else if (q.type === 'true-false') {
-        // Kiểm tra xem tất cả các ý trong câu Đúng/Sai đã được trả lời chưa
+        // Kiểm tra xem tất cả các ý trong câu Đúng/Sai đã được trả lời chưa (không có null)
         if (!userAnswer || !Array.isArray(userAnswer) || userAnswer.some(ans => ans === null || ans === undefined)) {
           setError(`Vui lòng trả lời đầy đủ các ý trong Câu hỏi ${exam.questions.indexOf(q) + 1}.`);
           setSubmitting(false); // Reset submitting state
@@ -516,7 +519,7 @@ const ExamDetailPage = () => {
               </div>
             ) : (
               <>
-                {error && submitting && ( // Hiển thị lỗi validation khi nộp bài
+                {error && ( // Hiển thị lỗi validation khi nộp bài
                   <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
                     {error}
                   </div>
@@ -575,9 +578,9 @@ const ExamDetailPage = () => {
                                                         name={`question-${q._id}-statement-${stmtIndex}`} // Đảm bảo unique name cho mỗi cặp radio của ý con
                                                         checked={currentUserAnswerForStatement === true}
                                                         onChange={() => handleAnswerChange(q._id, true, q.type, stmtIndex)}
-                                                        className="form-radio h-4 w-4 text-green-600"
+                                                        className="form-radio h-4 w-4 text-blue-600" // Đã loại bỏ màu cố định text-green-600
                                                     />
-                                                    <span className="ml-2 text-gray-800">Đúng</span>
+                                                    <span className={`ml-2 ${currentUserAnswerForStatement === true ? 'font-bold text-blue-800' : 'text-gray-800'}`}>Đúng</span>
                                                 </label>
                                                 <label className="flex items-center cursor-pointer">
                                                     <input
@@ -585,9 +588,9 @@ const ExamDetailPage = () => {
                                                         name={`question-${q._id}-statement-${stmtIndex}`}
                                                         checked={currentUserAnswerForStatement === false}
                                                         onChange={() => handleAnswerChange(q._id, false, q.type, stmtIndex)}
-                                                        className="form-radio h-4 w-4 text-red-600"
+                                                        className="form-radio h-4 w-4 text-blue-600" // Đã loại bỏ màu cố định text-red-600
                                                     />
-                                                    <span className="ml-2 text-gray-800">Sai</span>
+                                                    <span className={`ml-2 ${currentUserAnswerForStatement === false ? 'font-bold text-blue-800' : 'text-gray-800'}`}>Sai</span>
                                                 </label>
                                             </div>
                                         </div>
