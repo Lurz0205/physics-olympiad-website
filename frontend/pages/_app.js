@@ -1,42 +1,30 @@
-// physics-olympiad-website/frontend/pages/_app.js
+// frontend/pages/_app.js
 import '../styles/globals.css';
+import 'katex/dist/katex.min.css'; // Thêm dòng này để import KaTeX CSS
 import { AuthProvider } from '../context/AuthContext';
-import Layout from '../components/Layout';
-import AdminLayout from '../components/AdminLayout';
-import LoadingOverlay from '../components/LoadingOverlay'; // THAY ĐỔI MỚI: Import LoadingOverlay
+import Navbar from '../components/Navbar'; // Đảm bảo Navbar đã được import
+import Footer from '../components/Footer'; // Đảm bảo Footer đã được import
 import { useRouter } from 'next/router';
-import React, { useState, useEffect } from 'react'; // THAY ĐỔI MỚI: Import useState, useEffect
 
 function MyApp({ Component, pageProps }) {
   const router = useRouter();
-  const isAdminPage = router.pathname.startsWith('/admin');
-  const SelectedLayout = isAdminPage ? AdminLayout : Layout;
 
-  // THAY ĐỔI MỚI: State để điều khiển Loading Overlay
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    // Ẩn loading overlay sau 500ms (hoặc 700ms, 1000ms tùy bạn thấy mượt)
-    // Thời gian này đủ để font và các CSS cơ bản được tải và render
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 700); // Bạn có thể điều chỉnh thời gian này
-
-    // Cleanup timer khi component unmount
-    return () => clearTimeout(timer);
-  }, []); // Chạy một lần khi ứng dụng được mount
+  // Danh sách các đường dẫn không hiển thị Navbar và Footer
+  const noNavFooterPaths = ['/login', '/register', '/admin', '/admin/users', '/admin/theory', '/admin/exercise', '/admin/tests', '/admin/theory/new', '/admin/exercise/new', '/admin/tests/new', '/admin/theory/[slug]/edit', '/admin/exercise/[slug]/edit', '/admin/tests/[slug]/edit'];
+  const showNavFooter = !noNavFooterPaths.some(path => {
+    // Để xử lý các đường dẫn động như /admin/theory/[slug]/edit
+    if (path.includes('[slug]')) {
+      const basepath = path.replace('/[slug]', '');
+      return router.pathname.startsWith(basepath);
+    }
+    return router.pathname === path;
+  });
 
   return (
     <AuthProvider>
-      {/* THAY ĐỔI MỚI: Hiển thị LoadingOverlay nếu isLoading là true */}
-      {isLoading && <LoadingOverlay />}
-
-      {/* Phần tử bọc ngoài cùng với các Tailwind classes cơ bản */}
-      <div className="bg-white min-h-screen flex flex-col font-inter text-gray-700 leading-relaxed">
-        <SelectedLayout>
-          <Component {...pageProps} />
-        </SelectedLayout>
-      </div>
+      {showNavFooter && <Navbar />}
+      <Component {...pageProps} />
+      {showNavFooter && <Footer />}
     </AuthProvider>
   );
 }
