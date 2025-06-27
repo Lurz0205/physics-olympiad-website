@@ -1,4 +1,4 @@
-// physics-olympiad-website/frontend/pages/register.js
+// frontend/pages/register.js
 import React, { useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -14,29 +14,47 @@ const RegisterPage = () => {
   const [error, setError] = useState(null);
 
   const router = useRouter();
-  const { login } = useAuth();
+  const { login } = useAuth(); // Bạn có thể cân nhắc không tự động login sau register nếu có bước xác nhận email
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
-    // Client-side validation
-    if (!name.trim() || !email.trim() || !password.trim() || !confirmPassword.trim()) {
+    const trimmedName = name.trim();
+    const trimmedEmail = email.trim();
+    const trimmedPassword = password.trim(); // Trim password client-side
+    const trimmedConfirmPassword = confirmPassword.trim();
+
+    // Client-side validation - PHẢI KHỚP VỚI BACKEND
+    if (!trimmedName || !trimmedEmail || !trimmedPassword || !trimmedConfirmPassword) {
       setError('Vui lòng điền đầy đủ tất cả các trường.');
       setLoading(false);
       return;
     }
-    if (password !== confirmPassword) {
+    if (trimmedPassword !== trimmedConfirmPassword) {
       setError('Mật khẩu và xác nhận mật khẩu không khớp.');
       setLoading(false);
       return;
     }
-    if (password.length < 6) {
-      setError('Mật khẩu phải có ít nhất 6 ký tự.');
+    // THAY ĐỔI QUAN TRỌNG: Validation mật khẩu mới
+    if (trimmedPassword.length < 8) { // Yêu cầu >= 8 ký tự
+      setError('Mật khẩu phải dài ít nhất 8 ký tự.');
       setLoading(false);
       return;
     }
+    if (trimmedPassword.includes(' ')) { // Không chứa dấu cách
+      setError('Mật khẩu không được chứa dấu cách.');
+      setLoading(false);
+      return;
+    }
+    // Ít nhất một chữ cái HOẶC một số
+    if (!(/[a-zA-Z]/.test(trimmedPassword) || /[0-9]/.test(trimmedPassword))) {
+        setError('Mật khẩu phải chứa ít nhất một chữ cái hoặc một số.');
+        setLoading(false);
+        return;
+    }
+
 
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/register`, {
@@ -44,30 +62,50 @@ const RegisterPage = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name: trimmedName, email: trimmedEmail, password: trimmedPassword }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
+        // Cố gắng lấy thông báo lỗi từ backend nếu có
         throw new Error(data.message || 'Lỗi đăng ký.');
       }
 
-      // Đăng ký thành công, tự động đăng nhập
-      // Note: Backend register endpoint in your authController might not return user/token on register.
-      // If not, you might need to make a separate login call or redirect to login page.
-      // Assuming it does return user/token for simplicity based on previous setup.
-      if (data.user && data.token) {
-        login(data.user, data.token);
-        router.push('/'); // Chuyển hướng về trang chủ sau khi đăng ký và đăng nhập
+      // Đăng ký thành công, tự động đăng nhập nếu backend trả về user/token
+      if (data.token) { // Backend của bạn trả về token, không cần data.user riêng
+        // Gọi hàm login từ AuthContext với dữ liệu nhận được từ backend
+        // (Bạn cần điều chỉnh AuthContext để nhận data.email và data.name nếu bạn cần lưu vào user context)
+        // Hiện tại AuthContext.login có thể mong đợi email, password thô.
+        // Tốt nhất là AuthContext.login chỉ cần token và tự fetch /me
+        // Hoặc bạn truyền thẳng token và các thông tin user cần thiết vào AuthContext.login
+        
+        // Giả sử login trong AuthContext nhận { token, _id, name, email, role }
+        // Hoặc đơn giản là nó sẽ lưu token và sau đó dùng token để fetch user info
+        
+        // Điều chỉnh lại logic login trong AuthContext nếu cần
+        // Hiện tại, tôi sẽ chuyển hướng đến trang đăng nhập với thông báo thành công
+        router.push('/login?message=Đăng ký thành công! Vui lòng đăng nhập.');
+
       } else {
-        // If backend doesn't return user/token, just redirect to login
         router.push('/login?message=Đăng ký thành công! Vui lòng đăng nhập.');
       }
 
     } catch (err) {
       console.error('Error during registration:', err);
-      setError(err.message || 'Đã xảy ra lỗi không xác định trong quá trình đăng ký.');
+      // Cố gắng parse lỗi từ Backend nếu có
+      let errorMessage = 'Đã xảy ra lỗi không xác định trong quá trình đăng ký.';
+      if (err.message && err.message.startsWith('{')) { // Nếu lỗi là JSON string
+        try {
+          const errorObj = JSON.parse(err.message);
+          errorMessage = errorObj.message || errorMessage;
+        } catch (parseError) {
+          // Fallback if not a valid JSON string
+        }
+      } else {
+        errorMessage = err.message || errorMessage;
+      }
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -90,7 +128,6 @@ const RegisterPage = () => {
               {error}
             </div>
           )}
-          {/* THAY ĐỔI: Thay thế div -space-y-px bằng cách thêm khoảng cách cho từng input */}
           <div>
             <label htmlFor="name" className="sr-only">Tên người dùng</label>
             <input
@@ -99,8 +136,8 @@ const RegisterPage = () => {
               type="text"
               autoComplete="name"
               required
-              className="appearance-none block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm mb-4" // Thêm mb-4
-              placeholder="Tên người dùng (ví dụ: nguyenvana)"
+              className="appearance-none block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm mb-4"
+              placeholder="Tên người dùng (ít nhất 3 ký tự)" // Cập nhật placeholder
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
@@ -113,7 +150,7 @@ const RegisterPage = () => {
               type="email"
               autoComplete="email"
               required
-              className="appearance-none block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm mb-4" // Thêm mb-4
+              className="appearance-none block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm mb-4"
               placeholder="Địa chỉ Email (ví dụ: user@example.com)"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -127,8 +164,8 @@ const RegisterPage = () => {
               type="password"
               autoComplete="new-password"
               required
-              className="appearance-none block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm mb-4" // Thêm mb-4
-              placeholder="Mật khẩu (ít nhất 6 ký tự)"
+              className="appearance-none block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm mb-4"
+              placeholder="Mật khẩu (ít nhất 8 ký tự, gồm chữ, số, không khoảng trắng)" // Cập nhật placeholder
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
@@ -157,14 +194,14 @@ const RegisterPage = () => {
               {loading ? 'Đang đăng ký...' : 'Đăng ký'}
             </button>
           </div>
-        </form>
-        <div className="text-center text-sm text-gray-600 mt-4">
-          Đã có tài khoản?{' '}
-          <Link href="/login">
-            <a className="font-medium text-blue-600 hover:text-blue-500">
-              Đăng nhập tại đây
-            </a>
-          </Link>
+          <div className="text-center text-sm text-gray-600 mt-4">
+            Đã có tài khoản?{' '}
+            <Link href="/login">
+              <a className="font-medium text-blue-600 hover:text-blue-500">
+                Đăng nhập tại đây
+              </a>
+            </Link>
+          </div>
         </div>
       </div>
     </div>
