@@ -11,15 +11,24 @@ import MathContent from '../../components/MathContent'; // Component để rende
 
 // Tách ResultDisplay ra thành một component riêng biệt để hiển thị kết quả
 const ResultDisplay = ({ result, examData, formatTime }) => {
-  // result: dữ liệu kết quả bài thi từ backend
-  // examData: dữ liệu đề thi đầy đủ từ backend
+  // result: dữ liệu kết quả bài thi từ backend (ExamResult document)
+  // examData: dữ liệu đề thi đầy đủ từ backend (Exam document)
   if (!result || !examData) {
     console.error("ResultDisplay: result or examData is missing.", { result, examData });
-    return null;
+    return (
+        <div className="text-center p-8 bg-red-100 text-red-700 rounded-lg">
+            <p>Không thể hiển thị kết quả bài thi. Dữ liệu không đầy đủ hoặc có lỗi.</p>
+            <p>Vui lòng thử làm lại bài thi hoặc liên hệ hỗ trợ nếu vấn đề tiếp diễn.</p>
+        </div>
+    );
   }
 
-  // Tính phần trăm điểm dựa trên tổng điểm tối đa
-  const percentage = result.maxPossibleScore > 0 ? ((result.score / result.maxPossibleScore) * 100).toFixed(0) : 0;
+  // Sử dụng giá trị 0 nếu result.maxPossibleScore là undefined/null hoặc 0 để tránh chia cho 0
+  const actualMaxPossibleScore = result.maxPossibleScore !== undefined && result.maxPossibleScore > 0 ? result.maxPossibleScore : 0;
+  // Score cũng cần kiểm tra để tránh .toFixed trên undefined
+  const actualScore = result.score !== undefined ? result.score : 0;
+
+  const percentage = actualMaxPossibleScore > 0 ? ((actualScore / actualMaxPossibleScore) * 100).toFixed(0) : 0;
   
   return (
     <div className="mt-8 p-6 bg-white rounded-lg shadow-xl border border-gray-200">
@@ -27,37 +36,38 @@ const ResultDisplay = ({ result, examData, formatTime }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <div className="bg-blue-50 p-4 rounded-lg flex items-center justify-between">
           <span className="text-gray-700 font-semibold">Điểm số:</span>
+          {/* HIỂN THỊ ĐIỂM SỐ TRÊN TỔNG ĐIỂM TỐI ĐA, SỬ DỤNG default 0 nếu undefined */}
           <span className="text-blue-700 text-2xl font-bold">
-            {result.score.toFixed(2)} / {result.maxPossibleScore.toFixed(2)}
+            {actualScore.toFixed(2)} / {actualMaxPossibleScore.toFixed(2)}
           </span>
         </div>
         <div className="bg-green-50 p-4 rounded-lg flex items-center justify-between">
           <span className="text-gray-700 font-semibold">Số câu đúng:</span>
-          <span className="text-green-700 text-2xl font-bold">{result.correctAnswersCount} / {result.totalQuestions}</span>
+          <span className="text-green-700 text-2xl font-bold">{(result.correctAnswersCount || 0)} / {examData.questions.length}</span>
         </div>
         <div className="bg-red-50 p-4 rounded-lg flex items-center justify-between">
           <span className="text-gray-700 font-semibold">Số câu sai:</span>
-          <span className="text-red-700 text-2xl font-bold">{result.incorrectAnswersCount} / {result.totalQuestions}</span>
+          <span className="text-red-700 text-2xl font-bold">{(result.incorrectAnswersCount || 0)} / {examData.questions.length}</span>
         </div>
         <div className="bg-yellow-50 p-4 rounded-lg flex items-center justify-between">
           <span className="text-gray-700 font-semibold">Thời gian làm bài:</span>
-          {/* Backend lưu là timeTaken, frontend gọi là timeTaken */}
-          <span className="text-yellow-700 text-2xl font-bold">{formatTime(result.timeTaken)}</span>
+          <span className="text-yellow-700 text-2xl font-bold">{formatTime(result.timeTaken || 0)}</span>
         </div>
       </div>
       
       <p className="text-center text-lg text-gray-700 mb-8">
-        Bạn đã hoàn thành bài thi với **{result.score.toFixed(2)} điểm** ({percentage}%).
+        Bạn đã hoàn thành bài thi với **{actualScore.toFixed(2)} điểm** ({percentage}%).
       </p>
 
       <h3 className="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Xem lại các câu hỏi và đáp án:</h3>
       <div className="space-y-6">
         {examData.questions.map((q, qIndex) => {
           // Tìm đáp án của người dùng cho câu hỏi này trong mảng userAnswers
-          const userAnswerEntry = result.userAnswers.find(ua => ua.questionId === q._id.toString());
+          // Đảm bảo result.userAnswers là một mảng trước khi dùng .find
+          const userAnswerEntry = (result.userAnswers || []).find(ua => ua.questionId === q._id.toString());
           
           const isQuestionCorrectOverall = userAnswerEntry ? userAnswerEntry.isCorrect : false; // Đúng/Sai tổng thể câu hỏi
-          const scoreAchievedForQuestion = userAnswerEntry ? userAnswerEntry.scoreAchieved : 0; // Điểm đạt được cho câu hỏi này
+          const scoreAchievedForQuestion = userAnswerEntry ? (userAnswerEntry.scoreAchieved || 0) : 0; // Điểm đạt được cho câu hỏi này
 
           // Lấy điểm tối đa cho câu hỏi này từ scoringConfig của examData
           let maxScoreForThisQuestion = 0;
