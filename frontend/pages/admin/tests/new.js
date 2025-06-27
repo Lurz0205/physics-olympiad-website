@@ -7,28 +7,24 @@ import { useAuth } from '../../../context/AuthContext';
 
 const AddNewExamPage = () => {
   const router = useRouter();
-  const { token } = useAuth(); // Chỉ cần token để xác thực, AdminLayout đã kiểm tra user.role
+  const { token } = useAuth();
 
   const [title, setTitle] = useState('');
   const [slug, setSlug] = useState('');
   const [description, setDescription] = useState('');
-  const [duration, setDuration] = useState(60); // Thời gian làm bài mặc định 60 phút
+  const [duration, setDuration] = useState(60); 
   const [category, setCategory] = useState('TỔNG HỢP');
-  const [isPublished, setIsPublished] = useState(false); // Trạng thái xuất bản
-  const [questions, setQuestions] = useState([]); // Mảng các câu hỏi trắc nghiệm
+  const [isPublished, setIsPublished] = useState(false);
+  const [questions, setQuestions] = useState([]); // Mảng các câu hỏi, mỗi object sẽ có 'type'
+  
+  // State để quản lý loại câu hỏi đang được thêm vào (dùng cho form thêm câu hỏi mới)
+  const [newQuestionType, setNewQuestionType] = useState('multiple-choice'); 
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState('');
 
   const categories = ['TỔNG HỢP', 'CƠ HỌC', 'NHIỆT HỌC', 'ĐIỆN HỌC', 'QUANG HỌC', 'VẬT LÝ HẠT NHÂN', 'THUYẾT TƯƠNG ĐỐI', 'VẬT LÝ HIỆN ĐẠI', 'Chưa phân loại'];
-
-  // LOẠI BỎ: Chuyển hướng nếu không phải admin (AdminLayout đã xử lý)
-  // useEffect(() => {
-  //   if (user && user.role !== 'admin') {
-  //     router.push('/login'); // Hoặc trang lỗi
-  //   }
-  // }, [user, router]);
 
   const generateSlug = (text) => {
     return text
@@ -44,32 +40,73 @@ const AddNewExamPage = () => {
   const handleTitleChange = (e) => {
     const newTitle = e.target.value;
     setTitle(newTitle);
-    setSlug(generateSlug(newTitle)); // HOÀN THIỆN: Logic tạo slug
+    setSlug(generateSlug(newTitle));
   };
 
+  // Hàm để thêm một câu hỏi mới vào danh sách
   const addQuestion = () => {
-    setQuestions([...questions, { questionText: '', options: ['', '', '', ''], correctAnswer: '', explanation: '' }]);
+    let newQ = { questionText: '', explanation: '' };
+    if (newQuestionType === 'multiple-choice') {
+      newQ = { ...newQ, type: 'multiple-choice', options: ['', '', '', ''], multipleChoiceCorrectAnswer: '' };
+    } else if (newQuestionType === 'true-false') {
+      newQ = { ...newQ, type: 'true-false', statements: [
+        { statementText: '', isCorrect: true },
+        { statementText: '', isCorrect: true },
+        { statementText: '', isCorrect: true },
+        { statementText: '', isCorrect: true },
+      ]};
+    } else if (newQuestionType === 'short-answer') {
+      newQ = { ...newQ, type: 'short-answer', shortAnswerCorrectAnswer: '' };
+    }
+    setQuestions([...questions, newQ]);
   };
 
+  // Hàm để xóa một câu hỏi
   const removeQuestion = (index) => {
     const newQuestions = [...questions];
     newQuestions.splice(index, 1);
     setQuestions(newQuestions);
   };
 
-  const handleQuestionChange = (index, field, value) => {
+  // Hàm xử lý thay đổi nội dung câu hỏi (chung cho questionText, explanation)
+  const handleQuestionChange = (qIndex, field, value) => {
     const newQuestions = [...questions];
-    if (field === 'options') {
-      newQuestions[index][field] = value.split(',').map(item => item.trim());
-    } else {
-      newQuestions[index][field] = value;
-    }
+    newQuestions[qIndex][field] = value;
     setQuestions(newQuestions);
   };
 
+  // Hàm xử lý thay đổi lựa chọn cho Multiple Choice
   const handleOptionChange = (qIndex, optIndex, value) => {
     const newQuestions = [...questions];
     newQuestions[qIndex].options[optIndex] = value;
+    setQuestions(newQuestions);
+  };
+
+  // Hàm xử lý thay đổi đáp án đúng cho Multiple Choice
+  const handleMultipleChoiceAnswerChange = (qIndex, value) => {
+    const newQuestions = [...questions];
+    newQuestions[qIndex].multipleChoiceCorrectAnswer = value;
+    setQuestions(newQuestions);
+  };
+
+  // Hàm xử lý thay đổi nội dung ý con cho True/False
+  const handleStatementTextChange = (qIndex, stmtIndex, value) => {
+    const newQuestions = [...questions];
+    newQuestions[qIndex].statements[stmtIndex].statementText = value;
+    setQuestions(newQuestions);
+  };
+
+  // Hàm xử lý thay đổi đáp án Đúng/Sai cho ý con của True/False
+  const handleStatementIsCorrectChange = (qIndex, stmtIndex, value) => {
+    const newQuestions = [...questions];
+    newQuestions[qIndex].statements[stmtIndex].isCorrect = value;
+    setQuestions(newQuestions);
+  };
+
+  // Hàm xử lý thay đổi đáp án cho Short Answer
+  const handleShortAnswerChange = (qIndex, value) => {
+    const newQuestions = [...questions];
+    newQuestions[qIndex].shortAnswerCorrectAnswer = value;
     setQuestions(newQuestions);
   };
 
@@ -79,23 +116,74 @@ const AddNewExamPage = () => {
     setError(null);
     setSuccess('');
 
-    if (!title.trim() || !slug.trim() || !category.trim() || questions.length === 0 || duration <= 0) {
-      setError('Vui lòng điền đầy đủ các trường bắt buộc (Tiêu đề, Slug, Danh mục, Thời lượng, và thêm ít nhất một câu hỏi).');
+    if (!title.trim() || !slug.trim() || !category.trim() || duration <= 0) {
+      setError('Vui lòng điền đầy đủ Tiêu đề, Slug, Danh mục, và Thời lượng.');
       setSubmitting(false);
       return;
     }
 
-    // Validation cho từng câu hỏi
+    if (questions.length === 0) {
+      setError('Đề thi phải có ít nhất một câu hỏi.');
+      setSubmitting(false);
+      return;
+    }
+
+    // Client-side validation cho từng loại câu hỏi
     for (const q of questions) {
-      if (!q.questionText.trim() || q.options.filter(opt => opt.trim() !== '').length < 2 || !q.correctAnswer.trim()) {
-        setError('Mỗi câu hỏi phải có nội dung, ít nhất 2 lựa chọn và đáp án đúng.');
+      if (!q.questionText || q.questionText.trim() === '') {
+        setError('Nội dung câu hỏi không được để trống.');
         setSubmitting(false);
         return;
       }
-      if (!q.options.includes(q.correctAnswer)) {
-        setError(`Đáp án đúng "${q.correctAnswer}" không phải là một lựa chọn hợp lệ cho một câu hỏi.`);
-        setSubmitting(false);
-        return;
+
+      switch (q.type) {
+        case 'multiple-choice':
+          if (!q.options || q.options.filter(opt => opt.trim() !== '').length < 2 || !q.multipleChoiceCorrectAnswer || q.multipleChoiceCorrectAnswer.trim() === '') {
+            setError('Mỗi câu hỏi trắc nghiệm phải có nội dung, ít nhất 2 lựa chọn và đáp án đúng.');
+            setSubmitting(false);
+            return;
+          }
+          if (!q.options.map(opt => opt.toLowerCase().trim()).includes(q.multipleChoiceCorrectAnswer.toLowerCase().trim())) {
+            setError(`Đáp án đúng "${q.multipleChoiceCorrectAnswer}" không phải là một lựa chọn hợp lệ cho câu hỏi "${q.questionText.substring(0, 50)}..."`);
+            setSubmitting(false);
+            return;
+          }
+          break;
+        case 'true-false':
+          if (!q.statements || q.statements.length !== 4) {
+            setError('Câu hỏi Đúng/Sai phải có đúng 4 ý.');
+            setSubmitting(false);
+            return;
+          }
+          for (const stmt of q.statements) {
+            if (!stmt.statementText || stmt.statementText.trim() === '') {
+              setError('Nội dung của một ý trong câu hỏi Đúng/Sai không được để trống.');
+              setSubmitting(false);
+              return;
+            }
+            if (typeof stmt.isCorrect !== 'boolean') {
+              setError('Đáp án Đúng/Sai cho mỗi ý phải là Đúng hoặc Sai.');
+              setSubmitting(false);
+              return;
+            }
+          }
+          break;
+        case 'short-answer':
+          if (!q.shortAnswerCorrectAnswer || q.shortAnswerCorrectAnswer.trim() === '') {
+            setError('Vui lòng cung cấp đáp án cho câu hỏi trả lời ngắn.');
+            setSubmitting(false);
+            return;
+          }
+          if (!/^[0-9,-]{1,4}$/.test(q.shortAnswerCorrectAnswer.trim())) {
+            setError('Đáp án trả lời ngắn phải có tối đa 4 ký tự và chỉ chứa số (0-9), dấu "-" và dấu ",".');
+            setSubmitting(false);
+            return;
+          }
+          break;
+        default:
+          setError('Loại câu hỏi không hợp lệ.');
+          setSubmitting(false);
+          return;
       }
     }
 
@@ -107,7 +195,7 @@ const AddNewExamPage = () => {
         duration: parseInt(duration, 10),
         category,
         isPublished,
-        questions,
+        questions, // Gửi mảng câu hỏi đã có cấu trúc type mới
       };
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/exams`, {
@@ -127,6 +215,7 @@ const AddNewExamPage = () => {
       }
 
       setSuccess('Thêm đề thi mới thành công!');
+      // Reset form
       setTitle('');
       setSlug('');
       setDescription('');
@@ -134,6 +223,7 @@ const AddNewExamPage = () => {
       setCategory('TỔNG HỢP');
       setIsPublished(false);
       setQuestions([]);
+      setNewQuestionType('multiple-choice'); // Reset loại câu hỏi đang thêm về mặc định
 
       setTimeout(() => {
         router.push('/admin/tests');
@@ -181,7 +271,7 @@ const AddNewExamPage = () => {
               value={title}
               onChange={handleTitleChange}
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-200"
-              placeholder="Nhập tiêu đề đề thi"
+              placeholder="Nhập tiêu đề đề thi (ví dụ: Đề thi thử Quốc gia 2024)"
               required
             />
           </div>
@@ -202,27 +292,27 @@ const AddNewExamPage = () => {
 
           {/* Mô tả */}
           <div>
-            <label htmlFor="description" className="block text-gray-700 text-sm font-medium mb-2">Mô tả ngắn gọn:</label>
+            <label htmlFor="description" className="block text-gray-700 text-sm font-medium mb-2">Mô tả Đề thi (tùy chọn):</label>
             <textarea
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              rows="2"
+              rows="3"
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-200"
-              placeholder="Mô tả ngắn gọn về đề thi (không bắt buộc)"
+              placeholder="Mô tả ngắn gọn về đề thi, số lượng câu hỏi, chủ đề bao gồm..."
             ></textarea>
           </div>
 
-          {/* Thời lượng */}
+          {/* Thời gian làm bài */}
           <div>
-            <label htmlFor="duration" className="block text-gray-700 text-sm font-medium mb-2">Thời lượng (phút):</label>
+            <label htmlFor="duration" className="block text-gray-700 text-sm font-medium mb-2">Thời gian làm bài (phút):</label>
             <input
               type="number"
               id="duration"
               value={duration}
-              onChange={(e) => setDuration(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+              onChange={(e) => setDuration(Number(e.target.value))}
               min="1"
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-200"
               required
             />
           </div>
@@ -243,23 +333,28 @@ const AddNewExamPage = () => {
             </select>
           </div>
 
-          {/* Trạng thái xuất bản */}
+          {/* Trạng thái Xuất bản */}
           <div className="flex items-center">
             <input
               type="checkbox"
               id="isPublished"
               checked={isPublished}
               onChange={(e) => setIsPublished(e.target.checked)}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
             />
-            <label htmlFor="isPublished" className="ml-2 block text-sm text-gray-900">
-              Xuất bản ngay
-            </label>
+            <label htmlFor="isPublished" className="ml-2 block text-gray-700 text-sm font-medium">Xuất bản đề thi (Hiển thị công khai)</label>
           </div>
 
-          {/* Phần Câu hỏi Trắc nghiệm */}
+          {/* ========================================================= */}
+          {/* PHẦN QUẢN LÝ CÂU HỎI CỦA ĐỀ THI */}
+          {/* ========================================================= */}
           <div className="space-y-4 border p-4 rounded-lg bg-gray-50">
-            <h3 className="text-xl font-semibold text-gray-800 border-b pb-2 mb-4">Các câu hỏi trắc nghiệm:</h3>
+            <h3 className="text-xl font-semibold text-gray-800 border-b pb-2 mb-4">Các câu hỏi của Đề thi:</h3>
+            
+            {questions.length === 0 && (
+                <p className="text-center text-gray-600">Chưa có câu hỏi nào. Hãy thêm câu hỏi đầu tiên!</p>
+            )}
+
             {questions.map((q, qIndex) => (
               <div key={qIndex} className="border p-4 rounded-lg bg-white shadow-sm space-y-3 relative">
                 <button
@@ -272,6 +367,17 @@ const AddNewExamPage = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                   </svg>
                 </button>
+                
+                {/* Loại câu hỏi hiển thị */}
+                <p className="text-sm text-gray-500 mb-2">
+                    Loại: <span className="font-semibold text-indigo-700">
+                        {q.type === 'multiple-choice' && 'Trắc nghiệm nhiều lựa chọn'}
+                        {q.type === 'true-false' && 'Đúng / Sai'}
+                        {q.type === 'short-answer' && 'Trả lời ngắn'}
+                    </span>
+                </p>
+
+                {/* Nội dung câu hỏi (chung) */}
                 <label className="block text-gray-700 text-sm font-medium mb-1">Nội dung câu hỏi {qIndex + 1}:</label>
                 <textarea
                   value={q.questionText}
@@ -282,28 +388,78 @@ const AddNewExamPage = () => {
                   required
                 ></textarea>
 
-                <label className="block text-gray-700 text-sm font-medium mb-1">Các lựa chọn (ít nhất 2):</label>
-                {q.options.map((option, optIndex) => (
-                  <input
-                    key={optIndex}
-                    type="text"
-                    value={option}
-                    onChange={(e) => handleOptionChange(qIndex, optIndex, e.target.value)}
-                    className="w-full p-2 mb-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-200"
-                    placeholder={`Lựa chọn ${optIndex + 1} (hỗ trợ Markdown & LaTeX)`}
-                    required
-                  />
-                ))}
+                {/* Phần riêng cho Multiple Choice */}
+                {q.type === 'multiple-choice' && (
+                  <>
+                    <label className="block text-gray-700 text-sm font-medium mb-1 mt-3">Các lựa chọn (ít nhất 2):</label>
+                    {q.options.map((option, optIndex) => (
+                      <input
+                        key={optIndex}
+                        type="text"
+                        value={option}
+                        onChange={(e) => handleOptionChange(qIndex, optIndex, e.target.value)}
+                        className="w-full p-2 mb-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                        placeholder={`Lựa chọn ${optIndex + 1} (hỗ trợ Markdown & LaTeX)`}
+                        required={optIndex < 2} // Chỉ yêu cầu 2 lựa chọn đầu tiên
+                      />
+                    ))}
+                    
+                    <label className="block text-gray-700 text-sm font-medium mb-1">Đáp án đúng (phải khớp với một lựa chọn):</label>
+                    <input
+                      type="text"
+                      value={q.multipleChoiceCorrectAnswer}
+                      onChange={(e) => handleMultipleChoiceAnswerChange(qIndex, e.target.value)}
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                      placeholder="Nhập đáp án đúng"
+                      required
+                    />
+                  </>
+                )}
 
-                <label className="block text-gray-700 text-sm font-medium mb-1">Đáp án đúng:</label>
-                <input
-                  type="text"
-                  value={q.correctAnswer}
-                  onChange={(e) => handleQuestionChange(qIndex, 'correctAnswer', e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-200"
-                  placeholder="Nhập đáp án đúng (phải khớp với một trong các lựa chọn)"
-                  required
-                />
+                {/* Phần riêng cho True/False */}
+                {q.type === 'true-false' && (
+                  <>
+                    <label className="block text-gray-700 text-sm font-medium mb-1 mt-3">Các ý Đúng/Sai (Điền đủ 4 ý):</label>
+                    {q.statements.map((stmt, stmtIndex) => (
+                      <div key={stmtIndex} className="flex items-center space-x-2 mb-2">
+                        <textarea
+                          value={stmt.statementText}
+                          onChange={(e) => handleStatementTextChange(qIndex, stmtIndex, e.target.value)}
+                          rows="1"
+                          className="flex-grow p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                          placeholder={`Ý ${stmtIndex + 1} (hỗ trợ Markdown & LaTeX)`}
+                          required
+                        ></textarea>
+                        <select
+                          value={stmt.isCorrect}
+                          onChange={(e) => handleStatementIsCorrectChange(qIndex, stmtIndex, e.target.value === 'true')}
+                          className="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                        >
+                          <option value={true}>Đúng</option>
+                          <option value={false}>Sai</option>
+                        </select>
+                      </div>
+                    ))}
+                  </>
+                )}
+
+                {/* Phần riêng cho Short Answer */}
+                {q.type === 'short-answer' && (
+                  <>
+                    <label className="block text-gray-700 text-sm font-medium mb-1 mt-3">Đáp án trả lời ngắn:</label>
+                    <input
+                      type="text"
+                      value={q.shortAnswerCorrectAnswer}
+                      onChange={(e) => handleShortAnswerChange(qIndex, e.target.value)}
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                      placeholder="Đáp án (số 0-9, '-', ',' tối đa 4 ký tự)"
+                      maxLength="4"
+                      pattern="^[0-9,-]*$"
+                      required
+                    />
+                     <p className="mt-1 text-xs text-gray-500">Chỉ chấp nhận số (0-9), dấu "-" và dấu ",". Tối đa 4 ký tự.</p>
+                  </>
+                )}
 
                 <label className="block text-gray-700 text-sm font-medium mb-1">Giải thích (tùy chọn):</label>
                 <textarea
@@ -311,21 +467,37 @@ const AddNewExamPage = () => {
                   onChange={(e) => handleQuestionChange(qIndex, 'explanation', e.target.value)}
                   rows="2"
                   className="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-200"
-                  placeholder="Giải thích chi tiết đáp án"
+                  placeholder="Giải thích chi tiết đáp án (hỗ trợ Markdown & LaTeX)"
                 ></textarea>
               </div>
             ))}
-            <button
-              type="button"
-              onClick={addQuestion}
-              className="btn-secondary w-full flex items-center justify-center gap-2 mt-4"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
-              </svg>
-              Thêm Câu hỏi Trắc nghiệm
-            </button>
+            
+            {/* Lựa chọn loại câu hỏi để thêm mới */}
+            <div className="flex items-center justify-between gap-4 mt-6 p-3 bg-white rounded-lg shadow-inner">
+                <label htmlFor="newQuestionType" className="block text-gray-700 text-sm font-medium">Thêm loại câu hỏi:</label>
+                <select
+                    id="newQuestionType"
+                    value={newQuestionType}
+                    onChange={(e) => setNewQuestionType(e.target.value)}
+                    className="flex-grow p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                >
+                    <option value="multiple-choice">Trắc nghiệm nhiều lựa chọn</option>
+                    <option value="true-false">Đúng / Sai</option>
+                    <option value="short-answer">Trả lời ngắn</option>
+                </select>
+                <button
+                    type="button"
+                    onClick={addQuestion}
+                    className="btn-primary flex items-center justify-center gap-2 px-4 py-2"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
+                    </svg>
+                    Thêm
+                </button>
+            </div>
           </div>
+          {/* ========================================================= */}
 
           <button
             type="submit"
