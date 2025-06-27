@@ -14,7 +14,7 @@
     "react-dom": "18.2.0",
     "katex": "0.16.10",            
     "markdown-it": "14.1.0",      
-    "markdown-it-katex": "3.0.0"   
+    "markdown-it-katex": "2.0.3"   
   },
   "devDependencies": {
     "eslint": "8.57.0",
