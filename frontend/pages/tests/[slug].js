@@ -9,41 +9,53 @@ import MathContent from '../../components/MathContent';
 const ExamDetailPage = () => {
   const router = useRouter();
   const { slug } = router.query;
-  const { user, token } = useAuth();
+  const { user, token, authLoading } = useAuth(); // THAY ĐỔI: Lấy authLoading
 
   const [exam, setExam] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [userAnswers, setUserAnswers] = useState({}); // { questionId: userAnswer }
-  const [timeRemaining, setTimeRemaining] = useState(0); // Thời gian còn lại bằng giây
+  const [userAnswers, setUserAnswers] = useState({});
+  const [timeRemaining, setTimeRemaining] = useState(0);
   const [examStarted, setExamStarted] = useState(false);
   const [examFinished, setExamFinished] = useState(false);
-  const [examResult, setExamResult] = useState(null); // Kết quả sau khi nộp bài
+  const [examResult, setExamResult] = useState(null);
 
-  const timerRef = useRef(null); // Ref để lưu ID của setInterval
+  const timerRef = useRef(null);
 
   // Fetch exam details
   useEffect(() => {
-    if (!slug) {
+    if (!slug || authLoading) { // THAY ĐỔI: Chờ authLoading hoàn tất
       setLoading(false);
       return;
     }
+
+    // Nếu đã đăng nhập, hoặc nếu đề thi public, thì fetch.
+    // Logic của Backend ở getExamBySlug đã xử lý việc kiểm tra isPublished
+    // nếu user không phải admin.
     const fetchExam = async () => {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/exams/slug/${slug}`);
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/exams/slug/${slug}`, {
+          headers: user && token ? { 'Authorization': `Bearer ${token}` } : {}, // Gửi token nếu có
+        });
         const data = await response.json();
 
         if (!response.ok) {
+          if (response.status === 403) { // Forbidden - có thể do đề thi chưa publish và user không phải admin
+            throw new Error('Đề thi này chưa được xuất bản hoặc bạn không có quyền truy cập.');
+          }
+          if (response.status === 401) { // Unauthorized - token invalid
+            throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+          }
           throw new Error(data.message || 'Lỗi khi tải đề thi.');
         }
 
         setExam(data);
-        setTimeRemaining(data.duration * 60); // Chuyển phút sang giây
+        setTimeRemaining(data.duration * 60);
         const initialAnswers = {};
         data.questions.forEach(q => {
-          initialAnswers[q._id] = ''; // Khởi tạo đáp án rỗng cho mỗi câu hỏi
+          initialAnswers[q._id] = '';
         });
         setUserAnswers(initialAnswers);
 
@@ -55,7 +67,7 @@ const ExamDetailPage = () => {
       }
     };
     fetchExam();
-  }, [slug]);
+  }, [slug, authLoading, user, token]); // THAY ĐỔI: Thêm authLoading, user, token vào dependency
 
   // Start timer when exam starts
   useEffect(() => {
@@ -64,7 +76,7 @@ const ExamDetailPage = () => {
         setTimeRemaining(prevTime => {
           if (prevTime <= 1) {
             clearInterval(timerRef.current);
-            handleSubmitExam(true); // Tự động nộp bài khi hết giờ
+            handleSubmitExam(true);
             return 0;
           }
           return prevTime - 1;
@@ -72,43 +84,43 @@ const ExamDetailPage = () => {
       }, 1000);
     }
 
-    // Clear interval on component unmount or exam finished
     return () => {
       if (timerRef.current) {
         clearInterval(timerRef.current);
       }
     };
-  }, [examStarted, examFinished, timeRemaining]); // timeRemaining ở đây để re-evaluate setInterval khi nó thay đổi (như khi tự động nộp bài)
+  }, [examStarted, examFinished, timeRemaining, handleSubmitExam]);
 
-  // Format time for display
   const formatTime = (seconds) => {
     const minutes = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Handle user answer change for a specific question
   const handleAnswerChange = (questionId, value) => {
-    setUserAnswers(prevAnswers => ({
-      ...prevAnswers,
-      [questionId]: value,
-    }));
+    if (!examFinished) { // Không cho phép thay đổi đáp án sau khi đã nộp bài
+      setUserAnswers(prevAnswers => ({
+        ...prevAnswers,
+        [questionId]: value,
+      }));
+    }
   };
 
-  // Submit exam to backend
   const handleSubmitExam = useCallback(async (isTimeUp = false) => {
-    if (!user || !token || !exam || examFinished) return; // Chỉ nộp khi đã đăng nhập và bài chưa kết thúc
-
-    setExamFinished(true); // Đánh dấu bài thi đã kết thúc
-    if (timerRef.current) {
-      clearInterval(timerRef.current); // Dừng đồng hồ
+    if (!user || !token || !exam || examFinished) {
+      setError('Bạn cần đăng nhập để nộp bài thi.'); // THAY ĐỔI: Thông báo lỗi nếu chưa đăng nhập
+      return;
     }
-    setLoading(true); // Bật loading khi đang nộp bài
+
+    setExamFinished(true);
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+    setLoading(true);
     setError(null);
 
-    const timeTaken = exam.duration * 60 - timeRemaining; // Thời gian thực tế đã làm bài
+    const timeTaken = exam.duration * 60 - timeRemaining;
 
-    // Chuẩn bị dữ liệu gửi đi
     const submissionData = {
       examId: exam._id,
       userAnswers: Object.keys(userAnswers).map(questionId => ({
@@ -133,27 +145,17 @@ const ExamDetailPage = () => {
       if (!response.ok) {
         throw new Error(resultData.message || 'Lỗi khi nộp bài thi.');
       }
-      setExamResult(resultData); // Lưu kết quả nhận được từ backend
+      setExamResult(resultData);
     } catch (err) {
       console.error('Lỗi khi nộp bài thi:', err);
       setError(err.message || 'Đã xảy ra lỗi khi nộp bài thi.');
     } finally {
-      setLoading(false); // Tắt loading
+      setLoading(false);
     }
-  }, [user, token, exam, examFinished, userAnswers, timeRemaining]); // Thêm dependencies
+  }, [user, token, exam, examFinished, userAnswers, timeRemaining]);
 
-  if (!user) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
-        <p className="text-xl text-red-600 text-center font-semibold mb-4">Bạn cần đăng nhập để làm bài thi này.</p>
-        <Link href="/login">
-          <a className="btn-primary">Đăng nhập ngay</a>
-        </Link>
-      </div>
-    );
-  }
-
-  if (loading) {
+  // Hiển thị loading khi authLoading HOẶC loading dữ liệu
+  if (authLoading || loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100">
         <div className="text-center">
@@ -163,6 +165,18 @@ const ExamDetailPage = () => {
           </svg>
           <p className="text-xl text-gray-700">Đang tải đề thi...</p>
         </div>
+      </div>
+    );
+  }
+
+  // Nếu không có user VÀ authLoading đã xong
+  if (!user && !authLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
+        <p className="text-xl text-red-600 text-center font-semibold mb-4">Bạn cần đăng nhập để làm bài thi này.</p>
+        <Link href="/login">
+          <a className="btn-primary">Đăng nhập ngay</a>
+        </Link>
       </div>
     );
   }
@@ -187,7 +201,6 @@ const ExamDetailPage = () => {
     );
   }
 
-  // Component hiển thị kết quả sau khi nộp bài
   const ResultDisplay = ({ result, examData }) => {
     if (!result || !examData) return null;
 
@@ -244,7 +257,7 @@ const ExamDetailPage = () => {
                       <input
                         type="radio"
                         checked={option === userAnswer}
-                        disabled // Disabled after submission
+                        disabled
                         className={`h-5 w-5 ${option === q.correctAnswer ? 'text-green-600' : 'text-blue-600'}`}
                       />
                       <span className="text-base">
