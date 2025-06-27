@@ -1,84 +1,108 @@
 // physics-olympiad-website/frontend/context/AuthContext.js
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 
-// Tạo Auth Context
 const AuthContext = createContext();
 
-// Hook tùy chỉnh để sử dụng Auth Context dễ dàng hơn
-export const useAuth = () => {
-  return useContext(AuthContext);
-};
-
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null); // Lưu thông tin người dùng
-  const [token, setToken] = useState(null); // Lưu JWT token
-  const [loading, setLoading] = useState(true); // Trạng thái tải (đang kiểm tra token ban đầu)
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true); // MỚI: Trạng thái loading của auth
   const router = useRouter();
 
-  useEffect(() => {
-    // Hàm này sẽ chạy khi component được mount để kiểm tra token trong localStorage
-    const loadUser = async () => {
-      const storedToken = localStorage.getItem('token');
-      const storedUser = localStorage.getItem('user'); // Lấy cả thông tin user đã lưu
+  // Hàm này sẽ được gọi khi đăng nhập và khi khởi động ứng dụng
+  const loadUserFromToken = useCallback(async (authToken) => {
+    if (authToken) {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/me`, {
+          headers: {
+            'Authorization': `Bearer ${authToken}`,
+          },
+        });
 
-      if (storedToken && storedUser) {
-        try {
-          const parsedUser = JSON.parse(storedUser); // Parse thông tin user từ JSON
-          setToken(storedToken);
-          setUser(parsedUser); // Đặt thông tin user bao gồm role
-        } catch (e) {
-          console.error("Lỗi khi parse user từ localStorage:", e);
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          setToken(null);
-          setUser(null);
+        if (response.ok) {
+          const data = await response.json();
+          setUser(data);
+          setToken(authToken);
+          localStorage.setItem('token', authToken);
+          console.log('User loaded from token:', data);
+        } else {
+          // Token không hợp lệ hoặc hết hạn
+          console.error('Token invalid or expired. Logging out.');
+          logout(); // Tự động đăng xuất nếu token không hợp lệ
         }
+      } catch (err) {
+        console.error('Error verifying token:', err);
+        logout(); // Đăng xuất nếu có lỗi mạng hoặc lỗi khác
       }
-      setLoading(false); // Kết thúc quá trình tải
-    };
-
-    loadUser();
+    } else {
+      setUser(null);
+      setToken(null);
+      localStorage.removeItem('token');
+    }
+    setAuthLoading(false); // Hoàn thành tải, dù thành công hay thất bại
   }, []);
 
-  // Hàm đăng nhập
-  const login = (userData, userToken) => {
-    // Đảm bảo userData chứa tất cả các trường cần thiết, bao gồm role
-    const userToStore = {
-      id: userData.id,
-      name: userData.name,
-      email: userData.email,
-      role: userData.role || 'user', // Đảm bảo luôn có trường role, mặc định là 'user'
-    };
-    
-    setToken(userToken);
-    setUser(userToStore); // Cập nhật state user
+  // useEffect để chạy một lần khi component mount
+  useEffect(() => {
+    const storedToken = localStorage.getItem('token');
+    if (storedToken) {
+      loadUserFromToken(storedToken);
+    } else {
+      setAuthLoading(false); // Không có token, kết thúc loading ngay lập tức
+    }
+  }, [loadUserFromToken]); // Phụ thuộc vào loadUserFromToken
 
-    localStorage.setItem('token', userToken);
-    localStorage.setItem('user', JSON.stringify(userToStore)); // Lưu user object vào localStorage
+  const login = async (email, password) => {
+    setAuthLoading(true); // Bắt đầu loading khi cố gắng đăng nhập
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Đăng nhập thất bại.');
+      }
+
+      await loadUserFromToken(data.token); // Tải người dùng và lưu token
+      return data;
+    } catch (err) {
+      console.error('Login error:', err);
+      setError(err.message || 'Đã xảy ra lỗi không xác định.'); // Thêm state error nếu muốn hiển thị trên form
+      throw err; // Ném lỗi để component gọi có thể bắt
+    } finally {
+      setAuthLoading(false); // Kết thúc loading
+    }
   };
 
-  // Hàm đăng xuất
   const logout = () => {
-    setToken(null);
     setUser(null);
+    setToken(null);
     localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    router.push('/login'); // Chuyển hướng về trang đăng nhập sau khi đăng xuất
+    router.push('/login');
   };
 
-  // Giá trị sẽ được cung cấp bởi context
-  const authContextValue = {
+  const value = {
     user,
     token,
-    loading,
+    authLoading, // MỚI: Export authLoading
     login,
     logout,
   };
 
   return (
-    <AuthContext.Provider value={authContextValue}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
-};
+}
+
+export function useAuth() {
+  return useContext(AuthContext);
+}
