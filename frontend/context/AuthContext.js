@@ -24,7 +24,10 @@ export function AuthProvider({ children }) {
           const data = await response.json();
           setUser(data);
           setToken(authToken);
-          localStorage.setItem('token', authToken);
+          // CHỈ truy cập localStorage TRÊN CLIENT
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('token', authToken);
+          }
           console.log('User loaded from token:', data);
         } else {
           // Token không hợp lệ hoặc hết hạn
@@ -38,20 +41,30 @@ export function AuthProvider({ children }) {
     } else {
       setUser(null);
       setToken(null);
-      localStorage.removeItem('token');
+      // CHỈ truy cập localStorage TRÊN CLIENT
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('token');
+      }
     }
     setAuthLoading(false); // Hoàn thành tải, dù thành công hay thất bại
   }, []);
 
   // useEffect để chạy một lần khi component mount
   useEffect(() => {
-    const storedToken = localStorage.getItem('token');
-    if (storedToken) {
-      loadUserFromToken(storedToken);
+    // CHỈ truy cập localStorage TRÊN CLIENT
+    if (typeof window !== 'undefined') {
+      const storedToken = localStorage.getItem('token');
+      if (storedToken) {
+        loadUserFromToken(storedToken);
+      } else {
+        setAuthLoading(false); // Không có token, kết thúc loading ngay lập tức trên client
+      }
     } else {
-      setAuthLoading(false); // Không có token, kết thúc loading ngay lập tức
+      // TRÊN SERVER: Không có localStorage, giả định là chưa xác thực và kết thúc loading ngay
+      // Điều này ngăn chặn các component con bị treo trong trạng thái loading auth vô thời hạn
+      setAuthLoading(false); 
     }
-  }, [loadUserFromToken]); // Phụ thuộc vào loadUserFromToken
+  }, [loadUserFromToken]);
 
   const login = async (email, password) => {
     setAuthLoading(true); // Bắt đầu loading khi cố gắng đăng nhập
@@ -74,7 +87,8 @@ export function AuthProvider({ children }) {
       return data;
     } catch (err) {
       console.error('Login error:', err);
-      setError(err.message || 'Đã xảy ra lỗi không xác định.'); // Thêm state error nếu muốn hiển thị trên form
+      // KHÔNG CÓ setError TẠI ĐÂY NẾU KHÔNG KHAI BÁO STATE setError TRONG CONTEXT
+      // Bạn có thể thêm một state errorMessage nếu muốn xử lý lỗi trực tiếp trong context
       throw err; // Ném lỗi để component gọi có thể bắt
     } finally {
       setAuthLoading(false); // Kết thúc loading
@@ -84,7 +98,10 @@ export function AuthProvider({ children }) {
   const logout = () => {
     setUser(null);
     setToken(null);
-    localStorage.removeItem('token');
+    // CHỈ truy cập localStorage TRÊN CLIENT
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('token');
+    }
     router.push('/login');
   };
 
