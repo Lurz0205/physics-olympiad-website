@@ -21,11 +21,11 @@ const AddNewExamPage = () => {
   const [newQuestionType, setNewQuestionType] = useState('multiple-choice'); 
 
   // ============ THÊM CÁC STATE MỚI CHO CẤU HÌNH ĐIỂM ============
-  const [multipleChoiceScore, setMultipleChoiceScore] = useState(1); // Mặc định 1 điểm
-  const [shortAnswerScore, setShortAnswerScore] = useState(1);       // Mặc định 1 điểm
-  const [trueFalseScore1, setTrueFalseScore1] = useState(0.25);      // Mặc định điểm cho 1 ý đúng
-  const [trueFalseScore2, setTrueFalseScore2] = useState(0.5);       // Mặc định điểm cho 2 ý đúng
-  const [trueFalseScore3, setTrueFalseScore3] = useState(0.75);      // Mặc định điểm cho 3 ý đúng
+  const [multipleChoiceScore, setMultipleChoiceScore] = useState(0.25); // Mặc định 1 điểm
+  const [shortAnswerScore, setShortAnswerScore] = useState(0.5);       // Mặc định 1 điểm
+  const [trueFalseScore1, setTrueFalseScore1] = useState(0.1);      // Mặc định điểm cho 1 ý đúng
+  const [trueFalseScore2, setTrueFalseScore2] = useState(0.25);       // Mặc định điểm cho 2 ý đúng
+  const [trueFalseScore3, setTrueFalseScore3] = useState(0.5);      // Mặc định điểm cho 3 ý đúng
   const [trueFalseScore4, setTrueFalseScore4] = useState(1);        // Mặc định điểm cho 4 ý đúng
   // ============================================================
 
@@ -33,7 +33,7 @@ const AddNewExamPage = () => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState('');
 
-  const categories = ['TỔNG HỢP', 'CƠ HỌC', 'NHIỆT HỌC', 'ĐIỆN HỌC', 'QUANG HỌC', 'VẬT LÝ HẠT NHÂN', 'THUYẾT TƯƠNG ĐỐI', 'VẬT LÝ HIỆN ĐẠI', 'Chưa phân loại'];
+  const categories = ['TỔNG HỢP', 'CƠ HỌC', 'NHIỆT HỌC', 'ĐIỆN HỌC', 'VẬT LÝ HẠT NHÂN', 'Chưa phân loại'];
 
   const generateSlug = (text) => {
     return text
@@ -194,7 +194,7 @@ const AddNewExamPage = () => {
             return;
           }
           if (!/^[0-9,-]{1,4}$/.test(q.shortAnswerCorrectAnswer.trim())) {
-            setError('Đáp án trả lời ngắn phải có tối đa 4 ký tự và chỉ chứa số (0-9), dấu "-" và dấu ",".');
+            setError('Đáp án trả lời ngắn chỉ có tối đa 4 ký tự và chỉ chứa số (0-9), dấu "-" và dấu ",".');
             setSubmitting(false);
             return;
           }
@@ -256,11 +256,11 @@ const AddNewExamPage = () => {
       setQuestions([]);
       setNewQuestionType('multiple-choice'); // Reset loại câu hỏi đang thêm về mặc định
       // ============ RESET CÁC STATE ĐIỂM SAU KHI THÊM THÀNH CÔNG ============
-      setMultipleChoiceScore(1);
-      setShortAnswerScore(1);
-      setTrueFalseScore1(0.25);
-      setTrueFalseScore2(0.5);
-      setTrueFalseScore3(0.75);
+      setMultipleChoiceScore(0.25);
+      setShortAnswerScore(0.5);
+      setTrueFalseScore1(0.1);
+      setTrueFalseScore2(0.25);
+      setTrueFalseScore3(0.5);
       setTrueFalseScore4(1);
       // ============================================================
 
@@ -310,7 +310,7 @@ const AddNewExamPage = () => {
               value={title}
               onChange={handleTitleChange}
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-200"
-              placeholder="Nhập tiêu đề đề thi (ví dụ: Đề thi thử Quốc gia 2024)"
+              placeholder="Nhập tiêu đề đề thi (ví dụ: Đề thi thử THPT Quốc gia 2025)"
               required
             />
           </div>
