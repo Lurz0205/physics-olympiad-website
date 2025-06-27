@@ -24,8 +24,8 @@ app.get('/', (req, res) => {
 
 // Routes API của bạn
 app.use('/api/users', require('./routes/userRoutes'));
-app.use('/api/auth', require('./routes/auth')); // Đã sửa: Sử dụng tên file 'auth' thay vì 'authRoutes'
-app.use('/api/theory', require('./routes/theoryRoutes'));
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/theory', require('./routes/theory')); // THAY ĐỔI: Đổi thành './routes/theory'
 app.use('/api/exercises', require('./routes/exerciseRoutes'));
 app.use('/api/exams', require('./routes/examRoutes'));
 app.use('/api/exam-results', require('./routes/examResultRoutes'));
