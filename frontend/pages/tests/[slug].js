@@ -13,8 +13,8 @@ import MathContent from '../../components/MathContent'; // Component để rende
 const ResultDisplay = ({ result, examData, formatTime }) => {
   if (!result || !examData) return null;
 
-  // Tính phần trăm điểm dựa trên thang điểm 10 của backend
-  const percentage = ((result.score / 10) * 100).toFixed(0); 
+  // Tính phần trăm điểm dựa trên tổng điểm tối đa, nếu maxPossibleScore không tồn tại hoặc bằng 0 thì mặc định 0%
+  const percentage = result.maxPossibleScore > 0 ? ((result.score / result.maxPossibleScore) * 100).toFixed(0) : 0;
   
   return (
     <div className="mt-8 p-6 bg-white rounded-lg shadow-xl border border-gray-200">
@@ -22,7 +22,10 @@ const ResultDisplay = ({ result, examData, formatTime }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <div className="bg-blue-50 p-4 rounded-lg flex items-center justify-between">
           <span className="text-gray-700 font-semibold">Điểm số:</span>
-          <span className="text-blue-700 text-2xl font-bold">{result.score} / 10</span>
+          {/* HIỂN THỊ ĐIỂM SỐ TRÊN TỔNG ĐIỂM TỐI ĐA */}
+          <span className="text-blue-700 text-2xl font-bold">
+            {result.score} / {result.maxPossibleScore !== undefined ? result.maxPossibleScore.toFixed(2) : 'N/A'}
+          </span>
         </div>
         <div className="bg-green-50 p-4 rounded-lg flex items-center justify-between">
           <span className="text-gray-700 font-semibold">Số câu đúng:</span>
@@ -48,6 +51,25 @@ const ResultDisplay = ({ result, examData, formatTime }) => {
           // Tìm đáp án của người dùng cho câu hỏi này
           const userAnswerEntry = result.userAnswers.find(ua => ua.questionId === q._id);
           const isCorrectQuestionOverall = userAnswerEntry ? userAnswerEntry.isCorrect : false; // Đúng/Sai tổng thể câu hỏi
+          const scoreAchievedForQuestion = userAnswerEntry ? userAnswerEntry.scoreAchieved : 0; // Điểm đạt được cho câu hỏi này
+
+          // Lấy điểm tối đa cho câu hỏi này từ scoringConfig của examData
+          let maxScoreForThisQuestion = 0;
+          if (examData.scoringConfig) {
+            switch (q.type) {
+              case 'multiple-choice':
+                maxScoreForThisQuestion = examData.scoringConfig.multipleChoice || 0;
+                break;
+              case 'short-answer':
+                maxScoreForThisQuestion = examData.scoringConfig.shortAnswer || 0;
+                break;
+              case 'true-false':
+                maxScoreForThisQuestion = examData.scoringConfig.trueFalse && examData.scoringConfig.trueFalse['4'] !== undefined ? examData.scoringConfig.trueFalse['4'] : 0;
+                break;
+              default:
+                maxScoreForThisQuestion = 0;
+            }
+          }
 
           // Điều chỉnh màu sắc nền dựa trên tổng thể câu hỏi đúng/sai
           const questionCardClass = `p-5 rounded-lg border shadow-sm ${
@@ -58,6 +80,13 @@ const ResultDisplay = ({ result, examData, formatTime }) => {
             <div key={q._id || `q-${qIndex}`} className={questionCardClass}>
               <h4 className="text-lg font-semibold text-gray-900 mb-3">Câu hỏi {qIndex + 1}: <MathContent content={q.questionText} /></h4>
               
+              {/* Hiển thị điểm đạt được cho câu hỏi này */}
+              <p className="text-gray-700 text-sm mb-3">
+                Điểm câu hỏi: <span className="font-bold text-blue-700">
+                  {scoreAchievedForQuestion.toFixed(2)} / {maxScoreForThisQuestion.toFixed(2)}
+                </span>
+              </p>
+
               {/* PHẦN I: Trắc nghiệm nhiều lựa chọn */}
               {q.type === 'multiple-choice' && (
                 <div className="space-y-2 mb-4">
@@ -97,7 +126,7 @@ const ResultDisplay = ({ result, examData, formatTime }) => {
                   <p className="text-gray-700 font-semibold mb-2">Đáp án của bạn cho mỗi ý:</p>
                   {q.statements.map((stmt, stmtIndex) => {
                     // Lấy đáp án của người dùng cho từng ý (kiểm tra parse an toàn)
-                    let userStatementAnswers = null;
+                    let userStatementAnswers;
                     try {
                         userStatementAnswers = userAnswerEntry && userAnswerEntry.userAnswer 
                                                ? JSON.parse(userAnswerEntry.userAnswer) 
@@ -106,7 +135,7 @@ const ResultDisplay = ({ result, examData, formatTime }) => {
                         console.error("Failed to parse true-false user answer JSON:", e);
                         userStatementAnswers = [];
                     }
-                    const userStatementAnswer = userStatementAnswers[stmtIndex]; 
+                    const userStatementAnswer = userStatementsArray[stmtIndex]; 
                     
                     // Xác định xem người dùng trả lời đúng hay sai cho ý này
                     const isCorrectStatement = stmt.isCorrect === userStatementAnswer;
