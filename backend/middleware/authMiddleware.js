@@ -1,4 +1,4 @@
-// physics-olympiad-website/backend/middleware/authMiddleware.js
+// backend/middleware/authMiddleware.js
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
@@ -14,15 +14,23 @@ const protect = async (req, res, next) => {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
       // Tìm user theo ID trong token và gán vào req.user
-      req.user = await User.findById(decoded.id).select('-password'); // Bỏ qua trường password
+      // .select('-password') sẽ trả về tất cả các trường trừ password
+      req.user = await User.findById(decoded.id).select('-password'); 
+
+      // THÊM LOG MỚI QUAN TRỌNG: Kiểm tra thông tin người dùng được gán vào req.user
+      if (req.user) {
+        console.log(`[authMiddleware]: User ID: ${req.user._id}, Role: '${req.user.role}', Email: '${req.user.email}'`);
+      } else {
+        console.log(`[authMiddleware]: User not found for decoded ID: ${decoded.id}`);
+      }
+
       next();
     } catch (error) {
-      console.error(error);
+      console.error(`[authMiddleware]: Token verification error: ${error.message}`);
       res.status(401).json({ message: 'Không được ủy quyền, token lỗi' });
     }
-  }
-
-  if (!token) {
+  } else { // THAY ĐỔI: Chuyển kiểm tra !token ra ngoài if chính
+    console.log('[authMiddleware]: No token provided in headers.');
     res.status(401).json({ message: 'Không được ủy quyền, không có token' });
   }
 };
