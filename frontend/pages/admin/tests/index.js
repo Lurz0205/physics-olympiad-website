@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useAuth } from '../../../context/AuthContext'; // Sửa đường dẫn nếu cần
+import { useAuth } from '../../../../context/AuthContext';
 
 const AdminTestsPage = () => {
   const router = useRouter();
@@ -11,29 +11,28 @@ const AdminTestsPage = () => {
   const [exams, setExams] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [deletingId, setDeletingId] = useState(null); // ID của đề thi đang được xóa
-  const [showConfirmModal, setShowConfirmModal] = useState(false); // Trạng thái hiển thị modal xác nhận xóa
-  const [successMessage, setSuccessMessage] = useState(null); // Thông báo thành công mới
+  const [deletingId, setDeletingId] = useState(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState(null);
 
-  // Chuyển hướng nếu không phải admin
   useEffect(() => {
     if (user && user.role !== 'admin') {
-      router.push('/login'); // Hoặc trang lỗi
+      router.push('/login');
     }
   }, [user, router]);
 
-  // Hàm tải danh sách đề thi
   const fetchExams = useCallback(async () => {
-    if (!token) return; // Đảm bảo có token trước khi gọi API
+    if (!token) return;
 
     setLoading(true);
     setError(null);
-    setSuccessMessage(null); // Xóa thông báo thành công cũ khi tải lại
+    setSuccessMessage(null);
 
     try {
+      // THAY ĐỔI: Đảm bảo gọi API /api/exams (admin endpoint)
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/exams`, {
         headers: {
-          'Authorization': `Bearer ${token}`, // Gửi token để xác thực admin
+          'Authorization': `Bearer ${token}`,
         },
       });
       const data = await response.json();
@@ -50,19 +49,15 @@ const AdminTestsPage = () => {
     }
   }, [token]);
 
-  // Gọi hàm tải danh sách đề thi khi component mount, token thay đổi, hoặc đường dẫn router thay đổi
-  // router.asPath sẽ thay đổi khi chuyển hướng từ /admin/tests/new về /admin/tests
   useEffect(() => {
     fetchExams();
-  }, [fetchExams, router.asPath]); // THAY ĐỔI: Thêm router.asPath vào dependency
+  }, [fetchExams, router.asPath]);
 
-  // Xử lý xác nhận xóa đề thi (hiển thị modal)
   const handleDeleteClick = (examId) => {
     setDeletingId(examId);
     setShowConfirmModal(true);
   };
 
-  // Xử lý xóa đề thi sau khi xác nhận
   const confirmDelete = async () => {
     if (!deletingId || !token) return;
 
@@ -83,8 +78,7 @@ const AdminTestsPage = () => {
         throw new Error(data.message || 'Lỗi khi xóa đề thi.');
       }
 
-      setSuccessMessage('Đề thi đã được xóa thành công!'); // Đặt thông báo thành công
-      // Cập nhật lại danh sách sau khi xóa
+      setSuccessMessage('Xóa đề thi thành công!');
       fetchExams();
     } catch (err) {
       console.error('Lỗi khi xóa đề thi:', err);
@@ -101,7 +95,7 @@ const AdminTestsPage = () => {
   };
 
   if (!user || user.role !== 'admin') {
-    return null; // AdminLayout đã xử lý chuyển hướng
+    return null;
   }
 
   return (
@@ -127,7 +121,7 @@ const AdminTestsPage = () => {
             {error}
           </div>
         )}
-        {successMessage && ( // Hiển thị thông báo thành công
+        {successMessage && (
           <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4">
             {successMessage}
           </div>
@@ -191,7 +185,7 @@ const AdminTestsPage = () => {
                       {exam.isPublished ? (
                         <span className="text-green-600 font-bold">✔</span>
                       ) : (
-                        <span className="text-red-600 font-bold">✖</span> // LỖI CÚ PHÁP Ở ĐÂY: KHÔNG CÓ `</span>` THỪA
+                        <span className="text-red-600 font-bold">✖</span>
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
