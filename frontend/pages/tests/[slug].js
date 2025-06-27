@@ -55,9 +55,10 @@ const ResultDisplay = ({ result, examData, formatTime }) => {
         </div>
       </div>
       
-      <p className="text-center text-lg text-gray-700 mb-8">
-        Bạn đã hoàn thành bài thi với **{actualScore.toFixed(2)} điểm** ({percentage}%).
-      </p>
+      {/* THAY ĐỔI TẠI ĐÂY: Bọc đoạn văn bản bằng MathContent */}
+      <div className="text-center text-lg text-gray-700 mb-8">
+        <MathContent content={`Bạn đã hoàn thành bài thi với **${actualScore.toFixed(2)} điểm** (${percentage}%).`} />
+      </div>
 
       <h3 className="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Xem lại các câu hỏi và đáp án:</h3>
       <div className="space-y-6">
@@ -545,7 +546,7 @@ const ExamDetailPage = () => {
                   Đã xuất bản
                 </span>
               ) : (
-                <span className="bg-red-100 text-red-800 py-1 px-3 rounded-full text-sm font-semibold">
+                <span className="bg-red-100 text-red-800 px-2 py-0.5 rounded-full">
                   Chưa xuất bản
                 </span>
               )}
