@@ -6,7 +6,7 @@ import { useRouter } from 'next/router';
 import { useAuth } from '../context/AuthContext';
 
 const LoginPage = () => {
-  const [identifier, setIdentifier] = useState(''); // THAY ĐỔI: Đổi từ 'email' thành 'identifier'
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -21,18 +21,32 @@ const LoginPage = () => {
     }
   }, [user, router]);
 
+  // Handle success message from registration
+  useEffect(() => {
+    if (router.query.message) {
+      // display a temporary success message
+      // For now, we'll just log it to console or you can set a state for a temporary banner
+      console.log(router.query.message);
+      // Remove the message from URL after display
+      const { pathname, query } = router;
+      const params = new URLSearchParams(query);
+      params.delete('message');
+      router.replace({ pathname, query: params.toString() }, undefined, { shallow: true });
+    }
+  }, [router.query.message, router]);
+
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
 
     try {
-      await login(identifier, password); // THAY ĐỔI: Truyền 'identifier' thay vì 'email'
+      await login(identifier, password);
     } catch (err) {
       console.error('Login form submit error:', err);
-      // Cố gắng parse lỗi từ Backend nếu có
       let errorMessage = 'Đã xảy ra lỗi không xác định trong quá trình đăng nhập.';
-      if (err.message && err.message.startsWith('{')) { // Nếu lỗi là JSON string
+      if (err.message && err.message.startsWith('{')) { 
         try {
           const errorObj = JSON.parse(err.message);
           errorMessage = errorObj.message || errorMessage;
@@ -51,34 +65,44 @@ const LoginPage = () => {
   return (
     <>
       <Head>
-        <title>Đăng nhập - HTB</title>
+        <title>Đăng nhập - Olympic Vật lý</title>
       </Head>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-xl shadow-2xl border border-gray-200">
+      {/* Container chính với hiệu ứng gradient và căn giữa */}
+      <div className="min-h-screen bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 font-inter">
+        {/* Card chứa form */}
+        <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-2xl shadow-3xl border border-gray-200 backdrop-blur-sm bg-opacity-90 transition-all duration-300 ease-in-out transform hover:scale-[1.01] hover:shadow-4xl">
           <div>
-            <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-              Đăng nhập vào tài khoản của bạn
+            <h2 className="mt-6 text-center text-4xl font-extrabold text-gray-900 drop-shadow-sm">
+              Đăng nhập tài khoản
             </h2>
+            <p className="mt-2 text-center text-sm text-gray-600">
+              Chào mừng trở lại! Hãy điền thông tin của bạn.
+            </p>
           </div>
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
             {error && (
-              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative" role="alert">
                 <span className="block sm:inline">{error}</span>
+              </div>
+            )}
+            {router.query.message && (
+              <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg relative" role="alert">
+                <span className="block sm:inline">{router.query.message}</span>
               </div>
             )}
             <div className="rounded-md shadow-sm -space-y-px">
               <div>
                 <label htmlFor="identifier" className="sr-only">Email hoặc Tên đăng nhập</label>
                 <input
-                  id="identifier" // THAY ĐỔI: Đổi id thành 'identifier'
-                  name="identifier" // THAY ĐỔI: Đổi name thành 'identifier'
+                  id="identifier"
+                  name="identifier"
                   type="text"
-                  autoComplete="username" // auto-complete cho cả email/username
+                  autoComplete="username"
                   required
-                  className="appearance-none rounded-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                  className="appearance-none rounded-t-lg relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm transition duration-200 ease-in-out focus:shadow-outline"
                   placeholder="Email hoặc Tên đăng nhập"
-                  value={identifier} // THAY ĐỔI: Dùng state 'identifier'
-                  onChange={(e) => setIdentifier(e.target.value)} // THAY ĐỔI: Cập nhật state 'identifier'
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
                 />
               </div>
               <div>
@@ -89,7 +113,7 @@ const LoginPage = () => {
                   type="password"
                   autoComplete="current-password"
                   required
-                  className="appearance-none rounded-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                  className="appearance-none rounded-b-lg relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm transition duration-200 ease-in-out focus:shadow-outline"
                   placeholder="Mật khẩu"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -97,10 +121,21 @@ const LoginPage = () => {
               </div>
             </div>
 
+            <div className="flex items-center justify-between">
+              <div className="text-sm">
+                {/* Có thể thêm link quên mật khẩu sau này */}
+                {/* <Link href="/forgot-password">
+                  <a className="font-medium text-indigo-600 hover:text-indigo-500">
+                    Quên mật khẩu?
+                  </a>
+                </Link> */}
+              </div>
+            </div>
+
             <div>
               <button
                 type="submit"
-                className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-300 ease-in-out"
+                className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-300 ease-in-out shadow-lg hover:shadow-xl"
                 disabled={loading}
               >
                 {loading ? (
@@ -115,7 +150,7 @@ const LoginPage = () => {
             </div>
             <div className="text-center text-sm">
               <Link href="/register">
-                <a className="font-medium text-indigo-600 hover:text-indigo-500">
+                <a className="font-medium text-indigo-600 hover:text-indigo-500 transition duration-200">
                   Chưa có tài khoản? Đăng ký ngay
                 </a>
               </Link>
