@@ -31,13 +31,11 @@ const KatexRenderer = ({ content }) => {
   }, []); // Chạy một lần khi component mount
 
   useEffect(() => {
-    // console.log('KatexRenderer useEffect running for content. Content:', content);
-    // console.log('KatexRenderer: Is mdInstance ready for render?', !!mdInstance);
-
     if (markdownRef.current && mdInstance && content) {
       try {
-        // console.log('KatexRenderer: Attempting to render content:', content);
-        markdownRef.current.innerHTML = mdInstance.render(content);
+        const renderedHtml = mdInstance.render(content);
+        console.log('KatexRenderer: HTML output by MarkdownIt-KaTeX:', renderedHtml); // THÊM DÒNG LOG NÀY
+        markdownRef.current.innerHTML = renderedHtml;
         // console.log('KatexRenderer: MarkdownIt-KaTeX rendering successful.');
       } catch (error) {
         console.error("KatexRenderer: MarkdownIt-KaTeX rendering error caught:", error);
