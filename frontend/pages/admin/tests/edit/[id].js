@@ -3,15 +3,16 @@ import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useAuth } from '../../../../context/AuthContext'; // Sửa đường dẫn nếu cần
+import { useAuth } from '../../../../context/AuthContext'; 
 
 const EditExamPage = () => {
   const router = useRouter();
   const { id } = router.query; // Lấy ID đề thi từ URL
-  const { token, user } = useAuth(); // Lấy token và user để xác thực
+  const { token } = useAuth(); // Chỉ cần token để xác thực, AdminLayout đã kiểm tra user.role
 
   const [title, setTitle] = useState('');
   const [slug, setSlug] = useState('');
+  const [originalSlug, setOriginalSlug] = useState(''); // Để so sánh khi tự động tạo slug
   const [description, setDescription] = useState('');
   const [duration, setDuration] = useState(60);
   const [category, setCategory] = useState('TỔNG HỢP');
@@ -25,12 +26,12 @@ const EditExamPage = () => {
 
   const categories = ['TỔNG HỢP', 'CƠ HỌC', 'NHIỆT HỌC', 'ĐIỆN HỌC', 'QUANG HỌC', 'VẬT LÝ HẠT NHÂN', 'THUYẾT TƯƠNG ĐỐI', 'VẬT LÝ HIỆN ĐẠI', 'Chưa phân loại'];
 
-  // Chuyển hướng nếu không phải admin
-  useEffect(() => {
-    if (user && user.role !== 'admin') {
-      router.push('/login'); // Hoặc trang lỗi
-    }
-  }, [user, router]);
+  // LOẠI BỎ: Chuyển hướng nếu không phải admin (AdminLayout đã xử lý)
+  // useEffect(() => {
+  //   if (user && user.role !== 'admin') {
+  //     router.push('/login'); // Hoặc trang lỗi
+  //   }
+  // }, [user, router]);
 
   // Hàm tải dữ liệu đề thi khi ID và token có sẵn
   useEffect(() => {
@@ -57,6 +58,7 @@ const EditExamPage = () => {
         // Điền dữ liệu vào state
         setTitle(data.title);
         setSlug(data.slug);
+        setOriginalSlug(data.slug); // Lưu slug ban đầu
         setDescription(data.description || '');
         setDuration(data.duration);
         setCategory(data.category);
@@ -88,15 +90,15 @@ const EditExamPage = () => {
   const handleTitleChange = (e) => {
     const newTitle = e.target.value;
     setTitle(newTitle);
-    // Chỉ tự động cập nhật slug nếu slug chưa được sửa thủ công
-    // Hoặc nếu slug hiện tại khớp với slug tự động từ tiêu đề cũ
-    if (!slug || generateSlug(newTitle) === slug) {
-        setSlug(generateSlug(newTitle));
+    // Chỉ tự động cập nhật slug nếu slug hiện tại chưa được chỉnh sửa thủ công
+    // hoặc nếu nó trùng với slug ban đầu được tạo từ tiêu đề
+    if (slug === originalSlug || !slug) { // Nếu slug rỗng hoặc vẫn là slug gốc của tiêu đề
+      setSlug(generateSlug(newTitle));
     }
   };
 
   // =========================================================
-  // LOGIC QUẢN LÝ CÂU HỎI TRẮC NGHIỆM CON (Tương tự new.js)
+  // LOGIC QUẢN LÝ CÂU HỎI TRẮC NGHIỆM CON
   // =========================================================
 
   const addQuestion = () => {
@@ -212,9 +214,7 @@ const EditExamPage = () => {
     }
   };
 
-  if (!user || user.role !== 'admin') {
-    return null; // AdminLayout đã xử lý chuyển hướng
-  }
+  // LOẠI BỎ: if (!user || user.role !== 'admin') { return null; }
 
   if (loading) {
     return (
@@ -230,7 +230,8 @@ const EditExamPage = () => {
     );
   }
 
-  if (error && !submitting) { // Chỉ hiển thị lỗi tải dữ liệu, không phải lỗi submit
+  // Cải thiện hiển thị lỗi tải dữ liệu
+  if (error && !submitting) { 
     return (
       <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
         Lỗi: {error}
