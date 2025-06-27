@@ -123,25 +123,29 @@ const ResultDisplay = ({ result, examData, formatTime }) => {
                         </span>
                         <div className="flex items-center space-x-4">
                           {/* Hiển thị đáp án của người dùng */}
-                          <span className={`${userStatementAnswer === true ? 'font-bold' : 'text-gray-500'}`}>
-                            Đúng
-                          </span>
-                          <input 
-                            type="radio" 
-                            checked={userStatementAnswer === true} 
-                            disabled 
-                            className={`h-5 w-5 ${isCorrectStatement ? 'text-green-600' : 'text-red-600'}`}
-                          />
+                          <label className="flex items-center cursor-default">
+                              <input 
+                                  type="radio" 
+                                  checked={userStatementAnswer === true} 
+                                  disabled 
+                                  className={`h-5 w-5 ${isCorrectStatement ? 'text-green-600' : 'text-red-600'}`}
+                              />
+                              <span className={`ml-2 ${userStatementAnswer === true ? (isCorrectStatement ? 'font-bold text-green-700' : 'font-bold text-red-700') : 'text-gray-500'}`}>
+                                  Đúng
+                              </span>
+                          </label>
                           
-                          <span className={`${userStatementAnswer === false ? 'font-bold' : 'text-gray-500'}`}>
-                            Sai
-                          </span>
-                          <input 
-                            type="radio" 
-                            checked={userStatementAnswer === false} 
-                            disabled 
-                            className={`h-5 w-5 ${isCorrectStatement ? 'text-green-600' : 'text-red-600'}`}
-                          />
+                          <label className="flex items-center cursor-default">
+                              <input 
+                                  type="radio" 
+                                  checked={userStatementAnswer === false} 
+                                  disabled 
+                                  className={`h-5 w-5 ${isCorrectStatement ? 'text-green-600' : 'text-red-600'}`}
+                              />
+                              <span className={`ml-2 ${userStatementAnswer === false ? (isCorrectStatement ? 'font-bold text-green-700' : 'font-bold text-red-700') : 'text-gray-500'}`}>
+                                  Sai
+                              </span>
+                          </label>
                         </div>
                       </div>
                     );
@@ -234,12 +238,38 @@ const ExamDetailPage = () => {
       return;
     }
 
+    // --- BẮT ĐẦU VALIDATION PHÍA CLIENT ---
+    for (const q of exam.questions) {
+      const userAnswer = userAnswers[q._id];
+      if (q.type === 'multiple-choice') {
+        if (!userAnswer || userAnswer === '') {
+          setError(`Vui lòng chọn đáp án cho Câu hỏi ${exam.questions.indexOf(q) + 1}.`);
+          setSubmitting(false); // Reset submitting state
+          return; // Dừng hàm submit
+        }
+      } else if (q.type === 'true-false') {
+        // Kiểm tra xem tất cả các ý trong câu Đúng/Sai đã được trả lời chưa
+        if (!userAnswer || !Array.isArray(userAnswer) || userAnswer.some(ans => ans === null || ans === undefined)) {
+          setError(`Vui lòng trả lời đầy đủ các ý trong Câu hỏi ${exam.questions.indexOf(q) + 1}.`);
+          setSubmitting(false); // Reset submitting state
+          return; // Dừng hàm submit
+        }
+      } else if (q.type === 'short-answer') {
+        if (!userAnswer || userAnswer.trim() === '') {
+          setError(`Vui lòng điền đáp án cho Câu hỏi ${exam.questions.indexOf(q) + 1}.`);
+          setSubmitting(false); // Reset submitting state
+          return; // Dừng hàm submit
+        }
+      }
+    }
+    // --- KẾT THÚC VALIDATION PHÍA CLIENT ---
+
     setSubmitting(true);
     setExamFinished(true);
     if (timerRef.current) {
       clearInterval(timerRef.current);
     }
-    setError(null);
+    setError(null); // Xóa lỗi sau khi validation thành công
 
     const timeTaken = exam.duration * 60 - timeRemaining; 
     
@@ -331,8 +361,8 @@ const ExamDetailPage = () => {
           if (q.type === 'multiple-choice') {
             initialAnswers[q._id] = ''; // Chuỗi rỗng cho trắc nghiệm
           } else if (q.type === 'true-false') {
-            // Khởi tạo mảng boolean cho 4 ý của câu hỏi Đúng/Sai
-            initialAnswers[q._id] = [false, false, false, false]; 
+            // Khởi tạo mảng null cho 4 ý của câu hỏi Đúng/Sai (mặc định không chọn gì)
+            initialAnswers[q._id] = [null, null, null, null]; 
           } else if (q.type === 'short-answer') {
             initialAnswers[q._id] = ''; // Chuỗi rỗng cho trả lời ngắn
           }
@@ -380,7 +410,7 @@ const ExamDetailPage = () => {
           newAnswers[questionId] = value;
         } else if (questionType === 'true-false') {
           // Đối với Đúng/Sai, value là boolean (true/false) cho ý cụ thể
-          const currentStatementsAnswers = [...(newAnswers[questionId] || [false, false, false, false])];
+          const currentStatementsAnswers = [...(newAnswers[questionId] || [null, null, null, null])]; // Đảm bảo khởi tạo với null
           currentStatementsAnswers[statementIndex] = value;
           newAnswers[questionId] = currentStatementsAnswers;
         }
@@ -486,6 +516,11 @@ const ExamDetailPage = () => {
               </div>
             ) : (
               <>
+                {error && submitting && ( // Hiển thị lỗi validation khi nộp bài
+                  <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+                    {error}
+                  </div>
+                )}
                 <h2 className="text-2xl font-bold text-gray-800 mb-4">Các câu hỏi:</h2>
                 {exam.questions && exam.questions.length > 0 ? (
                   <div className="space-y-6">
