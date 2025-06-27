@@ -1,80 +1,87 @@
 // physics-olympiad-website/backend/models/ExamResult.js
 const mongoose = require('mongoose');
 
-// Schema cho mỗi câu trả lời của người dùng trong một đề thi
+// Schema for each user answer in an exam
 const userAnswerSchema = mongoose.Schema({
-  questionId: { // ID của câu hỏi trong đề thi gốc (sẽ là _id của subdocument question)
+  questionId: { // ID of the question in the original exam (will be _id of the question subdocument)
     type: mongoose.Schema.Types.ObjectId,
     required: true,
   },
-  userAnswer: { // Đáp án người dùng chọn/nhập
+  userAnswer: { // User's selected/entered answer
     type: String,
     required: true,
   },
-  isCorrect: { // Kết quả: đúng hay sai
+  isCorrect: { // Result: correct or incorrect overall for the question
     type: Boolean,
     required: true,
   },
+  scoreAchieved: { // Points achieved for this specific question
+    type: Number,
+    required: false, // Not strictly required for old data, but good to have
+    default: 0,
+  }
 });
 
-// Schema cho kết quả làm bài của một đề thi
+// Schema for an exam submission result
 const examResultSchema = mongoose.Schema(
   {
-    user: { // Người dùng làm bài
+    user: { // User who took the exam
       type: mongoose.Schema.Types.ObjectId,
       required: true,
       ref: 'User',
     },
-    exam: { // Đề thi đã làm
+    exam: { // Exam taken
       type: mongoose.Schema.Types.ObjectId,
       required: true,
       ref: 'Exam',
     },
-    examTitle: { // Tiêu đề đề thi tại thời điểm làm bài (để hiển thị nhanh)
+    examTitle: { // Exam title at the time of submission (for quick display)
       type: String,
       required: true,
     },
-    examSlug: { // Slug đề thi tại thời điểm làm bài
+    examSlug: { // Exam slug at the time of submission
       type: String,
       required: true,
     },
-    score: { // Điểm số đạt được
+    score: { // Achieved score (e.g., on a 10-point scale, or total points if preferred)
       type: Number,
       required: true,
       min: 0,
     },
-    totalQuestions: { // Tổng số câu hỏi trong đề thi
+    // ============ THÊM TRƯỜNG MỚI NÀY ============
+    maxPossibleScore: { // Maximum possible score for the exam based on its scoringConfig
+      type: Number,
+      required: true, // This field is now required to match backend logic
+      min: 0,
+    },
+    // ============================================
+    totalQuestions: { // Total number of questions in the exam
       type: Number,
       required: true,
       min: 0,
     },
-    correctAnswersCount: { // Số câu trả lời đúng
+    correctAnswersCount: { // Number of questions answered correctly (overall)
       type: Number,
       required: true,
       min: 0,
     },
-    incorrectAnswersCount: { // Số câu trả lời sai
+    incorrectAnswersCount: { // Number of questions answered incorrectly (overall)
       type: Number,
       required: true,
       min: 0,
     },
-    // unansweredQuestionsCount: { // Có thể thêm nếu muốn theo dõi câu chưa trả lời
-    //   type: Number,
-    //   required: true,
-    //   min: 0,
-    // },
-    timeTaken: { // Thời gian làm bài (tính bằng giây)
+    timeTaken: { // Time taken to complete the exam (in seconds)
       type: Number,
       required: true,
       min: 0,
     },
-    userAnswers: { // Mảng các câu trả lời của người dùng
+    userAnswers: { // Array of user's answers
       type: [userAnswerSchema],
       default: [],
     },
   },
   {
-    timestamps: true, // Thêm createdAt, updatedAt
+    timestamps: true, // Add createdAt, updatedAt
   }
 );
 
