@@ -1,204 +1,247 @@
-// physics-olympiad-website/backend/controllers/examResultController.js
-const ExamResult = require('../models/ExamResult');
+// physics-olympiad-website/backend/controllers/examController.js
 const Exam = require('../models/Exam');
 const asyncHandler = require('express-async-handler');
 
-// @desc    Submit an exam result
-// @route   POST /api/exam-results
-// @access  Private (Authenticated users)
-const submitExamResult = asyncHandler(async (req, res) => {
-  const { examId, userAnswers, timeTaken } = req.body; // userAnswers is an array { questionId, userAnswer }
+// Helper function to generate slug
+const generateSlug = (text) => {
+  return text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^\w-]+/g, '')
+    .replace(/--+/g, '-');
+};
 
-  if (!examId || !userAnswers || !Array.isArray(userAnswers) || timeTaken === undefined) {
-    res.status(400);
-    throw new Error('Dữ liệu gửi lên không hợp lệ.');
-  }
+// @desc    Get ALL exams (for Admin Panel)
+// @route   GET /api/exams (This route will be protected for admin access)
+// @access  Private (Admin only)
+const getAdminExams = asyncHandler(async (req, res) => {
+  const exams = await Exam.find({}).sort({ createdAt: -1 }); 
+  console.log('Fetched ALL exams for Admin GET /api/exams:', exams); 
+  res.status(200).json(exams);
+});
 
-  const exam = await Exam.findById(examId);
+// @desc    Get published exams (for Public view)
+// @route   GET /api/exams/public (This route will be public)
+// @access  Public
+const getPublicExams = asyncHandler(async (req, res) => {
+  const exams = await Exam.find({ isPublished: true }).sort({ createdAt: -1 }); 
+  console.log('Fetched PUBLISHED exams for Public GET /api/exams/public:', exams); 
+  res.status(200).json(exams);
+});
+
+// @desc    Get single exam by slug
+// @route   GET /api/exams/slug/:slug
+// @access  Public (if published) or Private (if admin)
+const getExamBySlug = asyncHandler(async (req, res) => {
+  const exam = await Exam.findOne({ slug: req.params.slug });
 
   if (!exam) {
     res.status(404);
-    throw new Error('Đề thi không tìm thấy.');
+    throw new Error('Đề thi không tìm thấy');
   }
 
-  let totalScoreAchieved = 0; // Tổng điểm mà người dùng đạt được (trên thang điểm thực của đề thi)
-  let maxPossibleScoreOverall = 0;   // Tổng điểm tối đa có thể đạt được của đề thi (trên thang điểm thực)
-
-  let correctAnswersCount = 0; // Tổng số câu đúng hoàn toàn (cho thống kê)
-  let incorrectAnswersCount = 0; // Tổng số câu sai hoàn toàn (cho thống kê)
-
-  const processedUserAnswers = []; // Will store detailed user answers and correct/incorrect status for each question
-
-  // Lấy cấu hình điểm từ đề thi, nếu không có thì dùng mặc định
-  const scoringConfig = exam.scoringConfig || {
-    multipleChoice: 1,
-    shortAnswer: 1,
-    trueFalse: {
-      '1': 0.25,
-      '2': 0.5,
-      '3': 0.75,
-      '4': 1
+  // Nếu không phải admin, kiểm tra xem đề thi đã xuất bản chưa
+  if (!req.user || req.user.role !== 'admin') {
+    if (!exam.isPublished) {
+      res.status(403); // Forbidden
+      throw new Error('Đề thi này chưa được xuất bản và bạn không có quyền truy cập.');
     }
-  };
+  }
 
-  // Logic chấm điểm cho từng loại câu hỏi
-  exam.questions.forEach(examQuestion => {
-    const userResponse = userAnswers.find(ua => ua.questionId === examQuestion._id.toString());
-    let isQuestionCorrectOverall = false; // Flag indicating if this entire question is correct (used for correct/incorrectAnswersCount)
-    let scoreForThisQuestion = 0; // Điểm đạt được cho câu hỏi hiện tại
-
-    // Tính điểm tối đa cho câu hỏi này để cộng vào maxPossibleScoreOverall
-    switch (examQuestion.type) {
-      case 'multiple-choice':
-        maxPossibleScoreOverall += scoringConfig.multipleChoice;
-        break;
-      case 'short-answer':
-        maxPossibleScoreOverall += scoringConfig.shortAnswer;
-        break;
-      case 'true-false':
-        maxPossibleScoreOverall += scoringConfig.trueFalse['4']; // Điểm tối đa cho Đúng/Sai là khi đúng cả 4 ý
-        break;
-      default:
-        // Nếu loại câu hỏi không xác định, không cộng điểm vào maxPossibleScoreOverall
-        break;
-    }
-
-    if (!userResponse || (userResponse.userAnswer === null || userResponse.userAnswer === undefined || userResponse.userAnswer === '')) {
-      // If user doesn't answer or answers empty, count as incorrect for all question types
-      isQuestionCorrectOverall = false;
-      scoreForThisQuestion = 0; // scoreForThisQuestion remains 0
-    } else {
-      switch (examQuestion.type) {
-        case 'multiple-choice':
-          // Multiple-choice answer: direct string comparison (case-insensitive, trimmed)
-          isQuestionCorrectOverall = userResponse.userAnswer.trim().toLowerCase() === examQuestion.multipleChoiceCorrectAnswer.trim().toLowerCase();
-          if (isQuestionCorrectOverall) {
-            scoreForThisQuestion = scoringConfig.multipleChoice;
-          }
-          break;
-
-        case 'true-false':
-          // True/False answer: need to compare each statement
-          let userStatementsArray;
-          let correctStatementsInTF = 0; // Counter for correctly answered statements in a True/False question
-          try {
-            userStatementsArray = JSON.parse(userResponse.userAnswer); // Frontend sends JSON string of boolean array
-            if (!Array.isArray(userStatementsArray) || userStatementsArray.length !== 4) {
-              isQuestionCorrectOverall = false; // Incorrect format also counts as wrong
-            } else {
-              // Compare each statement
-              examQuestion.statements.forEach((stmt, index) => {
-                // Backend stores isCorrect as boolean, Frontend sends boolean after JSON parse
-                if (stmt.isCorrect === userStatementsArray[index]) {
-                  correctStatementsInTF++;
-                }
-              });
-              // Determine score for True/False based on correctStatementsInTF
-              // Use scoringConfig.trueFalse to get score, default to 0 if not defined for a specific count
-              scoreForThisQuestion = scoringConfig.trueFalse[correctStatementsInTF.toString()] || 0;
-              // For correctAnswersCount/incorrectAnswersCount, True/False is considered correct only if all 4 are correct
-              isQuestionCorrectOverall = (correctStatementsInTF === 4); 
-            }
-          } catch (e) {
-            // If JSON cannot be parsed, count as wrong
-            console.error("Error parsing true-false user answer JSON:", e);
-            isQuestionCorrectOverall = false;
-            scoreForThisQuestion = 0;
-          }
-          break;
-
-        case 'short-answer':
-          // Short answer: direct string comparison (case-insensitive, trimmed)
-          isQuestionCorrectOverall = userResponse.userAnswer.trim().toLowerCase() === examQuestion.shortAnswerCorrectAnswer.trim().toLowerCase();
-          if (isQuestionCorrectOverall) {
-            scoreForThisQuestion = scoringConfig.shortAnswer;
-          }
-          break;
-
-        default:
-          // Unknown question type, count as wrong
-          isQuestionCorrectOverall = false;
-          scoreForThisQuestion = 0;
-          break;
-      }
-    }
-
-    // Accumulate total score
-    totalScoreAchieved += scoreForThisQuestion;
-
-    // For overall correct/incorrect count (statistical purposes)
-    if (isQuestionCorrectOverall) {
-      correctAnswersCount++;
-    } else {
-      incorrectAnswersCount++;
-    }
-
-    processedUserAnswers.push({
-      questionId: examQuestion._id,
-      userAnswer: userResponse ? userResponse.userAnswer : '', // Store original user answer
-      isCorrect: isQuestionCorrectOverall, // Overall correct/incorrect status of the question (True for full score, False otherwise)
-      scoreAchieved: scoreForThisQuestion // Điểm người dùng đạt được cho câu này
-    });
-  });
-
-  const totalQuestions = exam.questions.length;
-  
-  // ===================== SỬA LỖI TÍNH FINAL SCORE =====================
-  // finalScore bây giờ sẽ là tổng điểm đạt được (totalScoreAchieved)
-  // Không quy đổi về thang 10 ở đây nữa.
-  let finalScore = Math.max(0, totalScoreAchieved); 
-  // ====================================================================
-
-  const examResult = await ExamResult.create({
-    user: req.user.id,
-    exam: exam._id,
-    examTitle: exam.title,
-    examSlug: exam.slug,
-    score: finalScore, // Lưu điểm dưới dạng số float (chính là totalScoreAchieved)
-    totalQuestions,
-    correctAnswersCount,
-    incorrectAnswersCount,
-    timeTaken,
-    userAnswers: processedUserAnswers,
-    maxPossibleScore: maxPossibleScoreOverall // Lưu tổng điểm tối đa thực tế (số float)
-  });
-
-  res.status(201).json(examResult);
+  res.status(200).json(exam);
 });
 
-// @desc    Get user's exam results (history)
-// @route   GET /api/exam-results/me
-// @access  Private (Authenticated users)
-const getMyExamResults = asyncHandler(async (req, res) => {
-  const results = await ExamResult.find({ user: req.user.id })
-    .populate('exam', 'title slug duration category questions scoringConfig') // Populate scoringConfig too
-    .sort({ createdAt: -1 });
+// @desc    Get single exam by ID (for admin edit)
+// @route   GET /api/exams/:id
+// @access  Private (Admin only)
+const getExamById = asyncHandler(async (req, res) => {
+  const exam = await Exam.findById(req.params.id);
 
-  res.status(200).json(results);
-});
-
-// @desc    Get a single exam result by ID
-// @route   GET /api/exam-results/:id
-// @access  Private (Authenticated user who owns the result, or Admin)
-const getExamResultById = asyncHandler(async (req, res) => {
-  // Populate exam with all necessary fields, including questions and scoringConfig
-  const result = await ExamResult.findById(req.params.id).populate('exam');
-
-  if (!result) {
+  if (!exam) {
     res.status(404);
-    throw new Error('Kết quả bài thi không tìm thấy.');
+    throw new Error('Đề thi không tìm thấy');
   }
 
-  if (result.user.toString() !== req.user.id && req.user.role !== 'admin') {
-    res.status(403);
-    throw new Error('Bạn không có quyền xem kết quả bài thi này.');
+  res.status(200).json(exam);
+});
+
+// Hàm hỗ trợ validation cho từng loại câu hỏi
+const validateQuestion = (question) => {
+  const { type, questionText, options, multipleChoiceCorrectAnswer, statements, shortAnswerCorrectAnswer } = question;
+
+  if (!questionText || questionText.trim() === '') {
+    return 'Nội dung câu hỏi không được để trống.';
   }
 
-  res.status(200).json(result);
+  switch (type) {
+    case 'multiple-choice':
+      if (!options || options.filter(opt => opt.trim() !== '').length < 2) {
+        return 'Câu hỏi trắc nghiệm phải có ít nhất 2 lựa chọn đã điền.';
+      }
+      if (!multipleChoiceCorrectAnswer || multipleChoiceCorrectAnswer.trim() === '') {
+        return 'Vui lòng cung cấp đáp án đúng cho câu hỏi trắc nghiệm.';
+      }
+      if (!options.map(opt => opt.toLowerCase().trim()).includes(multipleChoiceCorrectAnswer.toLowerCase().trim())) {
+        return `Đáp án đúng "${multipleChoiceCorrectAnswer}" không phải là một lựa chọn hợp lệ.`;
+      }
+      break;
+    case 'true-false':
+      if (!statements || statements.length !== 4) {
+        return 'Câu hỏi Đúng/Sai phải có đúng 4 ý.';
+      }
+      for (const stmt of statements) {
+        if (!stmt.statementText || stmt.statementText.trim() === '') {
+          return 'Nội dung của một ý trong câu hỏi Đúng/Sai không được để trống.';
+        }
+        if (typeof stmt.isCorrect !== 'boolean') { // Kiểm tra kiểu boolean rõ ràng
+          return 'Đáp án Đúng/Sai cho mỗi ý phải là Đúng hoặc Sai.';
+        }
+      }
+      break;
+    case 'short-answer':
+      if (!shortAnswerCorrectAnswer || shortAnswerCorrectAnswer.trim() === '') {
+        return 'Vui lòng cung cấp đáp án cho câu hỏi trả lời ngắn.';
+      }
+      // Regex: chỉ chứa số (0-9), dấu "-" và dấu ",". Tối đa 4 ký tự.
+      if (!/^[0-9,-]{1,4}$/.test(shortAnswerCorrectAnswer.trim())) {
+        return 'Đáp án trả lời ngắn phải có tối đa 4 ký tự và chỉ chứa số (0-9), dấu "-" và dấu ",".';
+      }
+      break;
+    default:
+      return 'Loại câu hỏi không hợp lệ.';
+  }
+  return null; // Không có lỗi
+};
+
+
+// @desc    Create new exam
+// @route   POST /api/exams
+// @access  Private (Admin only)
+const createExam = asyncHandler(async (req, res) => {
+  // THÊM scoringConfig VÀO ĐÂY
+  const { title, description, duration, category, questions, isPublished, scoringConfig } = req.body;
+
+  const slug = generateSlug(title);
+
+  // Validate overall exam fields
+  if (!title || !duration || !category) {
+    res.status(400);
+    throw new Error('Vui lòng thêm tiêu đề, thời gian, và danh mục.');
+  }
+
+  // Validate questions array
+  if (!questions || questions.length === 0) {
+    res.status(400);
+    throw new Error('Đề thi phải có ít nhất một câu hỏi.');
+  }
+
+  // Validate each question individually
+  for (const q of questions) {
+    const validationError = validateQuestion(q);
+    if (validationError) {
+      res.status(400);
+      throw new Error(`Lỗi ở câu hỏi: ${validationError}`);
+    }
+  }
+
+  const examExists = await Exam.findOne({ slug });
+  if (examExists) {
+    res.status(400);
+    throw new Error('Đã tồn tại một đề thi với slug này, vui lòng chọn tiêu đề khác.');
+  }
+
+  const exam = await Exam.create({
+    title,
+    slug,
+    description,
+    duration,
+    category,
+    questions, // Mongoose sẽ tự động áp dụng schema con và validation
+    user: req.user ? req.user.id : null,
+    isPublished: isPublished || false,
+    scoringConfig: scoringConfig // LƯU TRƯỜNG scoringConfig VÀO ĐÂY
+  });
+
+  res.status(201).json(exam);
+});
+
+// @desc    Update an exam
+// @route   PUT /api/exams/:id
+// @access  Private (Admin only)
+const updateExam = asyncHandler(async (req, res) => {
+  // THÊM scoringConfig VÀO ĐÂY
+  const { title, slug, description, duration, category, questions, isPublished, scoringConfig } = req.body;
+
+  const exam = await Exam.findById(req.params.id);
+
+  if (!exam) {
+    res.status(404);
+    throw new Error('Đề thi không tìm thấy');
+  }
+
+  // Validate slug uniqueness only if it's changed and conflicts with another exam
+  if (slug && slug !== exam.slug) {
+    const slugExists = await Exam.findOne({ slug });
+    if (slugExists && slugExists._id.toString() !== req.params.id) {
+      res.status(400);
+      throw new Error('Đã tồn tại một đề thi khác với slug này.');
+    }
+  }
+
+  // Validate questions array
+  if (!questions || questions.length === 0) {
+    res.status(400);
+    throw new Error('Đề thi phải có ít nhất một câu hỏi.');
+  }
+
+  // Validate each question individually
+  for (const q of questions) {
+    const validationError = validateQuestion(q);
+    if (validationError) {
+      res.status(400);
+      throw new Error(`Lỗi ở câu hỏi: ${validationError}`);
+    }
+  }
+
+  // Update exam fields
+  exam.title = title || exam.title;
+  exam.slug = slug || exam.slug;
+  exam.description = description !== undefined ? description : exam.description;
+  exam.duration = duration || exam.duration;
+  exam.category = category || exam.category;
+  exam.questions = questions; // Cập nhật mảng câu hỏi
+  exam.isPublished = isPublished !== undefined ? isPublished : exam.isPublished;
+  exam.scoringConfig = scoringConfig; // LƯU TRƯỜNG scoringConfig VÀO ĐÂY
+
+  const updatedExam = await exam.save(); // Sử dụng .save() để kích hoạt validation của schema con
+
+  res.status(200).json(updatedExam);
+});
+
+// @desc    Delete an exam
+// @route   DELETE /api/exams/:id
+// @access  Private (Admin only)
+const deleteExam = asyncHandler(async (req, res) => {
+  const exam = await Exam.findById(req.params.id);
+
+  if (!exam) {
+    res.status(404);
+    throw new Error('Đề thi không tìm thấy');
+  }
+
+  await exam.deleteOne();
+  res.status(200).json({ message: 'Đề thi đã được xóa thành công.' });
 });
 
 module.exports = {
-  submitExamResult,
-  getMyExamResults,
-  getExamResultById,
+  getAdminExams,
+  getPublicExams,
+  getExamBySlug,
+  getExamById,
+  createExam,
+  updateExam,
+  deleteExam,
 };
