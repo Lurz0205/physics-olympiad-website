@@ -2,7 +2,6 @@
 const mongoose = require('mongoose');
 
 // Định nghĩa Schema cho một câu hỏi trắc nghiệm
-// Đây là một sub-document, sẽ được nhúng trực tiếp vào Exam Schema
 const questionSchema = mongoose.Schema({
   questionText: { // Nội dung câu hỏi (hỗ trợ Markdown/LaTeX)
     type: String,
@@ -24,7 +23,9 @@ const questionSchema = mongoose.Schema({
     validate: {
       validator: function(v) {
         // Đáp án đúng phải nằm trong danh sách các lựa chọn
-        return this.options.includes(v);
+        // Lưu ý: so sánh không phân biệt hoa/thường và trim khoảng trắng
+        // Để linh hoạt hơn, có thể dùng toLowerCase().trim() cho cả v và this.options[i]
+        return this.options.map(opt => opt.toLowerCase().trim()).includes(v.toLowerCase().trim());
       },
       message: 'Đáp án đúng phải là một trong các lựa chọn đã cho'
     }
@@ -46,7 +47,7 @@ const examSchema = mongoose.Schema(
     slug: { // Slug duy nhất cho URL thân thiện
       type: String,
       required: [true, 'Vui lòng thêm slug cho đề thi'],
-      unique: true,
+      unique: true, // Đảm bảo slug là duy nhất
       trim: true,
       lowercase: true,
     },
