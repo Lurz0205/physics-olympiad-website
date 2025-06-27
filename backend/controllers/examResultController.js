@@ -22,7 +22,7 @@ const submitExamResult = asyncHandler(async (req, res) => {
   }
 
   let totalScoreAchieved = 0; // Tổng điểm mà người dùng đạt được
-  let maxPossibleScore = 0;   // Tổng điểm tối đa có thể đạt được của đề thi
+  let maxPossibleScoreOverall = 0;   // Tổng điểm tối đa có thể đạt được của đề thi (trên thang điểm thực)
 
   let correctAnswersCount = 0; // Tổng số câu đúng hoàn toàn (cho thống kê)
   let incorrectAnswersCount = 0; // Tổng số câu sai hoàn toàn (cho thống kê)
@@ -31,12 +31,12 @@ const submitExamResult = asyncHandler(async (req, res) => {
 
   // Lấy cấu hình điểm từ đề thi, nếu không có thì dùng mặc định
   const scoringConfig = exam.scoringConfig || {
-    multipleChoice: 1,
-    shortAnswer: 1,
+    multipleChoice: 0.25,
+    shortAnswer: 0.5,
     trueFalse: {
-      '1': 0.25,
-      '2': 0.5,
-      '3': 0.75,
+      '1': 0.1,
+      '2': 0.25,
+      '3': 0.5,
       '4': 1
     }
   };
@@ -44,29 +44,29 @@ const submitExamResult = asyncHandler(async (req, res) => {
   // Logic chấm điểm cho từng loại câu hỏi
   exam.questions.forEach(examQuestion => {
     const userResponse = userAnswers.find(ua => ua.questionId === examQuestion._id.toString());
-    let isQuestionCorrectOverall = false; // Flag indicating if this entire question is correct
+    let isQuestionCorrectOverall = false; // Flag indicating if this entire question is correct (used for correct/incorrectAnswersCount)
     let scoreForThisQuestion = 0; // Điểm đạt được cho câu hỏi hiện tại
 
-    // Tính điểm tối đa cho câu hỏi này để cộng vào maxPossibleScore
+    // Tính điểm tối đa cho câu hỏi này để cộng vào maxPossibleScoreOverall
     switch (examQuestion.type) {
       case 'multiple-choice':
-        maxPossibleScore += scoringConfig.multipleChoice;
+        maxPossibleScoreOverall += scoringConfig.multipleChoice;
         break;
       case 'short-answer':
-        maxPossibleScore += scoringConfig.shortAnswer;
+        maxPossibleScoreOverall += scoringConfig.shortAnswer;
         break;
       case 'true-false':
-        maxPossibleScore += scoringConfig.trueFalse['4']; // Điểm tối đa cho Đúng/Sai là khi đúng cả 4 ý
+        maxPossibleScoreOverall += scoringConfig.trueFalse['4']; // Điểm tối đa cho Đúng/Sai là khi đúng cả 4 ý
         break;
       default:
-        // Nếu loại câu hỏi không xác định, không cộng điểm vào maxPossibleScore
+        // Nếu loại câu hỏi không xác định, không cộng điểm vào maxPossibleScoreOverall
         break;
     }
 
     if (!userResponse || (userResponse.userAnswer === null || userResponse.userAnswer === undefined || userResponse.userAnswer === '')) {
       // If user doesn't answer or answers empty, count as incorrect for all question types
       isQuestionCorrectOverall = false;
-      // scoreForThisQuestion remains 0
+      scoreForThisQuestion = 0; // scoreForThisQuestion remains 0
     } else {
       switch (examQuestion.type) {
         case 'multiple-choice':
@@ -96,8 +96,8 @@ const submitExamResult = asyncHandler(async (req, res) => {
               // Determine score for True/False based on correctStatementsInTF
               // Use scoringConfig.trueFalse to get score, default to 0 if not defined for a specific count
               scoreForThisQuestion = scoringConfig.trueFalse[correctStatementsInTF.toString()] || 0;
-              // A True/False question is "correct overall" only if all 4 statements are correct
-              isQuestionCorrectOverall = (correctStatementsInTF === 4);
+              // For correctAnswersCount/incorrectAnswersCount, True/False is considered correct only if all 4 are correct
+              isQuestionCorrectOverall = (correctStatementsInTF === 4); 
             }
           } catch (e) {
             // If JSON cannot be parsed, count as wrong
@@ -126,7 +126,7 @@ const submitExamResult = asyncHandler(async (req, res) => {
     // Accumulate total score
     totalScoreAchieved += scoreForThisQuestion;
 
-    // For overall correct/incorrect count (statistical purposes, not directly used for 'score')
+    // For overall correct/incorrect count (statistical purposes)
     if (isQuestionCorrectOverall) {
       correctAnswersCount++;
     } else {
@@ -142,29 +142,29 @@ const submitExamResult = asyncHandler(async (req, res) => {
   });
 
   const totalQuestions = exam.questions.length;
-  // Final score is totalScoreAchieved.
-  // We can convert this to a 10-point scale or display it directly.
-  // For consistency, let's keep it on a 10-point scale if totalPossibleScore > 0, otherwise directly use totalScoreAchieved
-  let finalScore = totalScoreAchieved;
-  if (maxPossibleScore > 0) {
-      finalScore = (totalScoreAchieved / maxPossibleScore) * 10;
+  
+  // ===================== SỬA LỖI LÀM TRÒN ĐIỂM =====================
+  // finalScore là điểm quy đổi về thang 10
+  let finalScore = 0; 
+  if (maxPossibleScoreOverall > 0) {
+      finalScore = (totalScoreAchieved / maxPossibleScoreOverall) * 10;
   }
-  // Ensure score is not negative and fixed to 2 decimal places
-  finalScore = Math.max(0, finalScore).toFixed(2);
-
+  // Giữ nguyên là số, không làm tròn bằng toFixed ở đây
+  finalScore = Math.max(0, finalScore); 
+  // =================================================================
 
   const examResult = await ExamResult.create({
     user: req.user.id,
     exam: exam._id,
     examTitle: exam.title,
     examSlug: exam.slug,
-    score: parseFloat(finalScore), // Store as number for better calculation/analysis later
+    score: finalScore, // Lưu điểm dưới dạng số float
     totalQuestions,
     correctAnswersCount,
     incorrectAnswersCount,
     timeTaken,
     userAnswers: processedUserAnswers,
-    maxPossibleScore: parseFloat(maxPossibleScore.toFixed(2)) // Store max possible score
+    maxPossibleScore: maxPossibleScoreOverall // Lưu tổng điểm tối đa thực tế (số float)
   });
 
   res.status(201).json(examResult);
