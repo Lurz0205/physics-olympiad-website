@@ -23,22 +23,22 @@ export function AuthProvider({ children }) {
           const data = await response.json();
           setUser(data);
           setToken(authToken);
-          if (typeof window !== 'undefined') { // Chỉ truy cập localStorage trên client
+          if (typeof window !== 'undefined') {
             localStorage.setItem('token', authToken);
           }
           console.log('User loaded from token:', data);
         } else {
           console.error('Token invalid or expired. Logging out.');
-          logout(); // Tự động đăng xuất nếu token không hợp lệ
+          logout();
         }
       } catch (err) {
         console.error('Error verifying token:', err);
-        logout(); // Đăng xuất nếu có lỗi mạng hoặc lỗi khác
+        logout();
       }
     } else {
       setUser(null);
       setToken(null);
-      if (typeof window !== 'undefined') { // Chỉ truy cập localStorage trên client
+      if (typeof window !== 'undefined') {
         localStorage.removeItem('token');
       }
     }
@@ -46,7 +46,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') { // Chỉ chạy trên client
+    if (typeof window !== 'undefined') {
       const storedToken = localStorage.getItem('token');
       if (storedToken) {
         loadUserFromToken(storedToken);
@@ -54,19 +54,20 @@ export function AuthProvider({ children }) {
         setAuthLoading(false);
       }
     } else {
-      setAuthLoading(false); // Trên server, đặt loading thành false ngay lập tức
+      setAuthLoading(false);
     }
   }, [loadUserFromToken]);
 
-  const login = async (email, password) => {
-    setAuthLoading(true); // Bắt đầu loading khi cố gắng đăng nhập
+  // THAY ĐỔI QUAN TRỌNG: Đổi 'email' thành 'identifier' trong tham số và body
+  const login = async (identifier, password) => { 
+    setAuthLoading(true);
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ identifier, password }), // Gửi 'identifier' và 'password'
       });
 
       const data = await response.json();
@@ -75,20 +76,20 @@ export function AuthProvider({ children }) {
         throw new Error(data.message || 'Đăng nhập thất bại.');
       }
 
-      await loadUserFromToken(data.token); // Tải người dùng và lưu token
+      await loadUserFromToken(data.token);
       return data;
     } catch (err) {
       console.error('Login error:', err);
-      throw err; // Ném lỗi để component gọi có thể bắt
+      throw err;
     } finally {
-      setAuthLoading(false); // Kết thúc loading
+      setAuthLoading(false);
     }
   };
 
   const logout = () => {
     setUser(null);
     setToken(null);
-    if (typeof window !== 'undefined') { // Chỉ truy cập localStorage trên client
+    if (typeof window !== 'undefined') {
       localStorage.removeItem('token');
     }
     router.push('/login');
