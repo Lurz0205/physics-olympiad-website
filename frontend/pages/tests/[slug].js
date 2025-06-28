@@ -142,61 +142,36 @@ const ResultDisplay = ({ result, examData, formatTime }) => {
                 <div className="space-y-2 mb-4">
                   <p className="text-gray-700 font-semibold mb-2">Đáp án của bạn cho mỗi ý:</p>
                   {q.statements.map((stmt, stmtIndex) => {
-                    // Lấy đáp án của người dùng cho từng ý (kiểm tra parse an toàn)
-                    let userStatementsArray;
-                    try {
-                        userStatementsArray = userAnswerEntry && userAnswerEntry.userAnswer 
-                                               ? JSON.parse(userAnswerEntry.userAnswer) 
-                                               : [];
-                    } catch (e) {
-                        console.error("Failed to parse true-false user answer JSON:", e);
-                        userStatementsArray = [];
-                    }
-                    const userStatementAnswer = userStatementsArray[stmtIndex]; 
-                    
-                    // Xác định xem người dùng trả lời đúng hay sai cho ý này
-                    const isCorrectStatement = stmt.isCorrect === userStatementAnswer;
-
-                    // Class cho từng ý Đúng/Sai
-                    let statementClass = 'flex items-center space-x-3 p-3 rounded-md border text-gray-800';
-                    if (isCorrectStatement) {
-                      statementClass += ' bg-green-100 border-green-300'; // Đáp án đúng
-                    } else {
-                      statementClass += ' bg-red-100 border-red-300'; // Đáp án sai
-                    }
-
+                    // Lấy đáp án hiện tại của người dùng cho ý này
+                    const currentUserAnswerForStatement = userAnswers[q._id] ? userAnswers[q._id][stmtIndex] : null;
                     return (
-                      <div key={stmtIndex} className={statementClass}>
-                        <span className="text-base flex-grow">
-                          {String.fromCharCode(97 + stmtIndex)}) <MathContent content={stmt.statementText} />
-                        </span>
-                        <div className="flex items-center space-x-4">
-                          {/* Hiển thị đáp án của người dùng */}
-                          <label className="flex items-center cursor-default">
-                              <input 
-                                  type="radio" 
-                                  checked={userStatementAnswer === true} 
-                                  disabled 
-                                  className={`h-5 w-5 ${isCorrectStatement ? 'text-green-600' : 'text-red-600'}`}
-                              />
-                              <span className={`ml-2 ${userStatementAnswer === true ? (isCorrectStatement ? 'font-bold text-green-700' : 'font-bold text-red-700') : 'text-gray-500'}`}>
-                                  Đúng
-                              </span>
-                          </label>
-                          
-                          <label className="flex items-center cursor-default">
-                              <input 
-                                  type="radio" 
-                                  checked={userStatementAnswer === false} 
-                                  disabled 
-                                  className={`h-5 w-5 ${isCorrectStatement ? 'text-green-600' : 'text-red-600'}`}
-                              />
-                              <span className={`ml-2 ${userStatementAnswer === false ? (isCorrectStatement ? 'font-bold text-green-700' : 'font-bold text-red-700') : 'text-gray-500'}`}>
-                                  Sai
-                              </span>
-                          </label>
+                        <div key={stmtIndex} className="flex items-center space-x-3 p-3 rounded-md border border-gray-300 bg-white">
+                            <span className="text-base text-gray-800 flex-grow">
+                                {String.fromCharCode(97 + stmtIndex)}) <MathContent content={stmt.statementText} />
+                            </span>
+                            <div className="flex items-center space-x-4">
+                                <label className="flex items-center cursor-pointer">
+                                    <input
+                                        type="radio"
+                                        name={`question-${q._id}-statement-${stmtIndex}`} // Đảm bảo unique name cho mỗi cặp radio của ý con
+                                        checked={currentUserAnswerForStatement === true}
+                                        onChange={() => handleAnswerChange(q._id, true, q.type, stmtIndex)}
+                                        className="form-radio h-4 w-4 text-blue-600"
+                                    />
+                                    <span className={`ml-2 ${currentUserAnswerForStatement === true ? 'font-bold text-blue-800' : 'text-gray-800'}`}>Đúng</span>
+                                </label>
+                                <label className="flex items-center cursor-pointer">
+                                    <input
+                                        type="radio"
+                                        name={`question-${q._id}-statement-${stmtIndex}`}
+                                        checked={currentUserAnswerForStatement === false}
+                                        onChange={() => handleAnswerChange(q._id, false, q.type, stmtIndex)}
+                                        className="form-radio h-4 w-4 text-blue-600"
+                                    />
+                                    <span className={`ml-2 ${currentUserAnswerForStatement === false ? 'font-bold text-blue-800' : 'text-gray-800'}`}>Sai</span>
+                                </label>
+                            </div>
                         </div>
-                      </div>
                     );
                   })}
                 </div>
@@ -362,6 +337,10 @@ const ExamDetailPage = () => {
         throw new Error(resultData.message || 'Lỗi khi nộp bài thi.');
       }
       setExamResult(resultData);
+
+      // THÊM DÒNG NÀY ĐỂ CUỘN LÊN ĐẦU TRANG
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
     } catch (err) {
       console.error('Lỗi khi nộp bài thi:', err);
       // Giữ examFinished = false và hiển thị lỗi để người dùng có thể thử lại
@@ -542,7 +521,7 @@ const ExamDetailPage = () => {
                 Thời lượng: {exam.duration} phút
               </span>
               {exam.isPublished ? (
-                <span className="bg-green-100 text-green-800 py-1 px-3 rounded-full text-sm font-semibold">
+                <span className="bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
                   Đã xuất bản
                 </span>
               ) : (
