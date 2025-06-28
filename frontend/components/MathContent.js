@@ -9,16 +9,22 @@ import remarkGfm from 'remark-gfm'; // Plugin để hỗ trợ GitHub Flavored M
 // VUI LÒNG KIỂM TRA VÀ THÊM DÒNG SAU VÀO frontend/pages/_app.js của bạn:
 // import 'katex/dist/katex.min.css';
 
+// Hàm xử lý lỗi KaTeX
+const handleKatexError = (error) => {
+  console.error("KaTeX rendering error:", error);
+  // Bạn có thể hiển thị một thông báo lỗi thân thiện hơn cho người dùng ở đây
+  // Ví dụ: return `<span style="color: red;">[Lỗi biểu thức toán học: ${error.message}]</span>`;
+  // Hiện tại, chúng ta chỉ log ra console để debug.
+};
+
 const MathContent = ({ content }) => {
   if (!content) return null;
 
   return (
-    // THAY ĐỔI TẠI ĐÂY: Đã bỏ 'inline-block' khỏi className
-    // Việc này giúp các biểu thức toán học dạng khối ($$...$$) được render đúng là block element và căn giữa
     <div className="math-content-container"> 
       <ReactMarkdown
         remarkPlugins={[remarkMath, remarkGfm]}
-        rehypePlugins={[rehypeKatex]}
+        rehypePlugins={[[rehypeKatex, { errorCallback: handleKatexError }]]} // THAY ĐỔI: Thêm errorCallback
         children={content}
       />
     </div>
