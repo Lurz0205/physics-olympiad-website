@@ -23,6 +23,17 @@ const ResultDisplay = ({ result, examData, formatTime }) => {
     );
   }
 
+  // Effect để cuộn lên đầu trang khi ResultDisplay được render
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      // Đặt timeout nhỏ để đảm bảo DOM đã cập nhật hoàn chỉnh
+      const timer = setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 100); // 100ms có thể đủ để React cập nhật DOM
+      return () => clearTimeout(timer); // Cleanup timeout
+    }
+  }, [result]); // Chạy lại khi có kết quả mới
+
   // Sử dụng giá trị 0 nếu result.maxPossibleScore là undefined/null hoặc 0 để tránh chia cho 0
   const actualMaxPossibleScore = result.maxPossibleScore !== undefined && result.maxPossibleScore > 0 ? result.maxPossibleScore : 0;
   // Score cũng cần kiểm tra để tránh .toFixed trên undefined
@@ -341,10 +352,10 @@ const ExamDetailPage = () => {
       setExamResult(resultData);
       setExamFinished(true); // Set exam finished ONLY on successful submission
 
-      // Cuộn lên đầu trang sau khi nộp bài thành công
-      if (typeof window !== 'undefined') {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
+      // // Removed window.scrollTo from here, moved to ResultDisplay component's useEffect
+      // if (typeof window !== 'undefined') {
+      //   window.scrollTo({ top: 0, behavior: 'smooth' });
+      // }
 
     } catch (err) {
       console.error('Lỗi khi nộp bài thi:', err);
