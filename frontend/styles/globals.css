@@ -34,12 +34,6 @@ a {
   Mục tiêu: Đảm bảo kích thước, khoảng cách và căn chỉnh tốt hơn
 */
 
-/* Đảm bảo .katex và .katex-html vẫn là inline-block cho inline math */
-.katex, .katex-html {
-  display: inline-block; 
-  white-space: nowrap;
-}
-
 /* Kích thước tổng thể cho các biểu thức KaTeX */
 .katex {
   font-size: 1.15em; /* Tăng kích thước font tổng thể cho KaTeX */
@@ -51,23 +45,23 @@ a {
   line-height: 1; /* Đảm bảo KaTeX không tự thêm line-height */
 }
 
-/* Khoảng cách cho các biểu thức toán học dạng khối (display math) */
-.katex-display {
+/* Khoảng cách cho các biểu thức toán học dạng khối được render trực tiếp */
+.katex-display-direct { /* THAY ĐỔI: Sử dụng class mới */
   display: block;       /* Đảm bảo nó là block element */
   margin-top: 1.2em;    /* Khoảng cách trên */
   margin-bottom: 1.2em; /* Khoảng cách dưới */
   overflow-x: auto;     /* Thêm scroll ngang nếu biểu thức quá dài */
   padding: 0.5em 0;     /* Thêm padding nhẹ */
-  /* text-align: center; */ /* Bỏ text-align ở đây để dùng margin auto trên phần tử con */
+  text-align: center;   /* Căn giữa nội dung HTML của KaTeX */
+  width: 100%;          /* Đảm bảo nó chiếm đủ chiều rộng */
 }
 
-/* THAY ĐỔI MỚI VÀ QUAN TRỌNG NHẤT: Căn giữa nội dung KaTeX bên trong display math */
-.katex-display > .katex {
-    display: block;       /* Biến phần tử .katex con thành block */
-    margin: 0 auto;       /* Dùng margin auto để căn giữa */
-    white-space: normal;  /* Cho phép ngắt dòng nếu cần */
-    max-width: 100%;      /* Đảm bảo không tràn ra ngoài */
+/* KaTeX tạo ra một <div> với class "katex-display" bên trong. 
+   Chúng ta cần đảm bảo KaTeX gốc đó cũng được căn giữa */
+.katex-display-direct > .katex-display {
+    text-align: center; /* Căn giữa nội dung KaTeX bên trong */
 }
+
 
 /* Đảm bảo các ký tự và số trong KaTeX có màu sắc tương phản tốt */
 .katex .mord {
