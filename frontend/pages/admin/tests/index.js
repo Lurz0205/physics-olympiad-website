@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
-// useRouter không cần thiết trực tiếp ở đây
 import { useAuth } from '../../../context/AuthContext'; 
 
 const AdminTestsPage = () => {
@@ -13,13 +12,6 @@ const AdminTestsPage = () => {
   const [deletingId, setDeletingId] = useState(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState(null);
-
-  // THAY ĐỔI: LOẠI BỎ logic kiểm tra user.role ở đây, AdminLayout đã xử lý
-  // useEffect(() => {
-  //   if (user && user.role !== 'admin') {
-  //     router.push('/login');
-  //   }
-  // }, [user, router]);
 
   const fetchExams = useCallback(async () => {
     if (!token) return;
@@ -93,9 +85,6 @@ const AdminTestsPage = () => {
     setDeletingId(null);
   };
 
-  // THAY ĐỔI: LOẠI BỎ logic kiểm tra user.role ở đây
-  // if (!user || user.role !== 'admin') { return null; }
-
   return (
     <>
       <Head>
@@ -165,8 +154,13 @@ const AdminTestsPage = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {exams.map((exam) => (
                   <tr key={exam._id}>
+                    {/* THAY ĐỔI: Tiêu đề có thể nhấp */}
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{exam.title}</div>
+                      <Link href={`/tests/${exam.slug}`} passHref>
+                        <a className="text-sm font-medium text-blue-600 hover:text-blue-900 hover:underline">
+                          {exam.title}
+                        </a>
+                      </Link>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-500">{exam.slug}</div>
@@ -186,7 +180,8 @@ const AdminTestsPage = () => {
                         <span className="text-red-600 font-bold">✖</span>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium"> {/* Căn giữa các nút hành động */}
+                      {/* Nút Chỉnh sửa */}
                       <Link href={`/admin/tests/edit/${exam._id}`}>
                         <a className="text-indigo-600 hover:text-indigo-900 mr-3 p-2 rounded-full hover:bg-indigo-50 transition duration-150" title="Chỉnh sửa">
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 inline-block" viewBox="0 0 20 20" fill="currentColor">
@@ -194,6 +189,7 @@ const AdminTestsPage = () => {
                           </svg>
                         </a>
                       </Link>
+                      {/* Nút Xóa */}
                       <button
                         onClick={() => handleDeleteClick(exam._id)}
                         className="text-red-600 hover:text-red-900 p-2 rounded-full hover:bg-red-50 transition duration-150"
