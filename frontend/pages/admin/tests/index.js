@@ -154,7 +154,7 @@ const AdminTestsPage = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {exams.map((exam) => (
                   <tr key={exam._id}>
-                    {/* THAY ĐỔI: Tiêu đề có thể nhấp */}
+                    {/* Tiêu đề có thể nhấp */}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <Link href={`/tests/${exam.slug}`} passHref>
                         <a className="text-sm font-medium text-blue-600 hover:text-blue-900 hover:underline">
@@ -180,25 +180,29 @@ const AdminTestsPage = () => {
                         <span className="text-red-600 font-bold">✖</span>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium"> {/* Căn giữa các nút hành động */}
-                      {/* Nút Chỉnh sửa */}
-                      <Link href={`/admin/tests/edit/${exam._id}`}>
-                        <a className="text-indigo-600 hover:text-indigo-900 mr-3 p-2 rounded-full hover:bg-indigo-50 transition duration-150" title="Chỉnh sửa">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 inline-block" viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M13.586 3.586a2 2 0 112.828 2.828l-7.664 7.664a1 1 0 01-.328.232l-3 1a1 1 0 01-1.264-1.264l1-3a1 1 0 01.232-.328l7.664-7.664zM16 17v-1.586l-7.664-7.664-2.828 2.828 7.664 7.664H16z" />
+                    <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                      {/* BẮT ĐẦU THAY ĐỔI NÚT HÀNH ĐỘNG */}
+                      <div className="flex item-center justify-center space-x-2"> {/* Thêm flex container để căn giữa và tạo khoảng cách */}
+                        {/* Nút Chỉnh sửa */}
+                        <Link href={`/admin/tests/edit/${exam._id}`}>
+                          <a className="w-8 h-8 rounded-full bg-blue-100 hover:bg-blue-200 text-blue-600 flex items-center justify-center transition-colors duration-200" title="Sửa">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                            </svg>
+                          </a>
+                        </Link>
+                        {/* Nút Xóa */}
+                        <button
+                          onClick={() => handleDeleteClick(exam._id)}
+                          className="w-8 h-8 rounded-full bg-red-100 hover:bg-red-200 text-red-600 flex items-center justify-center transition-colors duration-200"
+                          title="Xóa"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                           </svg>
-                        </a>
-                      </Link>
-                      {/* Nút Xóa */}
-                      <button
-                        onClick={() => handleDeleteClick(exam._id)}
-                        className="text-red-600 hover:text-red-900 p-2 rounded-full hover:bg-red-50 transition duration-150"
-                        title="Xóa"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 inline-block" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm6 0a1 1 0 11-2 0v6a1 1 0 112 0V8z" clipRule="evenodd" />
-                        </svg>
-                      </button>
+                        </button>
+                      </div>
+                      {/* KẾT THÚC THAY ĐỔI NÚT HÀNH ĐỘNG */}
                     </td>
                   </tr>
                 ))}
