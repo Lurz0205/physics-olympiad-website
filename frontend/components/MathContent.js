@@ -6,7 +6,7 @@ import remarkGfm from 'remark-gfm'; // Plugin để hỗ trợ GitHub Flavored M
 import katex from 'katex'; // THAY ĐỔI MỚI QUAN TRỌNG: Import thư viện KaTeX trực tiếp
 
 // QUAN TRỌNG: Đảm bảo CSS của KaTeX được import toàn cục.
-// VUI LÒNG KIỂM TRA VÀ THÊM DÒNG SAU VÀO frontend/pages/_app.js của bạn:
+// Dòng sau phải có trong frontend/pages/_app.js của bạn:
 // import 'katex/dist/katex.min.css';
 
 const MathContent = ({ content }) => {
@@ -17,7 +17,7 @@ const MathContent = ({ content }) => {
       <ReactMarkdown
         remarkPlugins={[remarkMath, remarkGfm]}
         // THAY ĐỔI QUAN TRỌNG: Render toán học trực tiếp thông qua 'components'
-        // Bỏ rehypePlugins vì chúng ta sẽ tự xử lý rendering
+        // Loại bỏ rehypePlugins vì chúng ta sẽ tự xử lý rendering KaTeX
         components={{
           // Custom renderer cho biểu thức toán học dạng khối ($$...$$)
           math: ({ value }) => {
@@ -27,20 +27,20 @@ const MathContent = ({ content }) => {
                 throwOnError: true, // Ném lỗi nếu có cú pháp sai
                 displayMode: true,  // Bật chế độ hiển thị dạng khối
                 output: 'html',
-                // fleqn: true, // Nếu bạn muốn công thức căn trái thay vì căn giữa
+                // fleqn: true, // Bỏ comment nếu bạn muốn công thức căn trái thay vì căn giữa
               });
               // Sử dụng dangerouslySetInnerHTML để chèn HTML đã render
               // Thêm class để dễ dàng định kiểu CSS
               return <div dangerouslySetInnerHTML={{ __html: html }} className="katex-display-direct" />;
             } catch (error) {
-              // HIỂN THỊ LỖI TRỰC TIẾP TRÊN TRANG VÀO CONSOLE
+              // HIỂN THỊ LỖI TRỰC TIẾP TRÊN TRANG VÀ VÀO CONSOLE
               console.error("KaTeX rendering error (display math):", error);
               return (
                 <div className="text-red-600 p-2 border border-red-300 rounded-md my-2">
                   <p className="font-semibold">Lỗi biểu thức toán học dạng khối:</p>
                   <p className="text-sm">{error.message}</p>
                   <pre className="text-xs bg-gray-100 p-1 mt-1 rounded overflow-x-auto text-gray-800">{value}</pre>
-                  <p className="text-xs mt-1">Kiểm tra cú pháp LaTeX hoặc khoảng trắng xung quanh `$$`.</p>
+                  <p className="text-xs mt-1">Vui lòng kiểm tra cú pháp LaTeX hoặc khoảng trắng xung quanh `$$.`</p>
                 </div>
               );
             }
@@ -63,8 +63,8 @@ const MathContent = ({ content }) => {
               );
             }
           },
-          // Giữ lại các trình render mặc định cho các phần tử Markdown khác nếu cần
-          // Ví dụ: pre: ({node, ...props}) => <pre style={{backgroundColor: 'black', color: 'white'}} {...props} />
+          // Đảm bảo ReactMarkdown vẫn xử lý các thẻ khác như p, h, ul, ol, v.v.
+          // Nếu bạn muốn tùy chỉnh cách render các thẻ này, bạn có thể thêm vào đây
         }}
         children={content}
       />
