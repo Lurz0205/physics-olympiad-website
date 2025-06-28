@@ -25,12 +25,16 @@ const ResultDisplay = ({ result, examData, formatTime }) => {
 
   // Effect để cuộn lên đầu trang khi ResultDisplay được render
   useEffect(() => {
+    console.log("ResultDisplay mounted or updated. Attempting to scroll to top...");
     if (typeof window !== 'undefined') {
       // Đặt timeout nhỏ để đảm bảo DOM đã cập nhật hoàn chỉnh
       const timer = setTimeout(() => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
+        console.log("Scroll to top command issued.");
       }, 100); // 100ms có thể đủ để React cập nhật DOM
       return () => clearTimeout(timer); // Cleanup timeout
+    } else {
+      console.log("window object not available for scrolling (SSR environment).");
     }
   }, [result]); // Chạy lại khi có kết quả mới
 
@@ -154,35 +158,60 @@ const ResultDisplay = ({ result, examData, formatTime }) => {
                   <p className="text-gray-700 font-semibold mb-2">Đáp án của bạn cho mỗi ý:</p>
                   {q.statements.map((stmt, stmtIndex) => {
                     // Lấy đáp án hiện tại của người dùng cho ý này
-                    const currentUserAnswerForStatement = userAnswers[q._id] ? userAnswers[q._id][stmtIndex] : null;
+                    let userStatementsArray;
+                    try {
+                        userStatementsArray = userAnswerEntry && userAnswerEntry.userAnswer 
+                                               ? JSON.parse(userAnswerEntry.userAnswer) 
+                                               : [];
+                    } catch (e) {
+                        console.error("Failed to parse true-false user answer JSON:", e);
+                        userStatementsArray = [];
+                    }
+                    const userStatementAnswer = userStatementsArray[stmtIndex]; 
+                    
+                    // Xác định xem người dùng trả lời đúng hay sai cho ý này
+                    const isCorrectStatement = stmt.isCorrect === userStatementAnswer;
+
+                    // Class cho từng ý Đúng/Sai
+                    let statementClass = 'flex items-center space-x-3 p-3 rounded-md border text-gray-800';
+                    if (isCorrectStatement) {
+                      statementClass += ' bg-green-100 border-green-300'; // Đáp án đúng
+                    } else {
+                      statementClass += ' bg-red-100 border-red-300'; // Đáp án sai
+                    }
+
                     return (
-                        <div key={stmtIndex} className="flex items-center space-x-3 p-3 rounded-md border border-gray-300 bg-white">
-                            <span className="text-base text-gray-800 flex-grow">
-                                {String.fromCharCode(97 + stmtIndex)}) <MathContent content={stmt.statementText} />
-                            </span>
-                            <div className="flex items-center space-x-4">
-                                <label className="flex items-center cursor-pointer">
-                                    <input
-                                        type="radio"
-                                        name={`question-${q._id}-statement-${stmtIndex}`} // Đảm bảo unique name cho mỗi cặp radio của ý con
-                                        checked={currentUserAnswerForStatement === true}
-                                        onChange={() => handleAnswerChange(q._id, true, q.type, stmtIndex)}
-                                        className="form-radio h-4 w-4 text-blue-600"
-                                    />
-                                    <span className={`ml-2 ${currentUserAnswerForStatement === true ? 'font-bold text-blue-800' : 'text-gray-800'}`}>Đúng</span>
-                                </label>
-                                <label className="flex items-center cursor-pointer">
-                                    <input
-                                        type="radio"
-                                        name={`question-${q._id}-statement-${stmtIndex}`}
-                                        checked={currentUserAnswerForStatement === false}
-                                        onChange={() => handleAnswerChange(q._id, false, q.type, stmtIndex)}
-                                        className="form-radio h-4 w-4 text-blue-600"
-                                    />
-                                    <span className={`ml-2 ${currentUserAnswerForStatement === false ? 'font-bold text-blue-800' : 'text-gray-800'}`}>Sai</span>
-                                </label>
-                            </div>
+                      <div key={stmtIndex} className={statementClass}>
+                        <span className="text-base flex-grow">
+                          {String.fromCharCode(97 + stmtIndex)}) <MathContent content={stmt.statementText} />
+                        </span>
+                        <div className="flex items-center space-x-4">
+                          {/* Hiển thị đáp án của người dùng */}
+                          <label className="flex items-center cursor-default">
+                              <input 
+                                  type="radio" 
+                                  checked={userStatementAnswer === true} 
+                                  disabled 
+                                  className={`h-5 w-5 ${isCorrectStatement ? 'text-green-600' : 'text-red-600'}`}
+                              />
+                              <span className={`ml-2 ${userStatementAnswer === true ? (isCorrectStatement ? 'font-bold text-green-700' : 'font-bold text-red-700') : 'text-gray-500'}`}>
+                                  Đúng
+                              </span>
+                          </label>
+                          
+                          <label className="flex items-center cursor-default">
+                              <input 
+                                  type="radio" 
+                                  checked={userStatementAnswer === false} 
+                                  disabled 
+                                  className={`h-5 w-5 ${isCorrectStatement ? 'text-green-600' : 'text-red-600'}`}
+                              />
+                              <span className={`ml-2 ${userStatementAnswer === false ? (isCorrectStatement ? 'font-bold text-green-700' : 'font-bold text-red-700') : 'text-gray-500'}`}>
+                                  Sai
+                              </span>
+                          </label>
                         </div>
+                      </div>
                     );
                   })}
                 </div>
@@ -260,9 +289,11 @@ const ExamDetailPage = () => {
 
   // Hàm nộp bài thi
   const handleSubmitExam = useCallback(async (isTimeUp = false) => {
+    console.log("handleSubmitExam called.");
     // Sử dụng examFinished thay vì isExamSubmitted
     if (!user || !token || !exam || examFinished || submitting) { 
       if (!user) setError('Bạn cần đăng nhập để nộp bài thi.');
+      console.log("Pre-submission check failed. User:", !!user, "Token:", !!token, "Exam:", !!exam, "Finished:", examFinished, "Submitting:", submitting);
       return;
     }
 
@@ -274,6 +305,7 @@ const ExamDetailPage = () => {
         if (!userAnswer || userAnswer === '') {
           setError(`Vui lòng chọn đáp án cho Câu hỏi ${exam.questions.indexOf(q) + 1}.`);
           allQuestionsAnswered = false;
+          console.log(`Validation failed: MC question ${q._id} not answered.`);
           break; // Dừng vòng lặp ngay khi tìm thấy câu chưa trả lời
         }
       } else if (q.type === 'true-false') {
@@ -281,12 +313,14 @@ const ExamDetailPage = () => {
         if (!userAnswer || !Array.isArray(userAnswer) || userAnswer.some(ans => ans === null || ans === undefined)) {
           setError(`Vui lòng trả lời đầy đủ các ý trong Câu hỏi ${exam.questions.indexOf(q) + 1}.`);
           allQuestionsAnswered = false;
+          console.log(`Validation failed: TF question ${q._id} not fully answered.`);
           break;
         }
       } else if (q.type === 'short-answer') {
         if (!userAnswer || userAnswer.trim() === '') {
           setError(`Vui lòng điền đáp án cho Câu hỏi ${exam.questions.indexOf(q) + 1}.`);
           allQuestionsAnswered = false;
+          console.log(`Validation failed: SA question ${q._id} not answered.`);
           break;
         }
       }
@@ -294,15 +328,16 @@ const ExamDetailPage = () => {
 
     if (!allQuestionsAnswered) {
         setSubmitting(false); // Đảm bảo nút không bị disabled
-        // Lỗi đã được set trong vòng lặp, không cần set lại ở đây
+        console.log("Client-side validation failed. Not submitting.");
         return; // Ngăn không cho hàm tiếp tục nộp bài
     }
     // --- KẾT THÚC VALIDATION PHÍA CLIENT ---
 
     setSubmitting(true);
-    // Removed setExamFinished(true) from here to ensure it's set AFTER successful submission logic
+    console.log("Client-side validation passed. Submitting exam...");
     if (timerRef.current) {
       clearInterval(timerRef.current);
+      console.log("Timer cleared.");
     }
     setError(null); // Xóa lỗi sau khi validation thành công và chuẩn bị nộp
 
@@ -325,14 +360,17 @@ const ExamDetailPage = () => {
             userAnswer: userAnswerValue // Đây là giá trị đã được chuẩn hóa (string)
         };
     });
+    console.log("Answers to send:", answersToSend);
 
     const submissionData = {
       examId: exam._id,
       userAnswers: answersToSend,
       timeTaken: timeTaken, // Gửi timeTaken thay vì timeSpent để khớp với backend
     };
+    console.log("Submission data:", submissionData);
 
     try {
+      console.log("Fetching API for exam submission...");
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/exam-results`, { // Endpoint đúng
         method: 'POST',
         headers: {
@@ -342,28 +380,29 @@ const ExamDetailPage = () => {
         body: JSON.stringify(submissionData),
       });
 
+      console.log("Response received. Status:", response.status, "OK:", response.ok);
       const resultData = await response.json();
+      console.log("Response JSON parsed:", resultData);
 
       if (!response.ok) {
         // Log detailed error from backend if available
-        console.error("Backend error response:", resultData);
+        console.error("Backend error response (not OK):", resultData);
+        // Throwing error here will be caught by the catch block below
         throw new Error(resultData.message || 'Lỗi khi nộp bài thi từ máy chủ.');
       }
+      
       setExamResult(resultData);
       setExamFinished(true); // Set exam finished ONLY on successful submission
-
-      // // Removed window.scrollTo from here, moved to ResultDisplay component's useEffect
-      // if (typeof window !== 'undefined') {
-      //   window.scrollTo({ top: 0, behavior: 'smooth' });
-      // }
+      console.log("Exam submitted successfully. State updated.");
 
     } catch (err) {
-      console.error('Lỗi khi nộp bài thi:', err);
+      console.error('Lỗi khi nộp bài thi (caught):', err);
       // Hiển thị lỗi rõ ràng hơn cho người dùng
       setError(err.message || 'Đã xảy ra lỗi không mong muốn khi nộp bài thi. Vui lòng thử lại.');
       setExamFinished(false); // Đảm bảo trạng thái không bị kẹt ở "finished" nếu lỗi
     } finally {
       setSubmitting(false); // Luôn tắt trạng thái submitting
+      console.log("Submission process finished (finally block).");
     }
   }, [user, token, exam, userAnswers, timeRemaining, submitting]);
 
