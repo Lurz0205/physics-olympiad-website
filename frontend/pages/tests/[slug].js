@@ -521,7 +521,7 @@ const ExamDetailPage = () => {
                 Thời lượng: {exam.duration} phút
               </span>
               {exam.isPublished ? (
-                <span className="bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
+                <span className="bg-green-100 text-green-800 py-1 px-3 rounded-full text-sm font-semibold">
                   Đã xuất bản
                 </span>
               ) : (
