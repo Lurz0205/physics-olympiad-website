@@ -51,22 +51,23 @@ a {
   line-height: 1; /* Đảm bảo KaTeX không tự thêm line-height */
 }
 
-/* Khoảng cách và CĂN GIỮA bằng FLEXBOX cho các biểu thức toán học dạng khối (display math) */
+/* Khoảng cách cho các biểu thức toán học dạng khối (display math) */
 .katex-display {
-  display: flex;        /* THAY ĐỔI MỚI QUAN TRỌNG: Biến nó thành flex container */
-  justify-content: center; /* THAY ĐỔI MỚI QUAN TRỌNG: Căn giữa theo chiều ngang */
-  align-items: center;  /* Căn giữa theo chiều dọc nếu nội dung có chiều cao khác nhau */
-  
+  display: block;       /* Đảm bảo nó là block element */
   margin-top: 1.2em;    /* Khoảng cách trên */
   margin-bottom: 1.2em; /* Khoảng cách dưới */
   overflow-x: auto;     /* Thêm scroll ngang nếu biểu thức quá dài */
   padding: 0.5em 0;     /* Thêm padding nhẹ */
-  /* Loại bỏ text-align: center; và width: 100%; ở đây vì flexbox sẽ xử lý tốt hơn */
+  /* text-align: center; */ /* Bỏ text-align ở đây để dùng margin auto trên phần tử con */
 }
 
-/* KHÔNG CẦN THÊM QUY TẮC .katex-display > .katex nữa khi sử dụng Flexbox */
-/* Bởi vì flexbox sẽ căn giữa trực tiếp các item con của nó */
-
+/* THAY ĐỔI MỚI VÀ QUAN TRỌNG NHẤT: Căn giữa nội dung KaTeX bên trong display math */
+.katex-display > .katex {
+    display: block;       /* Biến phần tử .katex con thành block */
+    margin: 0 auto;       /* Dùng margin auto để căn giữa */
+    white-space: normal;  /* Cho phép ngắt dòng nếu cần */
+    max-width: 100%;      /* Đảm bảo không tràn ra ngoài */
+}
 
 /* Đảm bảo các ký tự và số trong KaTeX có màu sắc tương phản tốt */
 .katex .mord {
@@ -97,7 +98,6 @@ img {
 .math-content-container {
   display: block; /* Đảm bảo MathContent wrapper là block */
   width: 100%; /* Chiếm toàn bộ chiều rộng có sẵn */
-  /* Bỏ vertical-align: middle; vì không cần thiết cho block display */
 }
 
 /* Adjustments for headings, if they contain math */
