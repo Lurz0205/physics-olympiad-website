@@ -45,8 +45,8 @@ a {
   line-height: 1; /* Đảm bảo KaTeX không tự thêm line-height */
 }
 
-/* Khoảng cách cho các biểu thức toán học dạng khối được render trực tiếp */
-.katex-display-direct { /* THAY ĐỔI: Sử dụng class mới */
+/* Khoảng cách và căn giữa cho các biểu thức toán học dạng khối được render trực tiếp */
+.katex-display-direct { /* Đây là class mới mà MathContent.js sẽ thêm vào div bọc KaTeX */
   display: block;       /* Đảm bảo nó là block element */
   margin-top: 1.2em;    /* Khoảng cách trên */
   margin-bottom: 1.2em; /* Khoảng cách dưới */
@@ -56,7 +56,7 @@ a {
   width: 100%;          /* Đảm bảo nó chiếm đủ chiều rộng */
 }
 
-/* KaTeX tạo ra một <div> với class "katex-display" bên trong. 
+/* KaTeX vẫn tạo ra một <div> với class "katex-display" bên trong.
    Chúng ta cần đảm bảo KaTeX gốc đó cũng được căn giữa */
 .katex-display-direct > .katex-display {
     text-align: center; /* Căn giữa nội dung KaTeX bên trong */
