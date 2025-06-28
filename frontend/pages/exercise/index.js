@@ -140,15 +140,21 @@ const ExerciseListPage = () => {
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {groupedExercises[category].map(exercise => (
-                  // THAY ĐỔI TẠI ĐÂY: Bọc toàn bộ div card bằng Link
                   <Link key={exercise._id} href={`/exercise/${exercise.slug}`} passHref>
                     <div className="bg-white rounded-lg shadow-md p-5 border border-gray-100 transform hover:scale-102 transition-transform duration-200 ease-in-out cursor-pointer h-full flex flex-col justify-between">
                       <div> {/* Dùng div này để nhóm nội dung text */}
                         <h3 className="text-lg font-semibold text-gray-800 mb-2 line-clamp-2">{exercise.title}</h3>
                         <p className="text-sm text-gray-600 mb-3 line-clamp-3">{exercise.description}</p>
                       </div>
-                      <div className="flex flex-wrap justify-between items-center text-xs mt-3 gap-2">
-                        <span className={`py-1 px-3 rounded-full text-white font-semibold ${
+                      <div className="flex flex-wrap items-center mt-3 gap-2"> {/* Thêm items-center */}
+                        {/* 1. Loại bài tập (cố định font size và padding) */}
+                        <span className={`py-1 px-3 rounded-full text-white font-semibold text-sm whitespace-nowrap ${
+                            exercise.type === 'Tự luận' ? 'bg-indigo-500' : 'bg-purple-500'
+                          }`}>
+                          {exercise.type}
+                        </span>
+                        {/* 2. Độ khó (cố định font size và padding) */}
+                        <span className={`py-1 px-3 rounded-full text-white font-semibold text-sm whitespace-nowrap ${
                             exercise.difficulty === 'Dễ' ? 'bg-green-500' :
                             exercise.difficulty === 'Trung bình' ? 'bg-yellow-600' :
                             exercise.difficulty === 'Khó' ? 'bg-orange-600' :
@@ -156,15 +162,11 @@ const ExerciseListPage = () => {
                           }`}>
                           {exercise.difficulty}
                         </span>
-                        <span className={`py-1 px-3 rounded-full text-sm font-semibold ${
-                          exercise.type === 'Tự luận' ? 'bg-indigo-500 text-white' : 'bg-purple-500 text-white'
-                        }`}>
-                          {exercise.type}
-                        </span>
+                        {/* 3. Các tags phụ (giữ font size nhỏ hơn một chút để phân biệt) */}
                         {exercise.tags && exercise.tags.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-2 sm:mt-0">
+                          <div className="flex flex-wrap gap-1"> {/* Bọc các tag phụ trong một flex container mới */}
                             {exercise.tags.map((tag, index) => (
-                              <span key={index} className="bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full text-xs">
+                              <span key={index} className="bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full text-xs whitespace-nowrap">
                                 {tag}
                               </span>
                             ))}
