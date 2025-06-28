@@ -34,8 +34,7 @@ a {
   Mục tiêu: Đảm bảo kích thước, khoảng cách và căn chỉnh tốt hơn
 */
 
-/* QUAN TRỌNG: Loại bỏ 'display: inline-block' cho .katex-display ở đây */
-/* Giữ 'display: inline-block' cho .katex và .katex-html để chúng hoạt động như mong đợi cho inline math */
+/* Đảm bảo .katex và .katex-html vẫn là inline-block cho inline math */
 .katex, .katex-html {
   display: inline-block; 
   white-space: nowrap;
@@ -52,23 +51,21 @@ a {
   line-height: 1; /* Đảm bảo KaTeX không tự thêm line-height */
 }
 
-/* Khoảng cách và căn giữa cho các biểu thức toán học dạng khối (display math) */
+/* Khoảng cách và CĂN GIỮA bằng FLEXBOX cho các biểu thức toán học dạng khối (display math) */
 .katex-display {
-  display: block;       /* THAY ĐỔI MỚI VÀ QUAN TRỌNG NHẤT: Đảm bảo nó là block */
+  display: flex;        /* THAY ĐỔI MỚI QUAN TRỌNG: Biến nó thành flex container */
+  justify-content: center; /* THAY ĐỔI MỚI QUAN TRỌNG: Căn giữa theo chiều ngang */
+  align-items: center;  /* Căn giữa theo chiều dọc nếu nội dung có chiều cao khác nhau */
+  
   margin-top: 1.2em;    /* Khoảng cách trên */
   margin-bottom: 1.2em; /* Khoảng cách dưới */
   overflow-x: auto;     /* Thêm scroll ngang nếu biểu thức quá dài */
   padding: 0.5em 0;     /* Thêm padding nhẹ */
-  text-align: center;   /* Căn giữa nội dung bên trong */
-  width: 100%;          /* Đảm bảo nó chiếm đủ chiều rộng để căn giữa */
+  /* Loại bỏ text-align: center; và width: 100%; ở đây vì flexbox sẽ xử lý tốt hơn */
 }
 
-/* Thêm quy tắc căn giữa mạnh mẽ hơn cho nội dung KaTeX bên trong display math */
-.katex-display > .katex {
-    display: block; /* Đảm bảo phần tử KaTeX bên trong cũng là block */
-    margin: 0 auto; /* Tăng cường căn giữa */
-    white-space: normal; /* Cho phép ngắt dòng nếu cần (để tránh overflow khi thu nhỏ) */
-}
+/* KHÔNG CẦN THÊM QUY TẮC .katex-display > .katex nữa khi sử dụng Flexbox */
+/* Bởi vì flexbox sẽ căn giữa trực tiếp các item con của nó */
 
 
 /* Đảm bảo các ký tự và số trong KaTeX có màu sắc tương phản tốt */
@@ -96,11 +93,11 @@ img {
 }
 
 /* Biểu thức toán học trong MathContent container */
-/* Đảm bảo MathContent container là block để chứa display math */
+/* Đảm bảo MathContent wrapper là block để chứa display math */
 .math-content-container {
   display: block; /* Đảm bảo MathContent wrapper là block */
   width: 100%; /* Chiếm toàn bộ chiều rộng có sẵn */
-  /* vertical-align: middle; <- B\u1ECF \u0111i v\xEC kh\xF4ng c\u1EA7n thi\u1EBFt cho block display */
+  /* Bỏ vertical-align: middle; vì không cần thiết cho block display */
 }
 
 /* Adjustments for headings, if they contain math */
