@@ -289,7 +289,7 @@ const ExamDetailPage = () => {
     // --- KẾT THÚC VALIDATION PHÍA CLIENT ---
 
     setSubmitting(true);
-    setExamFinished(true); // Chỉ set khi bài thi hợp lệ và chuẩn bị nộp
+    // Removed setExamFinished(true) from here to ensure it's set AFTER successful submission logic
     if (timerRef.current) {
       clearInterval(timerRef.current);
     }
@@ -334,22 +334,27 @@ const ExamDetailPage = () => {
       const resultData = await response.json();
 
       if (!response.ok) {
-        throw new Error(resultData.message || 'Lỗi khi nộp bài thi.');
+        // Log detailed error from backend if available
+        console.error("Backend error response:", resultData);
+        throw new Error(resultData.message || 'Lỗi khi nộp bài thi từ máy chủ.');
       }
       setExamResult(resultData);
+      setExamFinished(true); // Set exam finished ONLY on successful submission
 
-      // THÊM DÒNG NÀY ĐỂ CUỘN LÊN ĐẦU TRANG
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      // Cuộn lên đầu trang sau khi nộp bài thành công
+      if (typeof window !== 'undefined') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
 
     } catch (err) {
       console.error('Lỗi khi nộp bài thi:', err);
-      // Giữ examFinished = false và hiển thị lỗi để người dùng có thể thử lại
-      setExamFinished(false); 
-      setError(err.message || 'Đã xảy ra lỗi khi nộp bài thi.');
+      // Hiển thị lỗi rõ ràng hơn cho người dùng
+      setError(err.message || 'Đã xảy ra lỗi không mong muốn khi nộp bài thi. Vui lòng thử lại.');
+      setExamFinished(false); // Đảm bảo trạng thái không bị kẹt ở "finished" nếu lỗi
     } finally {
-      setSubmitting(false);
+      setSubmitting(false); // Luôn tắt trạng thái submitting
     }
-  }, [user, token, exam, examFinished, userAnswers, timeRemaining, submitting]);
+  }, [user, token, exam, userAnswers, timeRemaining, submitting]);
 
   // Fetch exam details
   useEffect(() => {
@@ -411,11 +416,14 @@ const ExamDetailPage = () => {
 
   // Start timer when exam starts
   useEffect(() => {
+    // Only start timer if exam has started, not finished, and time is remaining
+    // and if window object is available (i.e., not server-side rendering)
     if (examStarted && !examFinished && timeRemaining > 0 && typeof window !== 'undefined') {
       timerRef.current = setInterval(() => {
         setTimeRemaining(prevTime => {
           if (prevTime <= 1) {
             clearInterval(timerRef.current);
+            // Trigger submission if time runs out
             handleSubmitExam(true); 
             return 0;
           }
@@ -424,16 +432,17 @@ const ExamDetailPage = () => {
       }, 1000);
     }
 
+    // Cleanup function for the interval
     return () => {
       if (timerRef.current) {
         clearInterval(timerRef.current);
       }
     };
-  }, [examStarted, examFinished, handleSubmitExam, timeRemaining]); // Thêm timeRemaining vào dependencies
+  }, [examStarted, examFinished, handleSubmitExam, timeRemaining]); // Add timeRemaining to dependencies for proper re-evaluation
 
   // Xử lý khi user thay đổi đáp án
   const handleAnswerChange = useCallback((questionId, value, questionType, statementIndex = null) => {
-    if (!examFinished) {
+    if (!examFinished) { // Only allow changes if exam is not finished
       setUserAnswers(prevAnswers => {
         const newAnswers = { ...prevAnswers };
         if (questionType === 'multiple-choice' || questionType === 'short-answer') {
@@ -521,7 +530,7 @@ const ExamDetailPage = () => {
                 Thời lượng: {exam.duration} phút
               </span>
               {exam.isPublished ? (
-                <span className="bg-green-100 text-green-800 py-1 px-3 rounded-full text-sm font-semibold">
+                <span className="bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
                   Đã xuất bản
                 </span>
               ) : (
