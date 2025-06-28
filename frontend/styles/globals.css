@@ -10,10 +10,10 @@ html,
 body {
   padding: 0;
   margin: 0;
-  font-family: 'Inter', sans-serif; /* S\u1EED d\u1EE5ng font Inter */
-  line-height: 1.6; /* T\u0103ng line-height cho t\u1ED5ng th\u1EC3 trang */
+  font-family: 'Inter', sans-serif; /* Sử dụng font Inter */
+  line-height: 1.6; /* Tăng line-height cho tổng thể trang */
   color: #333;
-  background-color: #f7f9fc; /* M\xE0u n\u1EC1n nh\u1EB9 cho to\xE0n b\u1ED9 \u1EE9ng d\u1EE5ng */
+  background-color: #f7f9fc; /* Màu nền nhẹ cho toàn bộ ứng dụng */
 }
 
 a {
@@ -30,46 +30,47 @@ a {
   @apply inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-200 ease-in-out;
 }
 
-/* B\u1EAFT \u0110\u1EA6U C\u1EA2I THI\u1EC6N STYLING CHO BI\u1EC2U TH\u1EE8C TO\xC1N H\u1ECCC (KaTeX)
-  M\u1EE5c ti\xEAu: \u0110\u1EA3m b\u1EA3o k\xEDch th\u01B0\u1EDBc, kho\u1EA3ng c\xE1ch v\xE0 c\u0103n ch\u1EC9nh t\u1ED1t h\u01A1n
+/* BẮT ĐẦU CẢI THIỆN STYLING CHO BIỂU THỨC TOÁN HỌC (KaTeX)
+  Mục tiêu: Đảm bảo kích thước, khoảng cách và căn chỉnh tốt hơn
 */
 
-/* K\xEDch th\u01B0\u1EDBc t\u1ED5ng th\u1EC3 cho c\xE1c bi\u1EC3u th\u1EE9c KaTeX */
+/* Kích thước tổng thể cho các biểu thức KaTeX */
 .katex {
-  font-size: 1.15em; /* T\u0103ng k\xEDch th\u01B0\u1EDBc font t\u1ED5ng th\u1EC3 cho KaTeX */
-  line-height: 1.6;  /* \u0110i\u1EC1u ch\u1EC9nh line-height \u0111\u1EC3 kh\xF4ng b\u1ECB ch\u1ED3ng l\u1EA5n */
+  font-size: 1.15em; /* Tăng kích thước font tổng thể cho KaTeX */
+  line-height: 1.6;  /* Điều chỉnh line-height để không bị chồng lấn */
 }
 
-/* \u0110i\u1EC1u ch\u1EC9nh line-height cho c\xE1c bi\u1EC3u th\u1EE9c to\xE1n h\u1ECDc n\u1ED9i tuy\u1EBFn */
-/* \u0110i\u1EC1u n\xE0y gi\xFAp cho d\xF2ng v\u0103n b\u1EA3n ch\u1EE9a bi\u1EC3u th\u1EE9c kh\xF4ng b\u1ECB gi\xE3n qu\xE1 m\u1EE9c, 
-   v\xE0 bi\u1EC3u th\u1EE9c v\u1EABn n\u1EB1m \u0111\u00FAng v\u1ECB tr\xED. */
+/* Điều chỉnh line-height cho các biểu thức toán học nội tuyến */
+/* Điều này giúp cho dòng văn bản chứa biểu thức không bị giãn quá mức, 
+   và biểu thức vẫn nằm đúng vị trí. */
 .katex-html {
-  line-height: 1; /* \u0110\u1EA3m b\u1EA3o KaTeX kh\xF4ng t\u1EF1 th\xEAm line-height kh\xF4ng mong mu\u1ED1n */
+  line-height: 1; /* Đảm bảo KaTeX không tự thêm line-height */
 }
 
-/* Kho\u1EA3ng c\xE1ch cho c\xE1c bi\u1EC3u th\u1EE9c to\xE1n h\u1ECDc d\u1EA1ng kh\u1ED1i (display math) */
+/* Khoảng cách và căn giữa cho các biểu thức toán học dạng khối (display math) */
 .katex-display {
-  margin-top: 1.2em;    /* Kho\u1EA3ng c\xE1ch tr\xEAn */
-  margin-bottom: 1.2em; /* Kho\u1EA3ng c\xE1ch d\u01B0\u1EDBi */
-  overflow-x: auto;     /* Th\xEAm scroll ngang n\u1EBFu bi\u1EC3u th\u1EE9c qu\xE1 d\xE0i */
-  padding: 0.5em 0;     /* Th\xEAm padding nh\u1EB9 */
+  margin-top: 1.2em;    /* Khoảng cách trên */
+  margin-bottom: 1.2em; /* Khoảng cách dưới */
+  overflow-x: auto;     /* Thêm scroll ngang nếu biểu thức quá dài */
+  padding: 0.5em 0;     /* Thêm padding nhẹ */
+  text-align: center;   /* THAY ĐỔI MỚI: Căn giữa biểu thức */
 }
 
-/* \u0110\u1EA3m b\u1EA3o c\xE1c k\xFD t\u1EF1 v\xE0 s\u1ED1 trong KaTeX c\xF3 m\xE0u s\u1EAFc t\u01B0\u01A1ng ph\u1EA3n t\u1ED1t */
+/* Đảm bảo các ký tự và số trong KaTeX có màu sắc tương phản tốt */
 .katex .mord {
-  color: #212121; /* \u0110\u1EA3m b\u1EA3o m\xE0u ch\u1EEF \u0111en \u0111\u1EADm cho c\xE1c k\xFD t\u1EF1 */
+  color: #212121; /* Đảm bảo màu chữ đen đậm cho các ký tự */
 }
 .katex .mbin, .katex .mrel, .katex .mop, .katex .mopen, .katex .mclose, .katex .minner, .katex .mord, .katex .mfrac, .katex .msupsub {
-  /* C\xF3 th\u1EC3 \u0111i\u1EC1u ch\u1EC9nh m\xE0u ho\u1EB7c kho\u1EA3ng c\xE1ch nh\u1ECF n\u1EBFu c\u1EA7n */
-  /* color: inherit; */ /* \u0110\u1EC3 k\u1EBF th\u1EEBa m\xE0u t\u1EEB parent, th\u01B0\u1EDDng l\xE0 t\u1ED1t */
+  /* Có thể điều chỉnh màu hoặc khoảng cách nhỏ nếu cần */
+  /* color: inherit; */ /* Để kế thừa màu từ parent, thường là tốt */
 }
 
-/* \u0110i\u1EC1u ch\u1EC9nh k\xEDch th\u01B0\u1EDBc font cho c\xE1c ch\u1EC9 s\u1ED1 tr\xEAn/d\u01B0\u1EDBi v\xE0 ph\xE2n s\u1ED1 \u0111\u1EC3 d\u1EC5 \u0111\u1ECDc h\u01A1n */
+/* Điều chỉnh kích thước font cho các chỉ số trên/dưới và phân số để dễ đọc hơn */
 .katex .supsub, .katex .frac {
-  font-size: 0.9em; /* L\xE0m cho ch\u1EC9 s\u1ED1 v\xE0 ph\xE2n s\u1ED1 kh\xF4ng qu\xE1 nh\u1ECF */
+  font-size: 0.9em; /* Làm cho chỉ số và phân số không quá nhỏ */
 }
 
-/* C\u0103n gi\u1EEFa h\xECnh \u1EA3nh (n\u1EBFu c\xF3, kh\xF4ng \xE1p d\u1EE5ng cho to\xE1n) */
+/* Căn giữa hình ảnh (nếu có, không áp dụng cho toán) */
 img {
   max-width: 100%;
   height: auto;
@@ -79,19 +80,19 @@ img {
   border-radius: 0.5rem; /* rounded-lg */
 }
 
-/* Bi\u1EC3u th\u1EE9c to\xE1n h\u1ECBc trong MathContent container */
-/* \u0110i\u1EC1u ch\u1EC9nh cho MathContent component n\u1EBFu b\u1EA1n mu\u1ED1n n\xF3 l\xE0 block hay inline */
+/* Biểu thức toán học trong MathContent container */
+/* Điều chỉnh cho MathContent component nếu bạn muốn nó là block hay inline */
 .math-content-container {
-  display: inline-block; /* Ho\u1EB7c block n\u1EBFu b\u1EA1n mu\u1ED1n m\u1ED7i bi\u1EC3u th\u1EE9c tr\xEAn m\u1ED9t d\xF2ng ri\xEAng */
-  width: auto; /* T\u1EF1 \u0111\u1ED9ng \u0111i\u1EC1u ch\u1EC9nh chi\u1EC1u r\u1ED9ng */
-  max-width: 100%; /* Gi\u1EDBi h\u1EA1n chi\u1EC1u r\u1ED9ng t\u1ED1i \u0111a */
-  vertical-align: middle; /* Gi\xFAp c\u0103n ch\u1EC9nh inline math v\u1EDBi v\u0103n b\u1EA3n xung quanh */
+  display: inline-block; /* Hoặc block nếu bạn muốn mỗi biểu thức trên một dòng riêng */
+  width: auto; /* Tự động điều chỉnh chiều rộng */
+  max-width: 100%; /* Giới hạn chiều rộng tối đa */
+  vertical-align: middle; /* Giúp căn chỉnh inline math với văn bản xung quanh */
 }
 
 /* Adjustments for headings, if they contain math */
 h1 .katex, h2 .katex, h3 .katex, h4 .katex, h5 .katex, h6 .katex {
-  font-size: inherit; /* K\u1EBF th\u1EEBa k\xEDch th\u01B0\u1EDBc font t\u1EEB th\u1EBB heading */
-  vertical-align: baseline; /* \u0110\u1EA3m b\u1EA3o c\u0103n ch\u1EC9nh baseline v\u1EDBi text c\u1EE7a heading */
+  font-size: inherit; /* Kế thừa kích thước font từ thẻ heading */
+  vertical-align: baseline; /* Đảm bảo căn chỉnh baseline với text của heading */
 }
 
 /* Markdown specific styling (if not handled by Tailwind Typography) */
